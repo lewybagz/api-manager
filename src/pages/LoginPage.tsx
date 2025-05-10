@@ -6,19 +6,27 @@ import {
 } from "firebase/auth";
 import { auth } from "../firebase"; // Adjust if your firebase.ts is elsewhere
 import useAuthStore from "../stores/authStore";
-import { Mail, Lock, LogIn, UserPlus, AlertCircle } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  LogIn,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  Shield,
+} from "lucide-react";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLogin, setIsLogin] = useState(true); // To toggle between login and signup
   const [formError, setFormError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { user, isLoading, setUser, setLoading, setError } = useAuthStore();
 
   useEffect(() => {
     if (user) {
-      navigate("/dashboard"); // Redirect if already logged in
+      navigate("/dashboard");
     }
   }, [user, navigate]);
 
@@ -26,29 +34,16 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     setFormError(null);
-    setError(null); // Clear global auth error
-
+    setError(null);
     try {
-      let firebaseUser;
-      if (isLogin) {
-        const userCredential = await signInWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
-        firebaseUser = userCredential.user;
-      } else {
-        const userCredential = await createUserWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
-        firebaseUser = userCredential.user;
-      }
-      setUser(firebaseUser); // Update store
-      navigate("/dashboard"); // Redirect to dashboard after login/signup
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      setUser(userCredential.user);
+      navigate("/dashboard");
     } catch (err: any) {
-      // Use Firebase error messages if available and user-friendly
       let message = "An unexpected error occurred. Please try again.";
       if (err.code) {
         switch (err.code) {
@@ -56,143 +51,138 @@ const LoginPage: React.FC = () => {
           case "auth/wrong-password":
             message = "Invalid email or password.";
             break;
-          case "auth/email-already-in-use":
-            message = "This email address is already in use.";
-            break;
-          case "auth/weak-password":
-            message = "Password should be at least 6 characters.";
-            break;
           default:
-            message = err.message; // Fallback to Firebase message
+            message = err.message;
         }
       }
       setFormError(message);
-      setError({ name: err.name || "AuthError", message }); // Set global error too if needed
+      setError({ name: err.name || "AuthError", message });
     } finally {
       setLoading(false);
     }
   };
 
   if (isLoading && !user) {
-    // Show a loading indicator if auth state is loading and no user yet
-    // This avoids showing login form briefly before redirecting if already logged in
     return (
       <div className="flex min-h-screen items-center justify-center bg-brand-dark">
-        <p className="text-brand-light">Loading authentication...</p>
+        <div className="flex flex-col items-center">
+          <Shield className="h-10 w-10 text-brand-blue animate-spin mb-4" />
+          <p className="text-brand-light text-lg animate-pulse">
+            Loading authentication...
+          </p>
+        </div>
       </div>
     );
   }
 
-  // If user is already set (e.g. from initial load), this page shouldn't be visible (due to useEffect redirect)
-  // but as a fallback or if redirect hasn't happened, don't render form.
   if (user) return null;
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-brand-dark px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-white">
-            {isLogin ? "Sign in to your account" : "Create a new account"}
+      <div className="w-full max-w-md">
+        <div className="bg-brand-dark-secondary rounded-2xl shadow-2xl px-8 py-10 sm:p-10 flex flex-col items-center animate-fade-in">
+          <Shield className="h-12 w-12 text-brand-blue mb-3 animate-pop-in" />
+          <h1 className="text-3xl font-bold text-white mb-1 tracking-tight">
+            API Manager
+          </h1>
+          <p className="text-brand-light-secondary mb-6 text-center text-base">
+            Securely manage your API credentials in one place.
+          </p>
+          <h2 className="text-xl font-semibold text-white mb-6">
+            Sign in to your account
           </h2>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4 rounded-md shadow-sm">
-            <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
-              </label>
+          <form
+            className="space-y-6 w-full"
+            onSubmit={handleSubmit}
+            autoComplete="on"
+          >
+            <div className="space-y-4">
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  aria-label="Email address"
-                  required
-                  className="relative block w-full rounded-md border-0 py-2.5 pl-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-blue sm:text-sm sm:leading-6"
-                  placeholder="Email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+                <label
+                  htmlFor="email"
+                  className="text-sm font-medium text-brand-light-secondary mb-1 block"
+                >
+                  Email address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 pointer-events-none" />
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    aria-label="Email address"
+                    required
+                    className="block w-full rounded-md border border-gray-700 bg-gray-800 py-2.5 pl-10 pr-3 text-white placeholder-gray-400 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue transition-all"
+                    placeholder="Email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
               </div>
-              {formError && (
-                <p className="mt-2 text-sm text-red-500 flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-1" />
-                  {formError}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete={isLogin ? "current-password" : "new-password"}
-                  aria-label="Password"
-                  required
-                  className="relative block w-full rounded-md border-0 py-2.5 pl-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-blue sm:text-sm sm:leading-6"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <label
+                  htmlFor="password"
+                  className="text-sm font-medium text-brand-light-secondary mb-1 block"
+                >
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 pointer-events-none" />
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    aria-label="Password"
+                    required
+                    className="block w-full rounded-md border border-gray-700 bg-gray-800 py-2.5 pl-10 pr-10 text-white placeholder-gray-400 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue transition-all"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-brand-blue focus:outline-none"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
               </div>
-              {formError && (
-                <p className="mt-2 text-sm text-red-500 flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-1" />
-                  {formError}
-                </p>
-              )}
             </div>
-          </div>
-
-          <div>
+            {formError && (
+              <div className="flex items-center mt-2 text-red-400 animate-fade-in">
+                <AlertCircle className="h-4 w-4 mr-2" />
+                <span className="text-sm">{formError}</span>
+              </div>
+            )}
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative flex w-full justify-center rounded-md bg-brand-blue px-3 py-2 text-sm font-semibold text-white hover:bg-brand-blue-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative flex w-full justify-center rounded-md bg-brand-blue px-3 py-2 text-base font-semibold text-white hover:bg-brand-blue-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               {isLoading ? (
-                "Loading..."
+                <span className="flex items-center">
+                  <Shield className="h-5 w-5 mr-2 animate-spin" /> Loading...
+                </span>
               ) : (
                 <>
-                  {isLogin ? (
-                    <>
-                      <LogIn className="h-5 w-5 mr-2" />
-                      Sign in
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="h-5 w-5 mr-2" />
-                      Sign up
-                    </>
-                  )}
+                  <LogIn className="h-5 w-5 mr-2" />
+                  Sign in
                 </>
               )}
             </button>
-          </div>
-
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setFormError(null); // Clear error when toggling form
-              }}
-              className="text-sm text-brand-blue hover:text-brand-blue-hover"
-            >
-              {isLogin
-                ? "Don't have an account? Sign up"
-                : "Already have an account? Sign in"}
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );
