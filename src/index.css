@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* Basic dark theme background and text color, Tailwind will override where specified */
+  @apply bg-gray-900 text-gray-100;
+}
