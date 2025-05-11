@@ -1,119 +1,155 @@
-import { create } from 'zustand';
-import { 
-  db, // Firestore instance from firebase.ts
-  auth // Auth instance, to get current user if needed for userId
-} from '../firebase';
 import {
-  collection,
-  query,
-  where,
-  getDocs,
   addDoc,
-  doc,
-  updateDoc,
+  collection,
   deleteDoc,
+  doc,
+  FieldValue,
+  getDocs,
   serverTimestamp,
-  Timestamp // For type hinting
+  Timestamp,
+  updateDoc,
 } from 'firebase/firestore';
+import { create } from 'zustand';
+
+import { 
+  auth, // Auth instance, to get current user if needed for userId
+  db // Firestore instance from firebase.ts
+} from '../firebase';
 import useCredentialStore from './credentialStore'; // Import credential store
 
 export interface Project {
+  createdAt: null | Timestamp; // Firestore Timestamp
   id: string; // Firestore document ID
-  userId: string;
+  lastCredentialSummary?: {
+    addedAt: FieldValue | null | Timestamp; // Allow serverTimestamp
+    serviceName: string;
+  };
+  lastUpdated?: null | Timestamp; // New: last time any credential was added/updated
   projectName: string;
-  createdAt: Timestamp | null; // Firestore Timestamp
-  updatedAt: Timestamp | null; // Firestore Timestamp
-  lastUpdated?: Timestamp | null; // New: last time any credential was added/updated
-  lastCredentialSummary?: {
-    serviceName: string;
-    addedAt: Timestamp | any; // Allow serverTimestamp
-  };
-}
-
-interface ProjectUpdateData {
-  projectName?: string;
-  lastCredentialSummary?: {
-    serviceName: string;
-    addedAt: Timestamp | any; // Allow serverTimestamp
-  };
+  updatedAt: null | Timestamp; // Firestore Timestamp
+  userId: string;
 }
 
 interface ProjectState {
-  projects: Project[];
-  isLoading: boolean;
+  addProject: (projectData: { projectName: string; userId: string }) => Promise<null | string>; // Returns new project ID or null
+  clearProjects: () => void; // To clear projects on logout
+  deleteProject: (projectId: string) => Promise<void>;
   error: Error | null;
   fetchProjects: () => Promise<void>;
-  addProject: (projectData: { projectName: string; userId: string }) => Promise<string | null>; // Returns new project ID or null
+  isLoading: boolean;
+  projects: Project[];
   updateProject: (projectId: string, projectData: ProjectUpdateData) => Promise<void>;
-  deleteProject: (projectId: string) => Promise<void>;
-  clearProjects: () => void; // To clear projects on logout
+}
+
+interface ProjectUpdateData {
+  lastCredentialSummary?: {
+    addedAt: FieldValue | null | Timestamp; // Allow serverTimestamp
+    serviceName: string;
+  };
+  projectName?: string;
 }
 
 const useProjectStore = create<ProjectState>((set, get) => ({
-  projects: [],
-  isLoading: false,
-  error: null,
-  fetchProjects: async () => {
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
-      set({ projects: [], error: new Error('User not authenticated'), isLoading: false });
-      return;
-    }
-    set({ isLoading: true, error: null });
-    try {
-      const q = query(collection(db, 'projects'), where('userId', '==', currentUser.uid));
-      const querySnapshot = await getDocs(q);
-      const projectsData: Project[] = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...(doc.data() as Omit<Project, 'id'>)
-      }));
-      set({ projects: projectsData, isLoading: false });
-    } catch (e: any) {
-      console.error("Error fetching projects:", e);
-      set({ error: e, isLoading: false });
-    }
-  },
   addProject: async (projectData: { projectName: string; userId: string }) => {
-    const currentUser = auth.currentUser; // Still useful for validation if needed, or remove if userId from projectData is always trusted
+    const currentUser = auth.currentUser;
     if (!currentUser || currentUser.uid !== projectData.userId) {
       set({ error: new Error('User not authenticated or mismatched ID'), isLoading: false });
       return null;
     }
     if (!projectData.projectName.trim()) {
-        return null;
+      return null;
     }
-    set({ isLoading: true, error: null });
+    set({ error: null, isLoading: true });
     try {
-      const docRef = await addDoc(collection(db, 'projects'), {
-        userId: projectData.userId,
-        projectName: projectData.projectName.trim(),
+      // Updated path to use nested collection under user document
+      const projectsRef = collection(db, 'users', currentUser.uid, 'projects');
+      const docRef = await addDoc(projectsRef, {
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        lastUpdated: serverTimestamp(),
         lastCredentialSummary: null,
+        lastUpdated: serverTimestamp(),
+        projectName: projectData.projectName.trim(),
+        updatedAt: serverTimestamp(),
+        userId: projectData.userId,
       });
       set({ isLoading: false });
-      await get().fetchProjects(); 
+      await get().fetchProjects();
       return docRef.id;
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("Error adding project:", e);
-      set({ error: e, isLoading: false });
+      set({ error: e as Error, isLoading: false });
       return null;
     }
   },
+  clearProjects: () => {
+    set({ error: null, isLoading: false, projects: [] });
+  },
+  deleteProject: async (projectId: string) => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      set({ error: new Error('User not authenticated'), isLoading: false });
+      return;
+    }
+    set({ error: null, isLoading: true });
+    try {
+      // First, delete all credentials associated with this project
+      await useCredentialStore.getState().deleteCredentialsByProject(projectId);
+
+      // Then, delete the project itself using the new nested path
+      const projectRef = doc(db, 'users', currentUser.uid, 'projects', projectId);
+      await deleteDoc(projectRef);
+      
+      set(state => ({
+        isLoading: false,
+        projects: state.projects.filter(p => p.id !== projectId),
+      }));
+    } catch (e: unknown) {
+      console.error("Error deleting project and its credentials:", e);
+      set({ error: e as Error, isLoading: false });
+    }
+  },
+  error: null,
+  fetchProjects: async () => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      set({ error: new Error('User not authenticated'), isLoading: false, projects: [] });
+      return;
+    }
+    set({ error: null, isLoading: true });
+    try {
+      // Updated path to use nested collection under user document
+      const projectsRef = collection(db, 'users', currentUser.uid, 'projects');
+      const querySnapshot = await getDocs(projectsRef);
+      const projectsData: Project[] = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...(doc.data() as Omit<Project, 'id'>)
+      }));
+      set({ isLoading: false, projects: projectsData });
+    } catch (e: unknown) {
+      console.error("Error fetching projects:", e);
+      set({ error: e as Error, isLoading: false });
+    }
+  },
+  isLoading: false,
+  projects: [],
   updateProject: async (projectId: string, projectData: ProjectUpdateData) => {
-    if (projectData.projectName !== undefined && !projectData.projectName.trim()) {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      set({ error: new Error('User not authenticated'), isLoading: false });
+      return;
+    }
+    if (projectData.projectName?.trim() === '') {
       set({ error: new Error('Project name cannot be empty'), isLoading: false });
       return;
     }
-    set({ isLoading: true, error: null });
+    set({ error: null, isLoading: true });
     try {
-      const projectRef = doc(db, 'projects', projectId);
-      const updateFields: any = {
-        updatedAt: serverTimestamp(),
+      // Updated path to use nested collection under user document
+      const projectRef = doc(db, 'users', currentUser.uid, 'projects', projectId);
+      const updateFields: Record<string, FieldValue | null | object | string> = {
         lastUpdated: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       };
-      if (projectData.projectName !== undefined && projectData.projectName.trim()) {
+      if (projectData.projectName?.trim()) {
         updateFields.projectName = projectData.projectName.trim();
       }
       if (projectData.lastCredentialSummary) {
@@ -121,45 +157,23 @@ const useProjectStore = create<ProjectState>((set, get) => ({
       }
       await updateDoc(projectRef, updateFields);
       set(state => ({
+        isLoading: false,
         projects: state.projects.map(p =>
           p.id === projectId
             ? {
                 ...p,
-                ...(projectData.projectName !== undefined && projectData.projectName.trim() && { projectName: projectData.projectName.trim() }),
-                updatedAt: Timestamp.now(),
+                ...(projectData.projectName?.trim() && { projectName: projectData.projectName.trim() }),
                 lastUpdated: Timestamp.now(),
                 ...(projectData.lastCredentialSummary && { lastCredentialSummary: projectData.lastCredentialSummary }),
+                updatedAt: Timestamp.now(),
               }
             : p
         ),
-        isLoading: false,
       }));
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("Error updating project:", e);
-      set({ error: e, isLoading: false });
+      set({ error: e as Error, isLoading: false });
     }
-  },
-  deleteProject: async (projectId: string) => {
-    set({ isLoading: true, error: null });
-    try {
-      // First, delete all credentials associated with this project
-      await useCredentialStore.getState().deleteCredentialsByProject(projectId);
-
-      // Then, delete the project itself
-      const projectRef = doc(db, 'projects', projectId);
-      await deleteDoc(projectRef);
-      
-      set(state => ({
-        projects: state.projects.filter(p => p.id !== projectId),
-        isLoading: false,
-      }));
-    } catch (e: any) {
-      console.error("Error deleting project and its credentials:", e);
-      set({ error: e, isLoading: false });
-    }
-  },
-  clearProjects: () => {
-    set({ projects: [], isLoading: false, error: null });
   }
 }));
 

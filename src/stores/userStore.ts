@@ -1,25 +1,33 @@
+import { doc, getDoc, setDoc, Timestamp, updateDoc } from "firebase/firestore";
 import { create } from "zustand";
-import { doc, getDoc, setDoc, updateDoc, Timestamp } from "firebase/firestore";
-import { db } from "../firebase";
+
 import type { UserDocument } from "../types/user";
 
+import { auth, db } from "../firebase";
+
 interface UserStore {
-  userDoc: UserDocument | null;
-  isLoading: boolean;
+  clearUserDoc: () => void;
   error: Error | null;
   fetchUserDoc: (uid: string) => Promise<void>;
+  isLoading: boolean;
   updateUserDoc: (uid: string, data: Partial<UserDocument>) => Promise<void>;
-  clearUserDoc: () => void;
+  userDoc: null | UserDocument;
 }
 
 const useUserStore = create<UserStore>((set) => ({
-  userDoc: null,
-  isLoading: false,
+  clearUserDoc: () => {
+    set({ error: null, userDoc: null });
+  },
   error: null,
-
   fetchUserDoc: async (uid: string) => {
-    set({ isLoading: true, error: null });
+    const currentUser = auth.currentUser;
+    if (!currentUser || currentUser.uid !== uid) {
+      set({ error: new Error('User not authenticated or mismatched ID'), isLoading: false });
+      return;
+    }
+    set({ error: null, isLoading: true });
     try {
+      // Updated path to use root-level user document
       const userRef = doc(db, "users", uid);
       const userSnap = await getDoc(userRef);
 
@@ -28,11 +36,11 @@ const useUserStore = create<UserStore>((set) => ({
       } else {
         // Create user document if it doesn't exist
         const newUserDoc: UserDocument = {
-          uid,
-          email: "", // Will be updated from auth
-          displayName: null,
-          roles: ["user"],
           createdAt: Timestamp.now(),
+          displayName: currentUser.displayName,
+          email: currentUser.email ?? "",
+          roles: ["user"],
+          uid,
           updatedAt: Timestamp.now(),
         };
         await setDoc(userRef, newUserDoc);
@@ -45,10 +53,16 @@ const useUserStore = create<UserStore>((set) => ({
       set({ isLoading: false });
     }
   },
-
+  isLoading: false,
   updateUserDoc: async (uid: string, data: Partial<UserDocument>) => {
-    set({ isLoading: true, error: null });
+    const currentUser = auth.currentUser;
+    if (!currentUser || currentUser.uid !== uid) {
+      set({ error: new Error('User not authenticated or mismatched ID'), isLoading: false });
+      return;
+    }
+    set({ error: null, isLoading: true });
     try {
+      // Updated path to use root-level user document
       const userRef = doc(db, "users", uid);
       await updateDoc(userRef, {
         ...data,
@@ -64,8 +78,14 @@ const useUserStore = create<UserStore>((set) => ({
       set({ isLoading: false });
     }
   },
-
-  clearUserDoc: () => set({ userDoc: null, error: null }),
+  userDoc: null,
 }));
+
+// Subscribe to auth changes to clear user doc on logout
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    useUserStore.getState().clearUserDoc();
+  }
+});
 
 export default useUserStore; 

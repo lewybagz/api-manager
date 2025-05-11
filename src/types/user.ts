@@ -1,11 +1,11 @@
 import { Timestamp } from "firebase/firestore";
 
 export interface UserDocument {
-  uid: string;
-  email: string;
-  displayName: string | null;
-  roles: string[];
   createdAt: Timestamp;
+  displayName: null | string;
+  email: string;
+  roles: string[];
+  uid: string;
   updatedAt: Timestamp;
 }
 

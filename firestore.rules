@@ -2,7 +2,6 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
     // Helper function to check if a string is not empty and within a reasonable length
     function isString(value, minLength, maxLength) {
       return value is string && value.size() >= minLength && value.size() <= maxLength;
@@ -11,6 +10,12 @@ service cloud.firestore {
     // Helper function to check if a value is a timestamp or null
     function isTimestampOrNull(value) {
       return value == null || value is timestamp;
+    }
+
+    // Rate Limits Collection
+    match /rateLimits/{email} {
+      // Allow unauthenticated access for login rate limiting
+      allow read, write: if true;
     }
 
     // Users Collection
@@ -41,77 +46,68 @@ service cloud.firestore {
       // DELETE: User can delete their own document
       allow delete: if request.auth != null &&
                        request.auth.uid == userId;
-    }
+      
+      // Nested Projects Collection
+      match /projects/{projectId} {
+        // CREATE: User can create a project in their user document
+        allow create: if request.auth != null &&
+                         request.auth.uid == userId &&
+                         isString(request.resource.data.projectName, 1, 100) &&
+                         request.resource.data.createdAt == request.time &&
+                         request.resource.data.updatedAt == request.time;
 
-    // Projects Collection
-    match /projects/{projectId} {
-      // CREATE: User can create a project if they are authenticated,
-      //         the userId in the document matches their auth UID,
-      //         and projectName is a valid string.
-      allow create: if request.auth != null &&
-                       request.resource.data.userId == request.auth.uid &&
-                       isString(request.resource.data.projectName, 1, 100) &&
-                       request.resource.data.createdAt == request.time && // Enforce server timestamp on create
-                       request.resource.data.updatedAt == request.time;   // Enforce server timestamp on create
+        // READ: User can read their projects
+        allow read: if request.auth != null &&
+                       request.auth.uid == userId;
 
-      // READ: User can read a project if they are authenticated and
-      //       the userId in the document matches their auth UID.
-      allow read: if request.auth != null &&
-                     resource.data.userId == request.auth.uid;
+        // UPDATE: User can update their projects
+        allow update: if request.auth != null &&
+                         request.auth.uid == userId &&
+                         request.resource.data.createdAt == resource.data.createdAt &&
+                         (request.resource.data.projectName != resource.data.projectName ? isString(request.resource.data.projectName, 1, 100) : true) &&
+                         request.resource.data.updatedAt == request.time;
 
-      // UPDATE: User can update a project if they are authenticated,
-      //         the userId in the document matches their auth UID,
-      //         they are only updating projectName or updatedAt,
-      //         and projectName (if updated) is a valid string.
-      //         UserId and createdAt should not be updatable.
-      allow update: if request.auth != null &&
-                       resource.data.userId == request.auth.uid &&
-                       request.resource.data.userId == resource.data.userId && // userId cannot change
-                       request.resource.data.createdAt == resource.data.createdAt && // createdAt cannot change
-                       (request.resource.data.projectName != resource.data.projectName ? isString(request.resource.data.projectName, 1, 100) : true) &&
-                       request.resource.data.updatedAt == request.time; // Enforce server timestamp on update
+        // DELETE: User can delete their projects
+        allow delete: if request.auth != null &&
+                         request.auth.uid == userId;
 
-      // DELETE: User can delete a project if they are authenticated and
-      //         the userId in the document matches their auth UID.
-      //         (Client-side logic should handle deleting associated credentials)
-      allow delete: if request.auth != null &&
-                       resource.data.userId == request.auth.uid;
-    }
+        // Nested Credentials Collection
+        match /credentials/{credentialId} {
+          // CREATE: User can create credentials in their projects
+          allow create: if request.auth != null &&
+                           request.auth.uid == userId;
 
-    // Credentials Collection
-    match /credentials/{credentialId} {
-      // Helper function: Check if the user owns the project this credential belongs to.
-      function isProjectOwner(projectId) {
-        return get(/databases/$(database)/documents/projects/$(projectId)).data.userId == request.auth.uid;
+          // READ: User can read their credentials
+          allow read: if request.auth != null &&
+                         request.auth.uid == userId;
+
+          // UPDATE: User can update their credentials
+          allow update: if request.auth != null &&
+                           request.auth.uid == userId &&
+                           request.resource.data.createdAt == resource.data.createdAt &&
+                           (request.resource.data.serviceName != resource.data.serviceName ? isString(request.resource.data.serviceName, 1, 100) : true) &&
+                           (request.resource.data.encryptedApiKey != resource.data.encryptedApiKey ? isString(request.resource.data.encryptedApiKey, 1, 2048) : true) &&
+                           (request.resource.data.encryptedApiSecret != resource.data.encryptedApiSecret ? (request.resource.data.encryptedApiSecret == null || isString(request.resource.data.encryptedApiSecret, 0, 2048)) : true) &&
+                           (request.resource.data.encryptedNotes != resource.data.encryptedNotes ? (request.resource.data.encryptedNotes == null || isString(request.resource.data.encryptedNotes, 0, 4096)) : true) &&
+                           (request.resource.data.iv != resource.data.iv ? isString(request.resource.data.iv, 32, 32) : true) &&
+                           request.resource.data.updatedAt == request.time;
+
+          // DELETE: User can delete their credentials
+          allow delete: if request.auth != null &&
+                           request.auth.uid == userId;
+        }
       }
+    }
 
-      // CREATE: User can create a credential (DEBUGGING - SIMPLIFIED RULE)
-      allow create: if request.auth != null &&
-                       request.resource.data.userId == request.auth.uid;
+    // Legacy Collections (for migration)
+    match /projects/{projectId} {
+      allow read: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
 
-      // READ: User can read a credential if they are authenticated and
-      //       its userId matches their auth UID.
-      allow read: if request.auth != null &&
-                     resource.data.userId == request.auth.uid;
-
-      // UPDATE: User can update a credential (Restored original conditions)
-      allow update: if request.auth != null &&
-                       resource.data.userId == request.auth.uid &&
-                       request.resource.data.userId == resource.data.userId &&
-                       request.resource.data.projectId == resource.data.projectId &&
-                       isProjectOwner(resource.data.projectId) &&
-                       request.resource.data.createdAt == resource.data.createdAt &&
-                       (request.resource.data.serviceName != resource.data.serviceName ? isString(request.resource.data.serviceName, 1, 100) : true) &&
-                       (request.resource.data.encryptedApiKey != resource.data.encryptedApiKey ? isString(request.resource.data.encryptedApiKey, 1, 2048) : true) &&
-                       (request.resource.data.encryptedApiSecret != resource.data.encryptedApiSecret ? (request.resource.data.encryptedApiSecret == null || isString(request.resource.data.encryptedApiSecret, 0, 2048)) : true) &&
-                       (request.resource.data.encryptedNotes != resource.data.encryptedNotes ? (request.resource.data.encryptedNotes == null || isString(request.resource.data.encryptedNotes, 0, 4096)) : true) &&
-                       (request.resource.data.iv != resource.data.iv ? isString(request.resource.data.iv, 32, 32) : true) &&
-                       request.resource.data.updatedAt == request.time;
-
-      // DELETE: User can delete a credential (Restored original conditions)
-      allow delete: if request.auth != null &&
-                       resource.data.userId == request.auth.uid &&
-                       isProjectOwner(resource.data.projectId);
+    match /credentials/{credentialId} {
+      allow read: if request.auth != null;
+      allow delete: if request.auth != null;
     }
   }
-} 
+}

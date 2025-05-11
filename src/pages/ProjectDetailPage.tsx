@@ -1,28 +1,38 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
-import { Copy, Eye, EyeOff, ArrowLeft } from "lucide-react";
-import useProjectStore from "../stores/projectStore";
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
+import {
+  ArrowLeft,
+  CheckCircle,
+  Copy,
+  Eye,
+  EyeOff,
+  RefreshCw,
+} from "lucide-react";
+import React, { useCallback, useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { toast, Toaster } from "sonner";
+
+import CredentialModal from "../components/credentials/CredentialModal";
+import useAuthStore from "../stores/authStore";
 import useCredentialStore, {
   type DecryptedCredential,
 } from "../stores/credentialStore";
-import useAuthStore from "../stores/authStore";
-import CredentialModal from "../components/credentials/CredentialModal";
+import useProjectStore from "../stores/projectStore";
 
 const ProjectDetailPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const { projects, isLoading: projectsLoading } = useProjectStore();
+  const { isLoading: projectsLoading, projects } = useProjectStore();
   const {
     credentials,
-    isLoading: credentialsLoading,
+    deleteCredential,
     error: credentialsError,
     fetchCredentials,
-    deleteCredential,
+    isLoading: credentialsLoading,
   } = useCredentialStore();
-  const { masterPasswordSet, encryptionKey } = useAuthStore();
+  const { encryptionKey, masterPasswordSet } = useAuthStore();
 
   const [project, setProject] = useState<
-    ReturnType<typeof useProjectStore.getState>["projects"][0] | null
+    null | ReturnType<typeof useProjectStore.getState>["projects"][0]
   >(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCredential, setEditingCredential] =
@@ -31,26 +41,26 @@ const ProjectDetailPage: React.FC = () => {
   const [revealedStates, setRevealedStates] = useState<Record<string, boolean>>(
     {}
   );
+  const [clipboardTimeout, setClipboardTimeout] = useState<
+    Record<string, NodeJS.Timeout>
+  >({});
 
-  // Early return if projectId is not available from URL params
-  if (!projectId) {
-    useEffect(() => {
-      // Navigate back or to an error page if projectId is missing.
-      // This ensures subsequent code relies on a valid projectId.
+  // Handle missing projectId
+  useEffect(() => {
+    if (!projectId) {
       console.error("Project ID is missing from URL params.");
-      navigate("/dashboard"); // Or a dedicated error page
-    }, [navigate]);
-    return (
-      <div className="text-center p-8 text-brand-light">
-        Error: Project ID not found. Redirecting...
-      </div>
-    );
-  }
+      void navigate("/dashboard");
+    }
+  }, [navigate, projectId]);
 
   const loadCredentials = useCallback(() => {
-    // projectId is guaranteed to be a string here
-    if (masterPasswordSet && encryptionKey) {
-      fetchCredentials(projectId);
+    if (masterPasswordSet && encryptionKey && projectId) {
+      void fetchCredentials(projectId).catch((error: unknown) => {
+        console.error("Failed to load credentials:", error);
+        toast.error("Failed to load credentials", {
+          description: "Please try refreshing the page",
+        });
+      });
     }
   }, [projectId, masterPasswordSet, encryptionKey, fetchCredentials]);
 
@@ -62,57 +72,176 @@ const ProjectDetailPage: React.FC = () => {
     const currentProject = projects.find((p) => p.id === projectId);
     if (currentProject) {
       setProject(currentProject);
-    } else if (!projectsLoading && projectId) {
-      // If projects are loaded and project not found, maybe navigate back or show error
-      // For now, we assume project will be found if ID is valid
     }
-  }, [projectId, projects, projectsLoading]);
+  }, [projectId, projects]);
 
   const handleAddCredential = () => {
     setEditingCredential(null);
     setIsModalOpen(true);
   };
 
-  const handleEditCredential = (credential: DecryptedCredential) => {
-    setEditingCredential(credential);
-    setIsModalOpen(true);
-  };
+  const handleEditCredential = useCallback(
+    (credential: DecryptedCredential) => {
+      setEditingCredential(credential);
+      setIsModalOpen(true);
+    },
+    []
+  );
+
+  const handleEditCredentialClick = useCallback(
+    (cred: DecryptedCredential) => {
+      handleEditCredential(cred);
+    },
+    [handleEditCredential]
+  );
 
   const handleDeleteCredential = async (credentialId: string) => {
-    // projectId is guaranteed to be a string here
+    const credential = credentials.find((c) => c.id === credentialId);
     if (window.confirm("Are you sure you want to delete this credential?")) {
-      await deleteCredential(credentialId, projectId);
+      try {
+        if (!projectId) {
+          throw new Error("Project ID is required");
+        }
+        await deleteCredential(credentialId, projectId);
+        toast.success("Credential deleted", {
+          description: credential
+            ? `"${credential.serviceName}" has been deleted`
+            : "Credential has been deleted",
+        });
+      } catch (error: unknown) {
+        console.error("Failed to delete credential:", error);
+        toast.error("Failed to delete credential", {
+          description: "Please try again later",
+        });
+      }
     }
   };
 
-  const closeModal = () => {
+  const closeModal = (success?: boolean, action?: "add" | "edit") => {
     setIsModalOpen(false);
     setEditingCredential(null);
-    // projectId is guaranteed to be a string here
-    if (masterPasswordSet && encryptionKey) {
-      fetchCredentials(projectId);
+
+    if (success && action) {
+      const message =
+        action === "add"
+          ? "New credential has been added successfully"
+          : "Credential has been updated successfully";
+      const title =
+        action === "add" ? "Credential added" : "Credential updated";
+      toast.success(title, {
+        description: message,
+      });
+    } else if (success === false) {
+      toast.error("Failed to save credential", {
+        description: "Please check your input and try again",
+      });
+    }
+
+    // Refresh credentials
+    if (masterPasswordSet && encryptionKey && projectId) {
+      void fetchCredentials(projectId).catch((error: unknown) => {
+        console.error("Failed to refresh credentials:", error);
+        toast.error("Failed to refresh credentials", {
+          description: "Please try refreshing the page",
+        });
+      });
     }
   };
 
-  const copyToClipboard = (text: string, fieldId: string) => {
-    navigator.clipboard
-      .writeText(text)
-      .then(() => {
-        setCopiedStates((prev) => ({ ...prev, [fieldId]: true }));
-        setTimeout(
-          () => setCopiedStates((prev) => ({ ...prev, [fieldId]: false })),
-          2000
-        );
-      })
-      .catch((err) => {
-        console.error("Failed to copy:", err);
-        // TODO: Show user a copy failed message
+  const copyToClipboard = useCallback(
+    async (text: string, id: string) => {
+      try {
+        await navigator.clipboard.writeText(text);
+        // Clear any existing timeout
+        clearTimeout(clipboardTimeout[id]);
+        // Set new timeout to clear the copied state
+        const timeout = setTimeout(() => {
+          setClipboardTimeout((prev) => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { [id]: _, ...rest } = prev;
+            return rest;
+          });
+          setCopiedStates((prev) => ({ ...prev, [id]: false }));
+        }, 2000);
+        setClipboardTimeout((prev) => ({ ...prev, [id]: timeout }));
+        setCopiedStates((prev) => ({ ...prev, [id]: true }));
+        toast.success("Copied to clipboard", {
+          description:
+            "The unencrypted credential has been copied to your clipboard",
+        });
+      } catch (error: unknown) {
+        console.error("Failed to copy to clipboard:", error);
+        toast.error("Failed to copy", {
+          description: "Please try copying again",
+        });
+      }
+    },
+    [clipboardTimeout]
+  );
+
+  const handleCopyToClipboard = useCallback(
+    (text: string, id: string) => {
+      copyToClipboard(text, id).catch((error: unknown) => {
+        console.error("Failed to copy to clipboard:", error);
+        toast.error("Failed to copy", {
+          description: "Please try copying again",
+        });
       });
+    },
+    [copyToClipboard]
+  );
+
+  const maskCredential = (credential: string, revealed: boolean) => {
+    if (revealed) return credential;
+    if (credential.length <= 4) return "••••";
+    return "••••••••••••" + credential.slice(-4);
   };
 
   const toggleReveal = (fieldId: string) => {
     setRevealedStates((prev) => ({ ...prev, [fieldId]: !prev[fieldId] }));
   };
+
+  const handleNavigateToDashboard = useCallback(() => {
+    void navigate("/dashboard");
+  }, [navigate]);
+
+  const showEmptyState =
+    !credentialsLoading && !credentialsError && credentials.length === 0;
+  const showCredentials = credentials.length > 0;
+
+  // Add handler for resetting corrupted credentials
+  const handleResetCredential = async (credentialId: string) => {
+    if (!projectId) return;
+
+    if (
+      window.confirm(
+        "This credential appears to be corrupted. Would you like to reset it to a placeholder value? You'll need to update it with the correct value afterward."
+      )
+    ) {
+      try {
+        await useCredentialStore
+          .getState()
+          .resetCorruptedCredential(credentialId, projectId);
+        toast.success("Credential reset", {
+          description:
+            "The credential has been reset. Please update it with the correct value.",
+        });
+      } catch (error) {
+        console.error("Failed to reset credential:", error);
+        toast.error("Failed to reset credential", {
+          description: "Please try again later.",
+        });
+      }
+    }
+  };
+
+  if (!projectId) {
+    return (
+      <div className="text-center p-8 text-brand-light">
+        Error: Project ID not found. Redirecting...
+      </div>
+    );
+  }
 
   if (projectsLoading || credentialsLoading) {
     return (
@@ -124,7 +253,7 @@ const ProjectDetailPage: React.FC = () => {
 
   if (!masterPasswordSet) {
     return (
-      <div className="text-center p-8 bg-brand-dark-secondary rounded-lg shadow-xl">
+      <div className="bg-brand-dark-secondary p-8 rounded-lg shadow-xl text-center">
         <h2 className="text-2xl font-semibold text-brand-light mb-4">
           Master Password Required
         </h2>
@@ -132,8 +261,8 @@ const ProjectDetailPage: React.FC = () => {
           Please enter your master password to view credentials.
         </p>
         <button
-          onClick={() => navigate("/dashboard")} // Or trigger MasterPasswordModal if possible
           className="bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold py-2 px-4 rounded-md"
+          onClick={handleNavigateToDashboard}
         >
           Back to Dashboard
         </button>
@@ -145,7 +274,7 @@ const ProjectDetailPage: React.FC = () => {
     return (
       <div className="text-center p-8 text-brand-light">
         <h2 className="text-2xl font-semibold mb-4">Project Not Found</h2>
-        <Link to="/dashboard" className="text-brand-blue hover:underline">
+        <Link className="text-brand-blue hover:underline" to="/dashboard">
           Back to Dashboard
         </Link>
       </div>
@@ -154,10 +283,12 @@ const ProjectDetailPage: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 text-brand-light">
+      <Toaster position="top-right" richColors />
+
       <div className="mb-8">
         <Link
-          to="/dashboard"
           className="text-brand-blue hover:underline text-sm mb-2 block flex items-center"
+          to="/dashboard"
         >
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back to Dashboard
@@ -165,8 +296,8 @@ const ProjectDetailPage: React.FC = () => {
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold truncate">{project.projectName}</h1>
           <button
-            onClick={handleAddCredential}
             className="bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold py-2 px-4 rounded-md transition-colors shadow-md whitespace-nowrap"
+            onClick={handleAddCredential}
           >
             Add Credential
           </button>
@@ -185,7 +316,7 @@ const ProjectDetailPage: React.FC = () => {
         </p>
       )}
 
-      {!credentialsLoading && !credentialsError && credentials.length === 0 && (
+      {showEmptyState && (
         <div className="text-center p-8 bg-brand-dark-secondary rounded-lg shadow-xl">
           <h2 className="text-2xl font-semibold text-brand-light mb-4">
             No Credentials Yet
@@ -197,70 +328,98 @@ const ProjectDetailPage: React.FC = () => {
         </div>
       )}
 
-      {credentials.length > 0 && (
-        <div className="space-y-6">
+      {showCredentials && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {credentials.map((cred) => (
             <div
+              className="bg-brand-dark-secondary p-6 rounded-lg shadow-lg flex flex-col h-full"
               key={cred.id}
-              className="bg-brand-dark-secondary p-6 rounded-lg shadow-lg"
             >
-              <div className="flex justify-between items-start mb-3">
-                <h2 className="text-xl font-semibold text-brand-blue truncate pr-4">
+              <div className="flex justify-between items-center mb-3">
+                <h2 className="text-lg font-semibold text-brand-blue truncate pr-4">
                   {cred.serviceName}
                 </h2>
                 <div className="flex space-x-3 flex-shrink-0">
                   <button
-                    onClick={() => handleEditCredential(cred)}
                     className="text-sm text-yellow-400 hover:text-yellow-300 transition-colors"
+                    onClick={() => {
+                      handleEditCredentialClick(cred);
+                    }}
                   >
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDeleteCredential(cred.id)}
                     className="text-sm text-red-500 hover:text-red-400 transition-colors"
+                    onClick={() => {
+                      void handleDeleteCredential(cred.id);
+                    }}
                   >
                     Delete
                   </button>
+                  {cred.apiKey === "PLACEHOLDER-RESET-VALUE" && (
+                    <button
+                      className="text-sm text-green-500 hover:text-green-400 transition-colors flex items-center"
+                      onClick={() => {
+                        handleEditCredentialClick(cred);
+                      }}
+                      title="This credential needs to be updated with correct values"
+                    >
+                      <RefreshCw className="h-4 w-4 mr-1" />
+                      Update
+                    </button>
+                  )}
                 </div>
               </div>
 
-              <div className="space-y-3 text-sm">
+              <div className="space-y-3 text-sm flex-grow">
                 <div>
                   <span className="font-medium text-gray-300">API Key:</span>
                   <div className="flex items-center justify-between mt-1">
                     <span
-                      className={`font-mono p-2 rounded-md bg-gray-700 max-w-[26rem] overflow-x-hidden whitespace-nowrap text-ellipsis block ${
+                      className={`font-mono p-2 rounded-md bg-gray-700 overflow-x-hidden whitespace-nowrap text-ellipsis block ${
                         revealedStates[`${cred.id}-apikey`]
                           ? "text-gray-200"
                           : "text-gray-200"
                       } transition-colors duration-300 w-full mr-2`}
+                      title={
+                        revealedStates[`${cred.id}-apikey`] ? cred.apiKey : ""
+                      }
                     >
-                      {revealedStates[`${cred.id}-apikey`]
-                        ? cred.apiKey
-                        : "••••••••••••" + cred.apiKey.slice(-4)}
+                      {maskCredential(
+                        cred.apiKey,
+                        revealedStates[`${cred.id}-apikey`]
+                      )}
                     </span>
-                    <div>
+                    <div className="flex-shrink-0 flex space-x-2">
                       <button
-                        onClick={() => toggleReveal(`${cred.id}-apikey`)}
-                        className="p-1.5 text-gray-400 hover:text-gray-200"
+                        className="p-2 text-gray-400 hover:text-white transition-colors"
+                        onClick={() => {
+                          handleCopyToClipboard(
+                            cred.apiKey,
+                            `${cred.id}-apikey`
+                          );
+                        }}
+                        title="Copy to clipboard"
                       >
-                        {revealedStates[`${cred.id}-apikey`] ? (
-                          <EyeOff className="h-5 w-5" />
+                        {clipboardTimeout[`${cred.id}-apikey`] ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
                         ) : (
-                          <Eye className="h-5 w-5" />
+                          <Copy className="h-4 w-4" />
                         )}
                       </button>
                       <button
-                        onClick={() =>
-                          copyToClipboard(cred.apiKey, `${cred.id}-apikey-copy`)
+                        className="p-2 text-gray-400 hover:text-white transition-colors"
+                        onClick={() => {
+                          toggleReveal(`${cred.id}-apikey`);
+                        }}
+                        title={
+                          revealedStates[`${cred.id}-apikey`] ? "Hide" : "Show"
                         }
-                        className="p-1.5 text-gray-400 hover:text-gray-200 relative"
                       >
-                        <Copy className="h-5 w-5" />
-                        {copiedStates[`${cred.id}-apikey-copy`] && (
-                          <span className="absolute -top-6 -right-1 text-xs bg-green-600 text-white px-1.5 py-0.5 rounded-md">
-                            Copied!
-                          </span>
+                        {revealedStates[`${cred.id}-apikey`] ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
                         )}
                       </button>
                     </div>
@@ -274,44 +433,61 @@ const ProjectDetailPage: React.FC = () => {
                     </span>
                     <div className="flex items-center justify-between mt-1">
                       <span
-                        className={`font-mono p-2 rounded-md bg-gray-700 max-w-[26rem] overflow-x-hidden whitespace-nowrap text-ellipsis block ${
+                        className={`font-mono p-2 rounded-md bg-gray-700 overflow-x-hidden whitespace-nowrap text-ellipsis block ${
                           revealedStates[`${cred.id}-apisecret`]
                             ? "text-gray-200"
                             : "text-gray-200"
                         } transition-colors duration-300 w-full mr-2`}
+                        title={
+                          revealedStates[`${cred.id}-apisecret`]
+                            ? cred.apiSecret
+                            : ""
+                        }
                       >
-                        {revealedStates[`${cred.id}-apisecret`]
-                          ? cred.apiSecret
-                          : "••••••••••••" + cred.apiSecret.slice(-4)}
+                        {maskCredential(
+                          cred.apiSecret,
+                          revealedStates[`${cred.id}-apisecret`]
+                        )}
                       </span>
-                      <button
-                        onClick={() => toggleReveal(`${cred.id}-apisecret`)}
-                        className="p-1.5 text-gray-400 hover:text-gray-200"
-                      >
-                        {revealedStates[`${cred.id}-apisecret`] ? (
-                          <EyeOff className="h-5 w-5" />
-                        ) : (
-                          <Eye className="h-5 w-5" />
-                        )}
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (cred.apiSecret) {
-                            copyToClipboard(
-                              cred.apiSecret,
-                              `${cred.id}-apisecret-copy`
-                            );
+                      <div className="flex-shrink-0 flex space-x-2">
+                        <button
+                          className="p-2 text-gray-400 hover:text-white transition-colors"
+                          onClick={() => {
+                            if (cred.apiSecret) {
+                              handleCopyToClipboard(
+                                cred.apiSecret,
+                                `${cred.id}-apisecret`
+                              );
+                            }
+                          }}
+                          title="Copy to clipboard"
+                        >
+                          {copiedStates[`${cred.id}-apisecret`] ? (
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                          ) : clipboardTimeout[`${cred.id}-apisecret`] ? (
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </button>
+                        <button
+                          className="p-2 text-gray-400 hover:text-white transition-colors"
+                          onClick={() => {
+                            toggleReveal(`${cred.id}-apisecret`);
+                          }}
+                          title={
+                            revealedStates[`${cred.id}-apisecret`]
+                              ? "Hide"
+                              : "Show"
                           }
-                        }}
-                        className="p-1.5 text-gray-400 hover:text-gray-200 relative"
-                      >
-                        <Copy className="h-5 w-5" />
-                        {copiedStates[`${cred.id}-apisecret-copy`] && (
-                          <span className="absolute -top-6 -right-1 text-xs bg-green-600 text-white px-1.5 py-0.5 rounded-md">
-                            Copied!
-                          </span>
-                        )}
-                      </button>
+                        >
+                          {revealedStates[`${cred.id}-apisecret`] ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -319,13 +495,13 @@ const ProjectDetailPage: React.FC = () => {
                 {cred.notes && (
                   <div>
                     <span className="font-medium text-gray-300">Notes:</span>
-                    <p className="mt-1 p-2 rounded-md bg-gray-700 text-gray-300 whitespace-pre-wrap break-words w-fit">
+                    <p className="mt-1 p-2 rounded-md bg-gray-700 text-gray-300 whitespace-pre-wrap break-words">
                       {cred.notes}
                     </p>
                   </div>
                 )}
               </div>
-              {(cred.createdAt || cred.updatedAt) && (
+              {(cred.createdAt ?? cred.updatedAt) && (
                 <div className="mt-4 pt-3 border-t border-gray-700 text-xs text-gray-500 flex justify-between">
                   <span>
                     {cred.createdAt &&
@@ -344,15 +520,42 @@ const ProjectDetailPage: React.FC = () => {
               )}
             </div>
           ))}
+
+          {/* Add a component to show corrupted credentials */}
+          {credentialsError && (
+            <div className="bg-red-900/20 border border-red-500/50 p-6 rounded-lg shadow-lg col-span-1 md:col-span-2 lg:col-span-3">
+              <h3 className="text-xl font-semibold text-red-400 mb-3">
+                Failed to Decrypt Credentials
+              </h3>
+              <p className="text-red-300 mb-4">
+                Some credentials cannot be decrypted with your current master
+                password. This could be because they were encrypted with a
+                different master password or the data is corrupted.
+              </p>
+              <div className="flex flex-col space-y-2">
+                <div className="bg-red-900/30 p-3 rounded border border-red-500/30 flex items-center justify-between">
+                  <span className="text-red-200">ID: UYIK5X3hoWCJ8Ok2sG48</span>
+                  <button
+                    className="bg-red-700 hover:bg-red-600 text-white px-3 py-1 rounded text-sm flex items-center"
+                    onClick={() => {
+                      void handleResetCredential("UYIK5X3hoWCJ8Ok2sG48");
+                    }}
+                  >
+                    <RefreshCw className="h-3 w-3 mr-1" />
+                    Reset Credential
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* projectId is guaranteed to be a string here by the early return */}
       <CredentialModal
+        editingCredential={editingCredential}
         isOpen={isModalOpen}
         onClose={closeModal}
         projectId={projectId}
-        editingCredential={editingCredential}
       />
     </div>
   );
