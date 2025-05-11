@@ -1,4 +1,5 @@
 import { formatDistanceToNow } from "date-fns";
+import { FieldValue, Timestamp } from "firebase/firestore";
 import {
   Clock,
   FolderEdit,
@@ -16,12 +17,8 @@ import useCredentialStore from "../stores/credentialStore";
 import useProjectStore, { type Project } from "../stores/projectStore";
 
 interface LastCredentialSummary {
-  addedAt: Timestamp;
+  addedAt: FieldValue | null | Timestamp;
   serviceName: string;
-}
-
-interface Timestamp {
-  toDate: () => Date;
 }
 
 const DashboardPage: React.FC = () => {
@@ -323,9 +320,13 @@ const DashboardPage: React.FC = () => {
                       <span className="font-semibold text-brand-light">
                         {lastCred.serviceName}
                       </span>{" "}
-                      {formatDistanceToNow(lastCred.addedAt.toDate(), {
-                        addSuffix: true,
-                      })}
+                      {lastCred.addedAt instanceof Timestamp
+                        ? formatDistanceToNow(lastCred.addedAt.toDate(), {
+                            addSuffix: true,
+                          })
+                        : lastCred.addedAt
+                        ? "Processing..."
+                        : "N/A"}
                     </>
                   ) : (
                     <span>No credentials added yet.</span>
