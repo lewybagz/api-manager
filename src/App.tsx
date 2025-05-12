@@ -4,6 +4,8 @@ import { Outlet, Route, Routes } from "react-router-dom";
 import AuthGuard from "./components/auth/AuthGuard";
 import MasterPasswordModal from "./components/auth/MasterPasswordModal";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import MobileHeader from "./components/layout/MobileHeader";
+import MobileNav from "./components/layout/MobileNav";
 import Sidebar from "./components/layout/Sidebar";
 import CredentialsPage from "./pages/CredentialsPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -15,12 +17,27 @@ import ProjectDetailPage from "./pages/ProjectDetailPage";
 import useAuthStore from "./stores/authStore";
 
 function App() {
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+
   return (
     <div className="flex flex-col min-h-screen bg-brand-dark text-brand-light">
+      <MobileHeader
+        onMenuOpen={() => {
+          setIsMobileNavOpen(true);
+        }}
+      />
+      <MobileNav
+        isOpen={isMobileNavOpen}
+        onClose={() => {
+          setIsMobileNavOpen(false);
+        }}
+      />
       <div className="flex flex-1">
         <Sidebar />
-        <main className="flex-1 ml-64 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-          <Outlet />
+        <main className="flex-1 md:ml-64 p-2 sm:p-6 lg:p-8 overflow-y-auto">
+          <div className="pt-4 md:pt-0">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

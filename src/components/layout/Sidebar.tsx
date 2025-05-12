@@ -70,7 +70,7 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <div className="w-64 bg-brand-dark-secondary h-screen p-0 fixed left-0 top-0 overflow-y-auto border-r border-gray-800 flex flex-col">
+    <div className="w-64 bg-brand-dark-secondary h-screen p-0 fixed left-0 top-0 overflow-y-auto border-r border-gray-800 hidden md:flex flex-col">
       {/* App branding */}
       <div className="px-4 py-3 flex items-center border-b border-gray-800">
         <Shield className="h-6 w-6 text-brand-blue" />
