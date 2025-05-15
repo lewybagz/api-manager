@@ -10,6 +10,8 @@ import {
   Folder,
   Search,
   SlidersHorizontal,
+  SquarePen,
+  Trash2,
 } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
@@ -50,6 +52,14 @@ const CredentialsPage: React.FC = () => {
   const [filterOption, setFilterOption] = useState<"all" | "hasSecret">("all");
   const [sortOption, setSortOption] = useState<"latest" | "name">("latest");
   const [showFilters, setShowFilters] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [credentialToDeleteDetails, setCredentialToDeleteDetails] =
+    useState<null | {
+      id: string;
+      projectId: string;
+      serviceName: string;
+    }>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Load all credentials
   useEffect(() => {
@@ -173,8 +183,8 @@ const CredentialsPage: React.FC = () => {
         });
       }
 
-      // Refresh all credentials
-      if (masterPasswordSet && encryptionKey) {
+      // Refresh all credentials only on successful add/edit
+      if (success && masterPasswordSet && encryptionKey) {
         void fetchAllCredentials().catch((error: unknown) => {
           console.error("Failed to refresh credentials:", error);
           toast.error("Failed to refresh credentials", {
@@ -186,25 +196,51 @@ const CredentialsPage: React.FC = () => {
     [masterPasswordSet, encryptionKey, fetchAllCredentials]
   );
 
-  const handleDeleteCredential = async (
+  const confirmAndDeleteCredential = async (
     credentialId: string,
     projectId: string
   ) => {
-    const credential = credentials.find((c) => c.id === credentialId);
-    if (window.confirm("Are you sure you want to delete this credential?")) {
-      try {
-        await deleteCredential(credentialId, projectId);
-        toast.success("Credential deleted", {
-          description: credential
-            ? `"${credential.serviceName}" has been deleted`
-            : "Credential has been deleted",
-        });
-      } catch (error: unknown) {
-        console.error("Failed to delete credential:", error);
-        toast.error("Failed to delete credential", {
-          description: "Please try again later",
-        });
-      }
+    setIsDeleting(true);
+    try {
+      await deleteCredential(credentialId, projectId);
+      toast.success("Credential deleted", {
+        description: credentialToDeleteDetails
+          ? `"${credentialToDeleteDetails.serviceName}" has been deleted`
+          : "Credential has been deleted",
+      });
+    } catch (error: unknown) {
+      console.error("Failed to delete credential:", error);
+      toast.error("Failed to delete credential", {
+        description: "Please try again later",
+      });
+    } finally {
+      setIsDeleting(false);
+      closeCredentialDeleteConfirmModal();
+    }
+  };
+
+  const openCredentialDeleteConfirmModal = (
+    credential: DecryptedCredential
+  ) => {
+    setCredentialToDeleteDetails({
+      id: credential.id,
+      projectId: credential.projectId,
+      serviceName: credential.serviceName,
+    });
+    setShowDeleteConfirmModal(true);
+  };
+
+  const closeCredentialDeleteConfirmModal = () => {
+    setShowDeleteConfirmModal(false);
+    setCredentialToDeleteDetails(null);
+  };
+
+  const executeCredentialDeletion = async () => {
+    if (credentialToDeleteDetails) {
+      await confirmAndDeleteCredential(
+        credentialToDeleteDetails.id,
+        credentialToDeleteDetails.projectId
+      );
     }
   };
 
@@ -347,16 +383,16 @@ const CredentialsPage: React.FC = () => {
         </div>
 
         {/* Stats Card */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-brand-dark-secondary rounded-lg p-4 border border-gray-800">
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="max-w-fit bg-brand-dark-secondary rounded-lg p-4 border border-gray-800">
             <h3 className="text-xs sm:text-sm text-gray-400 uppercase tracking-wider">
-              Total Credentials
+              Total
             </h3>
             <p className="text-2xl sm:text-3xl font-bold text-brand-light">
               {stats.totalCredentials}
             </p>
           </div>
-          <div className="bg-brand-dark-secondary rounded-lg p-4 border border-gray-800">
+          <div className="max-w-fit bg-brand-dark-secondary rounded-lg p-4 border border-gray-800">
             <h3 className="text-xs sm:text-sm text-gray-400 uppercase tracking-wider">
               With API Secrets
             </h3>
@@ -364,7 +400,7 @@ const CredentialsPage: React.FC = () => {
               {stats.credentialsWithSecrets}
             </p>
           </div>
-          <div className="bg-brand-dark-secondary rounded-lg p-4 border border-gray-800">
+          <div className="max-w-fit bg-brand-dark-secondary rounded-lg p-4 border border-gray-800">
             <h3 className="text-xs sm:text-sm text-gray-400 uppercase tracking-wider">
               Projects
             </h3>
@@ -485,7 +521,7 @@ const CredentialsPage: React.FC = () => {
                 >
                   <div className="flex items-center space-x-2 sm:space-x-3 flex-grow min-w-0">
                     <Folder className="text-brand-blue h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-                    <div className="flex-grow min-w-0">
+                    <div className="min-w-0">
                       <h2 className="text-base sm:text-xl font-semibold text-brand-light truncate">
                         {getProjectName(projectId) ?? "Unknown Project"}
                       </h2>
@@ -494,10 +530,8 @@ const CredentialsPage: React.FC = () => {
                         {projectCredentials.length !== 1 ? "s" : ""})
                       </span>
                     </div>
-                  </div>
-                  <div className="flex items-center ml-2 sm:ml-0 pl-0 sm:pl-4 flex-shrink-0">
                     <Link
-                      className="text-brand-blue hover:text-brand-blue-hover mr-3 sm:mr-4 text-xs sm:text-sm whitespace-nowrap"
+                      className="self-end text-brand-blue hover:text-brand-blue-hover mr-3 sm:mr-4 text-xs sm:text-sm whitespace-nowrap"
                       onClick={(e) => {
                         e.stopPropagation(); // Keep this to prevent toggling expand when clicking link
                       }}
@@ -505,6 +539,8 @@ const CredentialsPage: React.FC = () => {
                     >
                       View Project
                     </Link>
+                  </div>
+                  <div className="flex items-center ml-2 sm:ml-0 pl-0 sm:pl-4 flex-shrink-0">
                     {expandedProjects[projectId] ? (
                       <ChevronUp className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                     ) : (
@@ -516,22 +552,26 @@ const CredentialsPage: React.FC = () => {
                 <AnimatePresence initial={false}>
                   {expandedProjects[projectId] && (
                     <motion.div
-                      animate={{ height: "auto", opacity: 1 }}
+                      animate={{ opacity: 1 }}
                       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 p-4 sm:p-6 overflow-hidden"
-                      exit={{ height: 0, opacity: 0 }}
+                      exit={{ opacity: 0 }}
                       id={`project-content-${projectId}`}
-                      initial={{ height: 0, opacity: 0 }}
+                      initial={{ opacity: 0 }}
                       key={`project-content-${projectId}`}
                       layout
                       transition={{ duration: 0.3, ease: "easeInOut" }}
                     >
                       {projectCredentials.map((cred) => (
-                        <div
+                        <motion.div
+                          animate={{ opacity: 1 }}
                           className="bg-gray-800/40 rounded-lg p-4 sm:p-5 shadow-sm border border-gray-700/50 flex flex-col h-full"
+                          exit={{ opacity: 0 }}
+                          initial={{ opacity: 0 }}
                           key={cred.id}
+                          transition={{ delay: 0.3, duration: 0.3 }}
                         >
                           <div className="flex flex-col sm:flex-row justify-between items-start mb-2 sm:mb-3">
-                            <h3 className="text-md sm:text-lg font-semibold text-brand-blue truncate pr-2 order-1 sm:order-none">
+                            <h3 className="w-full text-md sm:text-lg font-semibold text-brand-blue truncate mr-3 pr-4 pb-2 order-1 sm:order-none border-b border-white/20 pointer-events-none">
                               {cred.serviceName}
                             </h3>
                             <div className="flex space-x-2 flex-shrink-0 order-none sm:order-1 self-end sm:self-start mb-1 sm:mb-0">
@@ -541,18 +581,15 @@ const CredentialsPage: React.FC = () => {
                                   handleEditCredential(cred);
                                 }}
                               >
-                                Edit
+                                <SquarePen className="h-5 w-5" />
                               </button>
                               <button
                                 className="text-xs text-red-500 hover:text-red-400 transition-colors"
-                                onClick={() =>
-                                  void handleDeleteCredential(
-                                    cred.id,
-                                    cred.projectId
-                                  )
-                                }
+                                onClick={() => {
+                                  openCredentialDeleteConfirmModal(cred);
+                                }}
                               >
-                                Delete
+                                <Trash2 className="h-5 w-5" />
                               </button>
                             </div>
                           </div>
@@ -714,7 +751,7 @@ const CredentialsPage: React.FC = () => {
                                 </span>
                               )}
                           </div>
-                        </div>
+                        </motion.div>
                       ))}
                     </motion.div>
                   )}
@@ -744,6 +781,47 @@ const CredentialsPage: React.FC = () => {
           onClose={closeModal}
           projectId={editingCredential.projectId}
         />
+      )}
+
+      {/* Delete Credential Confirmation Modal */}
+      {showDeleteConfirmModal && credentialToDeleteDetails && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+          <div className="bg-brand-dark p-6 rounded-lg shadow-xl w-full max-w-md">
+            <h2 className="text-2xl font-semibold mb-4 text-red-500">
+              Confirm Credential Deletion
+            </h2>
+            <p className="text-brand-light-secondary mb-2">
+              Are you sure you want to delete the credential <br />
+              <strong className="text-red-400">
+                {" '"}
+                {credentialToDeleteDetails.serviceName}
+                {" '"}
+              </strong>
+              {` ?`}
+            </p>
+            <p className="text-sm text-yellow-400 mb-6">
+              This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                className="px-4 py-2 border border-gray-600 text-brand-light-secondary rounded-md hover:bg-gray-700 disabled:opacity-50"
+                disabled={isDeleting}
+                onClick={closeCredentialDeleteConfirmModal}
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-md disabled:opacity-50"
+                disabled={isDeleting}
+                onClick={() => void executeCredentialDeletion()}
+                type="button"
+              >
+                {isDeleting ? "Deleting..." : "Confirm Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

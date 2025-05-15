@@ -109,9 +109,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose }) => {
             <div className="flex items-center justify-between p-4 border-b border-gray-700 sticky top-0 bg-brand-dark-secondary z-10">
               <div className="flex items-center">
                 <Shield className="h-6 w-6 text-brand-blue" />
-                <span className="ml-2 text-lg font-bold text-white">
-                  API Manager
-                </span>
+                <span className="ml-2 text-lg font-bold text-white">Zeker</span>
               </div>
               <button
                 aria-label="Close navigation menu"
@@ -324,7 +322,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose }) => {
               )}
               <div className="px-3">
                 <p className="px-3 py-px text-xs text-center text-gray-500">
-                  API Manager &copy; {new Date().getFullYear()}
+                  Zeker&copy; {new Date().getFullYear()}
                 </p>
               </div>
             </div>

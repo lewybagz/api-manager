@@ -11,7 +11,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ onMenuOpen }) => {
       <div className="flex items-center">
         {/* Placeholder for a logo or app name if desired in the header */}
         <Shield className="h-6 w-6 text-brand-blue" />
-        <span className="ml-2 text-lg font-bold text-white">API Manager</span>
+        <span className="ml-2 text-lg font-bold text-white">Zeker</span>
       </div>
       <button
         aria-label="Open navigation menu"

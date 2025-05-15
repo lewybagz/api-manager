@@ -48,6 +48,11 @@ const DashboardPage: React.FC = () => {
   }>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [projectToDeleteDetails, setProjectToDeleteDetails] = useState<null | {
+    id: string;
+    name: string;
+  }>(null);
 
   const loadProjects = useCallback(() => {
     if (user && masterPasswordSet) {
@@ -95,24 +100,42 @@ const DashboardPage: React.FC = () => {
 
   const handleDeleteProject = async (projectId: string) => {
     const project = projects.find((p) => p.id === projectId);
-    if (
-      window.confirm(
-        "Are you sure you want to delete this project? This will also delete all associated credentials."
-      )
-    ) {
-      try {
-        await deleteProject(projectId);
-        toast.success("Project deleted", {
-          description: project
-            ? `"${project.projectName}" has been deleted`
-            : "Project has been deleted",
-        });
-      } catch (error) {
-        console.error("Failed to delete project:", error);
-        toast.error("Failed to delete project", {
-          description: "Please try again later",
-        });
-      }
+    if (!projectToDeleteDetails && project) {
+      setProjectToDeleteDetails({ id: project.id, name: project.projectName });
+    }
+
+    setIsSubmitting(true);
+    try {
+      await deleteProject(projectId);
+      toast.success("Project deleted", {
+        description: projectToDeleteDetails
+          ? `"${projectToDeleteDetails.name}" has been deleted`
+          : "Project has been deleted",
+      });
+    } catch (error) {
+      console.error("Failed to delete project:", error);
+      toast.error("Failed to delete project", {
+        description: "Please try again later",
+      });
+    } finally {
+      setIsSubmitting(false);
+      closeDeleteConfirmModal();
+    }
+  };
+
+  const openDeleteConfirmModal = (project: Project) => {
+    setProjectToDeleteDetails({ id: project.id, name: project.projectName });
+    setShowDeleteConfirmModal(true);
+  };
+
+  const closeDeleteConfirmModal = () => {
+    setShowDeleteConfirmModal(false);
+    setProjectToDeleteDetails(null);
+  };
+
+  const executeProjectDeletion = async () => {
+    if (projectToDeleteDetails) {
+      await handleDeleteProject(projectToDeleteDetails.id);
     }
   };
 
@@ -203,7 +226,7 @@ const DashboardPage: React.FC = () => {
       <div className="relative mb-6">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
         <input
-          className="w-full pl-10 pr-4 py-2 bg-brand-dark-secondary rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue"
+          className="w-fit pl-10 pr-4 py-2 bg-brand-dark-secondary rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue"
           onChange={(e) => {
             setSearchQuery(e.target.value);
           }}
@@ -290,7 +313,7 @@ const DashboardPage: React.FC = () => {
                       className="text-red-500 hover:text-red-400 transition-colors"
                       onClick={(e) => {
                         e.stopPropagation();
-                        void handleDeleteProject(project.id);
+                        openDeleteConfirmModal(project);
                       }}
                     >
                       <Trash2 className="h-5 w-5" />
@@ -362,12 +385,22 @@ const DashboardPage: React.FC = () => {
                 </label>
                 <input
                   aria-label="Project Name"
+                  autoCapitalize="words"
                   autoComplete="off"
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-brand-light focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent"
                   id="projectName"
                   name="projectName"
                   onChange={(e) => {
-                    setProjectName(e.target.value);
+                    const inputValue = e.target.value;
+                    const formattedValue = inputValue
+                      .split(" ")
+                      .map(
+                        (word) =>
+                          word.charAt(0).toUpperCase() +
+                          word.slice(1).toLowerCase()
+                      )
+                      .join(" ");
+                    setProjectName(formattedValue);
                   }}
                   required
                   type="text"
@@ -396,6 +429,47 @@ const DashboardPage: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showDeleteConfirmModal && projectToDeleteDetails && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+          <div className="bg-brand-dark p-6 rounded-lg shadow-xl w-full max-w-md">
+            <h2 className="text-2xl font-semibold mb-4 text-red-500">
+              Confirm Deletion
+            </h2>
+            <p className="text-brand-light-secondary mb-2">
+              Are you sure you want to delete the project <br />
+              <strong className="text-red-400">
+                {' "'}
+                {projectToDeleteDetails.name}
+                {'"'}
+              </strong>
+              {` ?`}
+            </p>
+            <p className="text-sm text-yellow-400 mb-6">
+              This action will also delete all associated credentials and cannot
+              be undone.
+            </p>
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                className="px-4 py-2 border border-gray-600 text-brand-light-secondary rounded-md hover:bg-gray-700 disabled:opacity-50"
+                disabled={isSubmitting}
+                onClick={closeDeleteConfirmModal}
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-md disabled:opacity-50"
+                disabled={isSubmitting}
+                onClick={() => void executeProjectDeletion()}
+                type="button"
+              >
+                {isSubmitting ? "Deleting..." : "Confirm Delete"}
+              </button>
+            </div>
           </div>
         </div>
       )}

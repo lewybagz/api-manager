@@ -47,7 +47,7 @@ const Navbar: React.FC = () => {
       <div className="mx-auto pl-12 pr-14 flex items-center justify-between h-full w-full">
         <div className="flex flex-shrink-0 items-center">
           <Shield className="h-8 w-8 text-brand-blue" />
-          <span className="ml-2 text-xl font-bold text-white">API Manager</span>
+          <span className="ml-2 text-xl font-bold text-white">Zeker</span>
         </div>
         <ul className="flex items-center space-x-4 sm:space-x-6">
           <li>

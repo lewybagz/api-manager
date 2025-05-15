@@ -337,12 +337,17 @@ const LoginPage: React.FC = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-brand-dark px-4 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-transparent px-4 py-12 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
-        <div className="bg-brand-dark-secondary rounded-2xl shadow-2xl px-8 py-10 sm:p-10 flex flex-col items-center animate-fade-in">
-          <Shield className="h-12 w-12 text-brand-blue mb-3 animate-pop-in" />
+        <div className="bg-transparent flex flex-col items-center animate-fade-in">
+          {/* <Shield className="h-12 w-12 text-brand-blue mb-3 animate-pop-in" /> */}
+          <img
+            alt="Zeker Logo"
+            className="h-40 w-40 animate-pop-in translate-y-6"
+            src="/assets/logos/logo-192x192.png"
+          />
           <h1 className="text-3xl font-bold text-white mb-1 tracking-tight">
-            API Manager
+            Zeker
           </h1>
           <p className="text-brand-light-secondary mb-6 text-center text-base">
             Securely manage your API credentials in one place.

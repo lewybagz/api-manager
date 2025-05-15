@@ -6,6 +6,8 @@ import {
   Eye,
   EyeOff,
   RefreshCw,
+  SquarePen,
+  Trash2,
 } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -44,6 +46,13 @@ const ProjectDetailPage: React.FC = () => {
   const [clipboardTimeout, setClipboardTimeout] = useState<
     Record<string, NodeJS.Timeout>
   >({});
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [credentialToDeleteDetails, setCredentialToDeleteDetails] =
+    useState<null | {
+      id: string;
+      serviceName: string;
+    }>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Handle missing projectId
   useEffect(() => {
@@ -95,25 +104,52 @@ const ProjectDetailPage: React.FC = () => {
     [handleEditCredential]
   );
 
-  const handleDeleteCredential = async (credentialId: string) => {
-    const credential = credentials.find((c) => c.id === credentialId);
-    if (window.confirm("Are you sure you want to delete this credential?")) {
-      try {
-        if (!projectId) {
-          throw new Error("Project ID is required");
-        }
-        await deleteCredential(credentialId, projectId);
-        toast.success("Credential deleted", {
-          description: credential
-            ? `"${credential.serviceName}" has been deleted`
-            : "Credential has been deleted",
-        });
-      } catch (error: unknown) {
-        console.error("Failed to delete credential:", error);
-        toast.error("Failed to delete credential", {
-          description: "Please try again later",
-        });
-      }
+  const confirmAndDeleteCredentialOnDetailPage = async (
+    credentialId: string
+  ) => {
+    if (!projectId) {
+      toast.error("Project ID is missing. Cannot delete credential.");
+      return;
+    }
+    setIsDeleting(true);
+    try {
+      await deleteCredential(credentialId, projectId);
+      toast.success("Credential deleted", {
+        description: credentialToDeleteDetails
+          ? `"${credentialToDeleteDetails.serviceName}" has been deleted`
+          : "Credential has been deleted",
+      });
+    } catch (error: unknown) {
+      console.error("Failed to delete credential:", error);
+      toast.error("Failed to delete credential", {
+        description: "Please try again later",
+      });
+    } finally {
+      setIsDeleting(false);
+      closeCredentialDeleteConfirmModal();
+    }
+  };
+
+  const openCredentialDeleteConfirmModal = (
+    credential: DecryptedCredential
+  ) => {
+    setCredentialToDeleteDetails({
+      id: credential.id,
+      serviceName: credential.serviceName,
+    });
+    setShowDeleteConfirmModal(true);
+  };
+
+  const closeCredentialDeleteConfirmModal = () => {
+    setShowDeleteConfirmModal(false);
+    setCredentialToDeleteDetails(null);
+  };
+
+  const executeCredentialDeletion = async () => {
+    if (credentialToDeleteDetails) {
+      await confirmAndDeleteCredentialOnDetailPage(
+        credentialToDeleteDetails.id
+      );
     }
   };
 
@@ -336,7 +372,7 @@ const ProjectDetailPage: React.FC = () => {
               key={cred.id}
             >
               <div className="flex justify-between items-center mb-3">
-                <h2 className="text-lg font-semibold text-brand-blue truncate pr-4">
+                <h2 className="w-full text-lg font-semibold text-brand-blue truncate mr-3 pr-4 pb-2 border-b border-white/20 pointer-events-none">
                   {cred.serviceName}
                 </h2>
                 <div className="flex space-x-3 flex-shrink-0">
@@ -346,15 +382,15 @@ const ProjectDetailPage: React.FC = () => {
                       handleEditCredentialClick(cred);
                     }}
                   >
-                    Edit
+                    <SquarePen className="h-5 w-5" />
                   </button>
                   <button
                     className="text-sm text-red-500 hover:text-red-400 transition-colors"
                     onClick={() => {
-                      void handleDeleteCredential(cred.id);
+                      openCredentialDeleteConfirmModal(cred);
                     }}
                   >
-                    Delete
+                    <Trash2 className="h-5 w-5" />
                   </button>
                   {cred.apiKey === "PLACEHOLDER-RESET-VALUE" && (
                     <button
@@ -557,6 +593,47 @@ const ProjectDetailPage: React.FC = () => {
         onClose={closeModal}
         projectId={projectId}
       />
+
+      {/* Delete Credential Confirmation Modal */}
+      {showDeleteConfirmModal && credentialToDeleteDetails && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+          <div className="bg-brand-dark p-6 rounded-lg shadow-xl w-full max-w-md">
+            <h2 className="text-2xl font-semibold mb-4 text-red-500">
+              Confirm Credential Deletion
+            </h2>
+            <p className="text-brand-light-secondary mb-2">
+              Are you sure you want to delete the credential <br />
+              <strong className="text-red-400">
+                {" '"}
+                {credentialToDeleteDetails.serviceName}
+                {" '"}
+              </strong>
+              {` ?`}
+            </p>
+            <p className="text-sm text-yellow-400 mb-6">
+              This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                className="px-4 py-2 border border-gray-600 text-brand-light-secondary rounded-md hover:bg-gray-700 disabled:opacity-50"
+                disabled={isDeleting}
+                onClick={closeCredentialDeleteConfirmModal}
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-md disabled:opacity-50"
+                disabled={isDeleting}
+                onClick={() => void executeCredentialDeletion()}
+                type="button"
+              >
+                {isDeleting ? "Deleting..." : "Confirm Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

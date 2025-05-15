@@ -1,6 +1,6 @@
 import { signOut } from "firebase/auth";
 import {
-  BookOpen,
+  BookOpenText,
   ChevronDown,
   ChevronRight,
   FolderPlus,
@@ -11,7 +11,6 @@ import {
   Mail,
   PlusCircle,
   Search,
-  Shield,
   Star,
   User,
 } from "lucide-react";
@@ -72,10 +71,19 @@ const Sidebar: React.FC = () => {
   return (
     <div className="w-64 bg-brand-dark-secondary h-screen p-0 fixed left-0 top-0 overflow-y-auto border-r border-gray-800 hidden md:flex flex-col">
       {/* App branding */}
-      <div className="px-4 py-3 flex items-center border-b border-gray-800">
-        <Shield className="h-6 w-6 text-brand-blue" />
-        <span className="ml-2 text-lg font-bold text-white">API Manager</span>
-      </div>
+      <Link
+        className="px-4 py-1 flex items-center border-b border-gray-800"
+        to="/"
+      >
+        <img
+          alt="Zeker Logo"
+          className="h-12 w-12 animate-pop-in translate-y-1"
+          src="/assets/logos/logo-sidebar-40x40.png"
+        />
+        <h1 className="ml-2 text-lg font-bold text-white tracking-wide -translate-x-1">
+          Zeker
+        </h1>
+      </Link>
 
       {/* Search box */}
       <div className="px-3 pt-3 pb-2">
@@ -192,15 +200,7 @@ const Sidebar: React.FC = () => {
                 </div>
               )}
             </li>
-            <li>
-              <Link
-                className="flex items-center px-3 py-2 rounded-md text-sm text-gray-300 hover:bg-gray-700 transition-colors"
-                to="/docs"
-              >
-                <BookOpen className="h-4 w-4 mr-3" />
-                Documentation
-              </Link>
-            </li>
+
             <li>
               <Link
                 className="flex items-center px-3 py-2 rounded-md text-sm text-gray-300 hover:bg-gray-700 transition-colors"
@@ -208,6 +208,15 @@ const Sidebar: React.FC = () => {
               >
                 <Key className="h-4 w-4 mr-3" />
                 All Credentials
+              </Link>
+            </li>
+            <li>
+              <Link
+                className="flex items-center px-3 py-2 rounded-md text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+                to="/docs"
+              >
+                <BookOpenText className="h-4 w-4 mr-3" />
+                Documentation
               </Link>
             </li>
           </ul>
@@ -260,7 +269,7 @@ const Sidebar: React.FC = () => {
 
         <div className="px-3">
           <p className="px-3 py-px text-xs text-gray-500">
-            API Manager &copy; {new Date().getFullYear()}
+            Zeker&copy; {new Date().getFullYear()}
           </p>
         </div>
       </div>

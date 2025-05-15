@@ -51,6 +51,51 @@ const CredentialModal = ({
   const [showSecret, setShowSecret] = useState(false);
   const [inputTimeout, setInputTimeout] = useState<NodeJS.Timeout | null>(null);
 
+  const validateNotesPotentialApiKey = (value: string): boolean | string => {
+    if (!value || value.trim() === "") {
+      return true; // Empty notes are fine
+    }
+
+    const notes = value;
+    // Split by characters that are NOT (alphanumeric, _, -, .)
+    // This extracts "words" that could be variable names or key-like strings.
+    const words = notes.split(/[^a-zA-Z0-9_.-]+/).filter(Boolean);
+
+    // Allows patterns like: API_KEY, API_V2, MY-CONFIG.1, ALL-CAPS-NAME
+    const allowedVarPattern = /^[A-Z0-9]+(?:[_.-][A-Z0-9]+)*$/;
+    // Allows numbered list items like: 1., 12.
+    const numberedListPattern = /^\d+\.$/;
+    // Detects 4 or more consecutive digits
+    const longDigitSequencePattern = /\d{4,}/;
+
+    for (const word of words) {
+      // Check 1: More than 3 consecutive digits within the word
+      if (longDigitSequencePattern.test(word)) {
+        if (!allowedVarPattern.test(word)) {
+          console.warn(
+            `Notes validation failed (long digit sequence): "${word}"`
+          );
+          return "Notes appear to contain a key-like pattern (long number sequence). API keys should be in designated fields only.";
+        }
+      }
+
+      // Check 2: Mixed letter-number words that aren't allowed variable names or numbered list items
+      const hasLetters = /[a-zA-Z]/.test(word);
+      const hasNumbers = /[0-9]/.test(word);
+
+      if (hasLetters && hasNumbers) {
+        if (!allowedVarPattern.test(word) && !numberedListPattern.test(word)) {
+          console.warn(
+            `Notes validation failed (mixed letter/number): "${word}"`
+          );
+          return "Notes appear to contain a key-like pattern (mixed letters/numbers not matching allowed variable styles like MY_VAR_1). API keys should be in designated fields only.";
+        }
+      }
+    }
+
+    return true; // All checks passed
+  };
+
   useEffect(() => {
     if (editingCredential) {
       console.log(
@@ -395,6 +440,7 @@ const CredentialModal = ({
                     )})`
                   );
                 },
+                validate: validateNotesPotentialApiKey,
               })}
             />
             {errors.notes && (
