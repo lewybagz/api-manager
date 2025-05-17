@@ -414,7 +414,7 @@ const CredentialsPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
           <div className="relative flex-1 w-full min-w-[200px]">
             <input
-              className="w-full bg-brand-dark-secondary border border-gray-700 text-brand-light px-10 py-2.5 text-sm sm:text-base rounded-md focus:outline-none focus:ring-2 focus:ring-brand-blue"
+              className="w-full bg-brand-dark-secondary border border-gray-700 text-brand-light px-10 py-2.5 text-sm sm:text-base rounded-md focus:outline-none"
               onChange={(e) => {
                 setSearchQuery(e.target.value);
               }}
@@ -442,7 +442,7 @@ const CredentialsPage: React.FC = () => {
                   Sort by:
                 </span>
                 <select
-                  className="bg-gray-800 text-white border border-gray-700 rounded px-2 sm:px-3 py-1.5 text-xs sm:text-sm w-full sm:w-auto focus:outline-none focus:ring-1 focus:ring-brand-blue"
+                  className="bg-gray-800 text-white border border-gray-700 rounded px-2 sm:px-3 py-1.5 text-xs sm:text-sm w-full sm:w-auto focus:outline-none"
                   onChange={(e) => {
                     setSortOption(e.target.value as "latest" | "name");
                   }}
@@ -458,7 +458,7 @@ const CredentialsPage: React.FC = () => {
                   Show:
                 </span>
                 <select
-                  className="bg-gray-800 text-white border border-gray-700 rounded px-2 sm:px-3 py-1.5 text-xs sm:text-sm w-full sm:w-auto focus:outline-none focus:ring-1 focus:ring-brand-blue"
+                  className="bg-gray-800 text-white border border-gray-700 rounded px-2 sm:px-3 py-1.5 text-xs sm:text-sm w-full sm:w-auto focus:outline-none"
                   onChange={(e) => {
                     setFilterOption(e.target.value as "all" | "hasSecret");
                   }}

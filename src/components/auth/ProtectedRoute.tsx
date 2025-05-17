@@ -1,3 +1,4 @@
+import { Loader2 } from "lucide-react";
 import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 
@@ -12,7 +13,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (isLoading) {
     // You might want to show a loading spinner here instead of null
-    return <div>Loading authentication status...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="h-10 w-10 mr-2 animate-spin" />
+        <p className="text-sm text-gray-500">Vibe Checking...</p>
+      </div>
+    );
   }
 
   if (!user) {

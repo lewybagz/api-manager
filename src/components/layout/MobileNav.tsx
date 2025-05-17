@@ -113,7 +113,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose }) => {
               </div>
               <button
                 aria-label="Close navigation menu"
-                className="text-gray-400 hover:text-white p-1 -mr-1 rounded-md focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-blue"
+                className="text-gray-400 hover:text-white p-1 -mr-1 rounded-md focus:outline-none"
                 onClick={onClose}
               >
                 <X className="h-6 w-6" />
@@ -124,7 +124,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose }) => {
             <div className="p-3 border-b border-gray-700">
               <div className="relative">
                 <input
-                  className="w-full bg-gray-800 text-gray-200 text-sm rounded-md pl-8 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-blue placeholder-gray-400"
+                  className="w-full bg-gray-800 text-gray-200 text-sm rounded-md pl-8 pr-3 py-2.5 focus:outline-none placeholder-gray-400"
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
                   }}

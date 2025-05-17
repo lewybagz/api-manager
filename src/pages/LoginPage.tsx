@@ -8,6 +8,7 @@ import {
   Clock,
   Eye,
   EyeOff,
+  Loader2,
   Lock,
   LogIn,
   Mail,
@@ -426,7 +427,7 @@ const LoginPage: React.FC = () => {
                     <input
                       aria-label="Email address"
                       autoComplete="email"
-                      className="block w-full rounded-md border border-gray-700 bg-gray-800 py-2.5 pl-10 pr-3 text-white placeholder-gray-400 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue transition-all"
+                      className="block w-full rounded-md border border-gray-700 bg-gray-800 py-2.5 pl-10 pr-3 text-white placeholder-gray-400  transition-all"
                       disabled={isSubmitting}
                       id="email"
                       name="email"
@@ -452,7 +453,7 @@ const LoginPage: React.FC = () => {
                     <input
                       aria-label="Password"
                       autoComplete="current-password"
-                      className="block w-full rounded-md border border-gray-700 bg-gray-800 py-2.5 pl-10 pr-10 text-white placeholder-gray-400 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue transition-all"
+                      className="block w-full rounded-md border border-gray-700 bg-gray-800 py-2.5 pl-10 pr-10 text-white placeholder-gray-400  transition-all"
                       disabled={isSubmitting}
                       id="password"
                       name="password"
@@ -498,7 +499,8 @@ const LoginPage: React.FC = () => {
               >
                 {isSubmitting ? (
                   <span className="flex items-center">
-                    <Shield className="h-5 w-5 mr-2 animate-spin" /> Loading...
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    One Sec...
                   </span>
                 ) : (
                   <>
@@ -549,7 +551,7 @@ const LoginPage: React.FC = () => {
                     <input
                       aria-label="Display Name"
                       autoComplete="name"
-                      className="block w-full rounded-md border border-gray-700 bg-gray-800 py-2.5 pl-3 pr-3 text-white placeholder-gray-400 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue transition-all"
+                      className="block w-full rounded-md border border-gray-700 bg-gray-800 py-2.5 pl-3 pr-3 text-white placeholder-gray-400  transition-all"
                       id="registerName"
                       name="registerName"
                       onChange={(e) => {
@@ -574,7 +576,7 @@ const LoginPage: React.FC = () => {
                     <input
                       aria-label="Email address"
                       autoComplete="email"
-                      className="block w-full rounded-md border border-gray-700 bg-gray-800 py-2.5 pl-10 pr-3 text-white placeholder-gray-400 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue transition-all"
+                      className="block w-full rounded-md border border-gray-700 bg-gray-800 py-2.5 pl-10 pr-3 text-white placeholder-gray-400  transition-all"
                       id="registerEmail"
                       name="registerEmail"
                       onChange={(e) => {
@@ -599,7 +601,7 @@ const LoginPage: React.FC = () => {
                     <input
                       aria-label="Password"
                       autoComplete="new-password"
-                      className="block w-full rounded-md border border-gray-700 bg-gray-800 py-2.5 pl-10 pr-10 text-white placeholder-gray-400 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue transition-all"
+                      className="block w-full rounded-md border border-gray-700 bg-gray-800 py-2.5 pl-10 pr-10 text-white placeholder-gray-400  transition-all"
                       id="registerPassword"
                       name="registerPassword"
                       onChange={(e) => {
@@ -660,8 +662,12 @@ const LoginPage: React.FC = () => {
                 <span className="flex items-center">
                   {isLoading ? (
                     <>
-                      <Shield className="h-5 w-5 mr-2 animate-spin" />
-                      Loading...
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                        <p className="text-sm text-brand-light-secondary">
+                          Checking Aura...
+                        </p>
+                      </span>
                     </>
                   ) : (
                     <>

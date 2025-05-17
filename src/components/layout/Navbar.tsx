@@ -1,5 +1,5 @@
 import { signOut } from "firebase/auth";
-import { LogOut, Mail, Shield, User, User2 } from "lucide-react";
+import { Loader2, LogOut, Mail, Shield, User, User2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -60,7 +60,10 @@ const Navbar: React.FC = () => {
           </li>
           {isLoading ? (
             <li>
-              <span className="text-brand-light-secondary">Loading...</span>
+              <span className="text-brand-light-secondary flex flex-col items-center gap-2">
+                <Loader2 className="h-4 w-4 inline animate-spin" />
+                <p className="text-xs">One sec...</p>
+              </span>
             </li>
           ) : user ? (
             <>
@@ -78,7 +81,7 @@ const Navbar: React.FC = () => {
                     <button
                       aria-expanded="false"
                       aria-haspopup="true"
-                      className="flex rounded-full bg-brand-dark-secondary text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue focus:ring-offset-2 focus:ring-offset-brand-dark"
+                      className="flex rounded-full bg-brand-dark-secondary text-sm focus:outline-none"
                       id="user-menu-button"
                       onClick={() => {
                         setIsOpen(!isOpen);

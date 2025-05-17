@@ -282,8 +282,8 @@ const CredentialModal = ({
             </label>
             <input
               aria-label="Service Name"
-              autoComplete="organization"
-              className="w-full rounded-md border border-gray-600 bg-gray-700 p-2.5 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
+              autoComplete="new-password"
+              className="w-full rounded-md border border-gray-600 bg-gray-700 p-2.5 text-white placeholder-gray-400"
               id="serviceName"
               placeholder="e.g., AWS, Stripe, OpenAI"
               type="text"
@@ -320,8 +320,8 @@ const CredentialModal = ({
             <div className="relative">
               <input
                 aria-label="API Key"
-                autoComplete="off"
-                className="w-full rounded-md border border-gray-600 bg-gray-700 p-2.5 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500 pr-10"
+                autoComplete="new-password"
+                className="w-full rounded-md border border-gray-600 bg-gray-700 p-2.5 text-white placeholder-gray-400 pr-10"
                 id="apiKey"
                 placeholder="Enter API Key"
                 type={showPassword ? "text" : "password"}
@@ -373,7 +373,7 @@ const CredentialModal = ({
               <input
                 aria-label="API Secret"
                 autoComplete="off"
-                className="w-full rounded-md border border-gray-600 bg-gray-700 p-2.5 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500 pr-10"
+                className="w-full rounded-md border border-gray-600 bg-gray-700 p-2.5 text-white placeholder-gray-400 pr-10"
                 id="apiSecret"
                 placeholder="Enter API Secret"
                 type={showSecret ? "text" : "password"}
@@ -423,7 +423,7 @@ const CredentialModal = ({
             <textarea
               aria-label="Notes"
               autoComplete="off"
-              className="w-full rounded-md border border-gray-600 bg-gray-700 p-2.5 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
+              className="w-full rounded-md border border-gray-600 bg-gray-700 p-2.5 text-white placeholder-gray-400"
               id="notes"
               placeholder="Any additional notes, e.g., usage instructions, scopes"
               rows={4}
@@ -452,7 +452,7 @@ const CredentialModal = ({
 
           <div className="flex justify-end space-x-3">
             <button
-              className="rounded-md border border-gray-600 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-brand-dark disabled:opacity-50"
+              className="rounded-md border border-gray-600 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 focus:outline-none disabled:opacity-50"
               disabled={isSubmitting}
               onClick={() => {
                 console.log("Form cancelled by user");
@@ -464,7 +464,7 @@ const CredentialModal = ({
               Cancel
             </button>
             <button
-              className="rounded-md bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-brand-dark disabled:opacity-50"
+              className="rounded-md bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-hover focus:outline-none disabled:opacity-50"
               disabled={isSubmitting}
               type="submit"
             >

@@ -37,7 +37,7 @@ const HomePage: React.FC = () => {
           {user ? (
             <>
               <button
-                className="flex items-center gap-2 bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold py-3 px-6 rounded-lg text-md shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-brand-blue"
+                className="flex items-center gap-2 bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold py-3 px-6 rounded-lg text-md shadow-lg transition-all focus:outline-none"
                 onClick={() => {
                   void navigate("/dashboard");
                 }}
@@ -46,7 +46,7 @@ const HomePage: React.FC = () => {
                 Go to Dashboard
               </button>
               <button
-                className="flex items-center gap-2 bg-gray-700 hover:bg-brand-blue text-white font-semibold py-3 px-6 rounded-lg text-md shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-brand-blue"
+                className="flex items-center gap-2 bg-gray-700 hover:bg-brand-blue text-white font-semibold py-3 px-6 rounded-lg text-md shadow-lg transition-all focus:outline-none"
                 onClick={() => {
                   void navigate("/dashboard", {
                     state: { quickAdd: "project" },
@@ -57,7 +57,7 @@ const HomePage: React.FC = () => {
                 Add Project
               </button>
               <button
-                className="flex items-center gap-2 bg-gray-700 hover:bg-brand-blue text-white font-semibold py-3 px-6 rounded-lg text-md shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-brand-blue"
+                className="flex items-center gap-2 bg-gray-700 hover:bg-brand-blue text-white font-semibold py-3 px-6 rounded-lg text-md shadow-lg transition-all focus:outline-none"
                 onClick={() => {
                   void navigate("/dashboard", {
                     state: { quickAdd: "credential" },
@@ -70,7 +70,7 @@ const HomePage: React.FC = () => {
             </>
           ) : (
             <Link
-              className="flex items-center gap-2 bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold py-3 px-6 rounded-lg text-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-brand-blue"
+              className="flex items-center gap-2 bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold py-3 px-6 rounded-lg text-lg shadow-lg transition-all focus:outline-none"
               to="/login"
             >
               <LogIn className="h-5 w-5" />

@@ -1,3 +1,4 @@
+import { InfoIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast, Toaster } from "sonner";
 
@@ -18,6 +19,7 @@ const MasterPasswordModal: React.FC<MasterPasswordModalProps> = ({
     useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [subError, setError] = useState<null | string>(null);
+  const [isCapsLockOn, setIsCapsLockOn] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +72,12 @@ const MasterPasswordModal: React.FC<MasterPasswordModalProps> = ({
     }
   }, [masterPasswordSet, onClose, isOpen]);
 
+  useEffect(() => {
+    if (!isOpen) {
+      setIsCapsLockOn(false);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -104,20 +112,35 @@ const MasterPasswordModal: React.FC<MasterPasswordModalProps> = ({
             <input
               aria-label="Master Password"
               autoComplete="current-password"
-              className="w-full px-3 py-2 bg-brand-dark border border-brand-dark focus:border-brand-blue rounded-md text-brand-light focus:outline-none focus:ring-2 focus:ring-brand-blue"
+              className="w-full px-3 py-2 bg-brand-dark border border-brand-dark  rounded-md text-brand-light focus:outline-none"
               id="masterPassword"
               name="masterPassword"
               onChange={(e) => {
                 setPassword(e.target.value);
               }}
+              onKeyDown={(e) => {
+                setIsCapsLockOn(e.getModifierState("CapsLock"));
+              }}
+              onKeyUp={(e) => {
+                setIsCapsLockOn(e.getModifierState("CapsLock"));
+              }}
               required
               type="password"
               value={password}
             />
+            <div
+              aria-live="polite"
+              className="mt-1 text-yellow-400 text-xs flex items-center"
+              role="alert"
+              style={{ visibility: isCapsLockOn ? "visible" : "hidden" }}
+            >
+              <InfoIcon className="h-4 w-4 mr-1 inline" />
+              Caps Lock is ON
+            </div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-4 justify-end">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
-              className="px-4 py-2 border border-brand-light-secondary text-brand-light-secondary rounded-md hover:bg-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-blue disabled:opacity-50 order-2 sm:order-1"
+              className="px-4 py-2 border border-brand-light-secondary text-brand-light-secondary rounded-md hover:bg-brand-dark focus:outline-none disabled:opacity-50 order-2 sm:order-1"
               disabled={isLoading}
               onClick={onClose}
               type="button"
@@ -125,7 +148,7 @@ const MasterPasswordModal: React.FC<MasterPasswordModalProps> = ({
               Cancel
             </button>
             <button
-              className="px-4 py-2 bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold rounded-md focus:outline-none focus:ring-2 focus:ring-brand-blue focus:ring-offset-2 focus:ring-offset-brand-dark-secondary disabled:opacity-50 order-1 sm:order-2"
+              className="px-4 py-2 bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold rounded-md focus:outline-none disabled:opacity-50 order-1 sm:order-2"
               disabled={isLoading || isSubmitting}
               type="submit"
             >

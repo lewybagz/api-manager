@@ -80,7 +80,7 @@ const ForgotPasswordPage: React.FC = () => {
                   <input
                     aria-label="Email address"
                     autoComplete="email"
-                    className="block w-full rounded-md border border-gray-700 bg-gray-800 py-2.5 pl-10 pr-3 text-white placeholder-gray-400 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue transition-all"
+                    className="block w-full rounded-md border border-gray-700 bg-gray-800 py-2.5 pl-10 pr-3 text-white placeholder-gray-400  transition-all"
                     id="forgotEmail"
                     name="forgotEmail"
                     onChange={(e) => {

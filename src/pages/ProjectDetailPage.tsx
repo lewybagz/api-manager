@@ -5,6 +5,7 @@ import {
   Copy,
   Eye,
   EyeOff,
+  Loader2,
   RefreshCw,
   SquarePen,
   Trash2,
@@ -281,8 +282,9 @@ const ProjectDetailPage: React.FC = () => {
 
   if (projectsLoading || credentialsLoading) {
     return (
-      <div className="text-center p-8 text-brand-light">
-        Loading project details...
+      <div className="text-center p-8 text-brand-light flex flex-col items-center gap-2">
+        <Loader2 className="h-4 w-4 inline animate-spin" />
+        <p className="text-sm text-gray-500">You Know What Time It Is...</p>
       </div>
     );
   }
@@ -365,15 +367,32 @@ const ProjectDetailPage: React.FC = () => {
       )}
 
       {showCredentials && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-6 sm:gap-4 gap-2">
           {credentials.map((cred) => (
             <div
-              className="bg-brand-dark-secondary p-6 rounded-lg shadow-lg flex flex-col h-full"
+              className="bg-brand-dark-secondary p-6 md:p-6 sm:p-4 p-2 rounded-lg shadow-lg flex flex-col h-full"
               key={cred.id}
             >
-              <div className="flex justify-between items-center mb-3">
-                <h2 className="w-full text-lg font-semibold text-brand-blue truncate mr-3 pr-4 pb-2 border-b border-white/20 pointer-events-none">
-                  {cred.serviceName}
+              <div className="flex justify-between items-center mb-3 md:mb-3 sm:mb-2 mb-1">
+                <h2 className="w-full text-lg md:text-xl sm:text-lg text-base font-semibold text-brand-blue truncate mr-3 pr-4 pb-2 border-b border-white/20">
+                  <button
+                    aria-label="Copy service name to clipboard"
+                    className="group flex items-center w-full text-left text-brand-blue truncate bg-transparent border-none p-0 m-0 focus:outline-none hover:text-white transition-colors"
+                    onClick={() => {
+                      handleCopyToClipboard(cred.serviceName, cred.id);
+                    }}
+                    style={{ WebkitTapHighlightColor: "transparent" }}
+                    title="Copy service name to clipboard"
+                  >
+                    <span className="truncate flex-1">{cred.serviceName}</span>
+                    <span className="ml-2 align-middle flex-shrink-0">
+                      {copiedStates[cred.id] ? (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-5 w-5 group-hover:text-white text-gray-400" />
+                      )}
+                    </span>
+                  </button>
                 </h2>
                 <div className="flex space-x-3 flex-shrink-0">
                   <button
@@ -407,12 +426,12 @@ const ProjectDetailPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="space-y-3 text-sm flex-grow">
+              <div className="space-y-3 md:space-y-3 sm:space-y-2 space-y-1 text-sm md:text-base sm:text-sm text-xs flex-grow">
                 <div>
                   <span className="font-medium text-gray-300">API Key:</span>
-                  <div className="flex items-center justify-between mt-1">
+                  <div className="flex items-center justify-between mt-1 md:mt-1 sm:mt-0.5 mt-0">
                     <span
-                      className={`font-mono p-2 rounded-md bg-gray-700 overflow-x-hidden whitespace-nowrap text-ellipsis block ${
+                      className={`font-mono p-2 md:p-2 sm:p-1 p-0.5 rounded-md bg-gray-700 overflow-x-hidden whitespace-nowrap text-ellipsis block ${
                         revealedStates[`${cred.id}-apikey`]
                           ? "text-gray-200"
                           : "text-gray-200"
@@ -467,9 +486,9 @@ const ProjectDetailPage: React.FC = () => {
                     <span className="font-medium text-gray-300">
                       API Secret:
                     </span>
-                    <div className="flex items-center justify-between mt-1">
+                    <div className="flex items-center justify-between mt-1 md:mt-1 sm:mt-0.5 mt-0">
                       <span
-                        className={`font-mono p-2 rounded-md bg-gray-700 overflow-x-hidden whitespace-nowrap text-ellipsis block ${
+                        className={`font-mono p-2 md:p-2 sm:p-1 p-0.5 rounded-md bg-gray-700 overflow-x-hidden whitespace-nowrap text-ellipsis block ${
                           revealedStates[`${cred.id}-apisecret`]
                             ? "text-gray-200"
                             : "text-gray-200"
@@ -531,7 +550,7 @@ const ProjectDetailPage: React.FC = () => {
                 {cred.notes && (
                   <div>
                     <span className="font-medium text-gray-300">Notes:</span>
-                    <p className="mt-1 p-2 rounded-md bg-gray-700 text-gray-300 whitespace-pre-wrap break-words">
+                    <p className="mt-1 md:mt-1 sm:mt-0.5 mt-0 p-2 md:p-2 sm:p-1 p-0.5 rounded-md bg-gray-700 text-gray-300 whitespace-pre-wrap break-words">
                       {cred.notes}
                     </p>
                   </div>

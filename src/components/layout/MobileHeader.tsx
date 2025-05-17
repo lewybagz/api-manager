@@ -15,7 +15,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ onMenuOpen }) => {
       </div>
       <button
         aria-label="Open navigation menu"
-        className="text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-blue rounded-md p-1 -mr-1"
+        className="text-gray-300 hover:text-white focus:outline-none rounded-md p-1 -mr-1"
         onClick={onMenuOpen}
       >
         <Menu className="h-6 w-6" />

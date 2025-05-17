@@ -4,6 +4,7 @@ import {
   Clock,
   FolderEdit,
   FolderPlus,
+  Loader2,
   Plus,
   Search,
   Trash2,
@@ -187,7 +188,10 @@ const DashboardPage: React.FC = () => {
 
   if (projectsLoading || credentialsLoading) {
     return (
-      <p className="text-brand-light">Loading projects and credentials...</p>
+      <div className="text-center p-8 text-brand-light flex flex-col items-center gap-2">
+        <Loader2 className="h-4 w-4 inline animate-spin" />
+        <p className="text-sm text-gray-500">Checking Aura Levels...</p>
+      </div>
     );
   }
 
@@ -226,7 +230,7 @@ const DashboardPage: React.FC = () => {
       <div className="relative mb-6">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
         <input
-          className="w-fit pl-10 pr-4 py-2 bg-brand-dark-secondary rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue"
+          className="w-fit pl-10 pr-4 py-2 bg-brand-dark-secondary rounded-lg text-white placeholder-gray-400 focus:outline-none"
           onChange={(e) => {
             setSearchQuery(e.target.value);
           }}
@@ -387,7 +391,7 @@ const DashboardPage: React.FC = () => {
                   aria-label="Project Name"
                   autoCapitalize="words"
                   autoComplete="off"
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-brand-light focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent"
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-brand-light focus:outline-none"
                   id="projectName"
                   name="projectName"
                   onChange={(e) => {

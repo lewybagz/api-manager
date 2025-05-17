@@ -183,7 +183,8 @@ const ProfilePage: React.FC = () => {
   if (userLoading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-        <Loader2 className="h-8 w-8 text-brand-blue animate-spin" />
+        <Loader2 className="h-8 w-8 mr-2 text-brand-blue animate-spin" />
+        <p className="text-sm text-gray-500">Loading Vibes...</p>
       </div>
     );
   }
@@ -271,7 +272,7 @@ const ProfilePage: React.FC = () => {
                         errors.displayName
                           ? "border-red-500"
                           : "border-gray-700"
-                      } focus:outline-none focus:ring-1 focus:ring-brand-blue`}
+                      } focus:outline-none`}
                       id="displayName"
                       onChange={(e) => {
                         setDisplayName(e.target.value);
@@ -302,7 +303,7 @@ const ProfilePage: React.FC = () => {
                     <input
                       className={`w-full bg-gray-800 text-white pl-10 pr-3 py-2 rounded-md border ${
                         errors.email ? "border-red-500" : "border-gray-700"
-                      } focus:outline-none focus:ring-1 focus:ring-brand-blue`}
+                      } focus:outline-none`}
                       id="email"
                       onChange={(e) => {
                         setEmail(e.target.value);
@@ -372,7 +373,7 @@ const ProfilePage: React.FC = () => {
                         errors.currentPassword
                           ? "border-red-500"
                           : "border-gray-700"
-                      } focus:outline-none focus:ring-1 focus:ring-brand-blue`}
+                      } focus:outline-none`}
                       id="currentPassword"
                       onChange={(e) => {
                         setCurrentPassword(e.target.value);
@@ -419,7 +420,7 @@ const ProfilePage: React.FC = () => {
                         errors.newPassword
                           ? "border-red-500"
                           : "border-gray-700"
-                      } focus:outline-none focus:ring-1 focus:ring-brand-blue`}
+                      } focus:outline-none`}
                       id="newPassword"
                       onChange={(e) => {
                         setNewPassword(e.target.value);
@@ -466,7 +467,7 @@ const ProfilePage: React.FC = () => {
                         errors.confirmPassword
                           ? "border-red-500"
                           : "border-gray-700"
-                      } focus:outline-none focus:ring-1 focus:ring-brand-blue`}
+                      } focus:outline-none`}
                       id="confirmPassword"
                       onChange={(e) => {
                         setConfirmPassword(e.target.value);

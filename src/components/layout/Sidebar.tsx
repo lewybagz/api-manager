@@ -89,7 +89,7 @@ const Sidebar: React.FC = () => {
       <div className="px-3 pt-3 pb-2">
         <div className="relative">
           <input
-            className="w-full bg-gray-800 text-gray-200 text-sm rounded-md pl-8 pr-3 py-2 focus:outline-none focus:ring-1 focus:ring-brand-blue"
+            className="w-full bg-gray-800 text-gray-200 text-sm rounded-md pl-8 pr-3 py-2 focus:outline-none"
             onChange={(e) => {
               setSearchQuery(e.target.value);
             }}
