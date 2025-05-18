@@ -64,7 +64,6 @@ const encryptData = (text: string, key: string, ivString?: string): null | { enc
     return null;
   }
   try {
-    console.log(`Encrypting data with length: ${String(text.length)}, IV present: ${String(!!ivString)}`);
     const iv = ivString ? CryptoJS.enc.Hex.parse(ivString) : CryptoJS.lib.WordArray.random(128 / 8);
     const encrypted = CryptoJS.AES.encrypt(text, CryptoJS.enc.Hex.parse(key), {
       iv: iv,
@@ -72,7 +71,6 @@ const encryptData = (text: string, key: string, ivString?: string): null | { enc
       padding: CryptoJS.pad.Pkcs7
     });
     const ivHex = CryptoJS.enc.Hex.stringify(iv);
-    console.log(`Encryption successful. IV length: ${String(ivHex.length)}, Encrypted text length: ${String(encrypted.toString().length)}`);
     return {
       encryptedText: encrypted.toString(),
       iv: ivHex // Return the IV used (either provided or generated)
@@ -97,7 +95,6 @@ const decryptData = (encryptedText: string, key: string, ivString: string): null
       return null;
     }
     
-    console.log(`Decrypting data with IV length: ${String(ivString.length)}, Encrypted text length: ${String(encryptedText.length)}`);
     const iv = CryptoJS.enc.Hex.parse(ivString);
     const decrypted = CryptoJS.AES.decrypt(encryptedText, CryptoJS.enc.Hex.parse(key), {
       iv: iv,
@@ -120,8 +117,7 @@ const decryptData = (encryptedText: string, key: string, ivString: string): null
         console.warn("Decryption resulted in empty string. Key or IV might be incorrect or data corrupted.");
         return null;
       }
-      
-      console.log(`Decryption successful. Decrypted text length: ${String(decryptedText.length)}`);
+    
       return decryptedText;
     } catch (utf8Error) {
       console.error("Failed to decode decrypted data as UTF-8:", utf8Error);
@@ -135,13 +131,9 @@ const decryptData = (encryptedText: string, key: string, ivString: string): null
 
 const useCredentialStore = create<CredentialState>((set, get) => ({
   addCredential: async (projectId: string, data: Omit<DecryptedCredential, 'createdAt' | 'id' | 'updatedAt' | 'userId'>) => {
-    console.log("=== STARTING ADD CREDENTIAL PROCESS ===");
-    console.log(`Adding credential for project ${projectId}. Service name: ${data.serviceName}`);
     
     const currentUser = auth.currentUser;
     const encryptionKey = useAuthStore.getState().encryptionKey;
-    
-    console.log(`Authentication check: User authenticated: ${String(!!currentUser)}, Encryption key set: ${String(!!encryptionKey)}`);
     
     if (!currentUser || !encryptionKey) {
       const errorMsg = !currentUser 
@@ -155,20 +147,13 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
     set({ error: null, isLoading: true });
     
     try {
-      console.log("Generating IV and starting encryption process");
       const singleIV = CryptoJS.lib.WordArray.random(128 / 8).toString(CryptoJS.enc.Hex);
-      console.log(`Generated IV: ${String(singleIV.length)} characters long`);
-      
-      // Log data being encrypted (without showing actual values)
-      console.log(`Data to encrypt: API Key (${String(data.apiKey.length)} chars), API Secret: ${data.apiSecret ? `${String(data.apiSecret.length)} chars` : 'not provided'}, Notes: ${data.notes ? `${String(data.notes.length)} chars` : 'not provided'}`);
       
       const encryptedApiKeyResult = encryptData(data.apiKey, encryptionKey, singleIV);
       if (!encryptedApiKeyResult?.encryptedText) {
         console.error("Failed to encrypt API key");
         throw new Error('Failed to encrypt API key.');
       }
-      
-      console.log(`API Key encrypted successfully. Length: ${String(encryptedApiKeyResult.encryptedText.length)}`);
 
       const finalStoredData: StoredCredentialData = {
         createdAt: serverTimestamp(),
@@ -181,58 +166,35 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
       };
 
       if (data.apiSecret) {
-        console.log("Encrypting API secret");
         const encryptedSecretResult = encryptData(data.apiSecret, encryptionKey, singleIV);
         if (!encryptedSecretResult) {
           console.error("Failed to encrypt API secret");
           throw new Error('Failed to encrypt API secret.');
         }
         finalStoredData.encryptedApiSecret = encryptedSecretResult.encryptedText;
-        console.log(`API Secret encrypted successfully. Length: ${String(encryptedSecretResult.encryptedText.length)}`);
       }
       
       if (data.notes) {
-        console.log("Encrypting notes");
         const encryptedNotesResult = encryptData(data.notes, encryptionKey, singleIV);
         if (!encryptedNotesResult) {
           console.error("Failed to encrypt notes");
           throw new Error('Failed to encrypt notes.');
         }
         finalStoredData.encryptedNotes = encryptedNotesResult.encryptedText;
-        console.log(`Notes encrypted successfully. Length: ${String(encryptedNotesResult.encryptedText.length)}`);
       }
 
-      // Log the data being stored (without sensitive info)
-      console.log(`Final data to store: 
-        projectId: ${finalStoredData.projectId},
-        userId: ${finalStoredData.userId},
-        serviceName: ${finalStoredData.serviceName},
-        iv length: ${String(finalStoredData.iv.length)},
-        encryptedApiKey length: ${String(finalStoredData.encryptedApiKey.length)},
-        encryptedApiSecret: ${finalStoredData.encryptedApiSecret ? `present (${String(finalStoredData.encryptedApiSecret.length)} chars)` : 'not provided'},
-        encryptedNotes: ${finalStoredData.encryptedNotes ? `present (${String(finalStoredData.encryptedNotes.length)} chars)` : 'not provided'}
-      `);
-
-      console.log(`Firestore path: /users/${currentUser.uid}/projects/${projectId}/credentials`);
-      
       // Updated path to use nested collections
       const credentialsRef = collection(db, 'users', currentUser.uid, 'projects', projectId, 'credentials');
-      console.log("Adding document to Firestore...");
       const docRef = await addDoc(credentialsRef, finalStoredData);
-      console.log(`Document added successfully with ID: ${docRef.id}`);
       
-      console.log("Updating project with last credential summary");
       await useProjectStore.getState().updateProject(projectId, {
         lastCredentialSummary: {
           addedAt: serverTimestamp(),
           serviceName: data.serviceName,
         },
       });
-      console.log("Project updated successfully");
       
-      console.log("Refreshing credentials list");
       await get().fetchCredentials(projectId);
-      console.log("=== CREDENTIAL ADDED SUCCESSFULLY ===");
       return docRef.id;
     } catch (e: unknown) {
       console.error("Error adding credential:", e);
@@ -241,7 +203,6 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
         console.error(`Error stack: ${e.stack ?? 'No stack trace'}`);
       }
       set({ error: e instanceof Error ? e : new Error(String(e)), isLoading: false });
-      console.log("=== CREDENTIAL ADDITION FAILED ===");
       return null;
     }
   },
@@ -498,7 +459,6 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
       
       set({ isLoading: false });
       
-      console.log(`Successfully reset corrupted credential ${credentialId}`);
     } catch (error) {
       console.error('Error resetting corrupted credential:', error);
       set({ error: new Error('Failed to reset corrupted credential'), isLoading: false });

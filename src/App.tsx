@@ -46,35 +46,30 @@ function App() {
 
 function MainApp() {
   const {
+    closeMasterPasswordModal,
     isLoading: authLoading,
+    isMasterPasswordModalExplicitlyOpen,
     masterPasswordSet,
+    openMasterPasswordModal,
     subscribeToAuthState,
     user,
   } = useAuthStore();
-  const [isMasterPasswordModalOpen, setIsMasterPasswordModalOpen] =
-    useState(false);
 
   useEffect(() => {
     const unsubscribe = subscribeToAuthState();
     return () => {
       unsubscribe();
-    }; // Cleanup subscription on unmount
+    };
   }, [subscribeToAuthState]);
 
   useEffect(() => {
-    // Open modal if user is logged in, auth is not loading, and master password is not set
     if (user && !masterPasswordSet && !authLoading) {
-      setIsMasterPasswordModalOpen(true);
+      openMasterPasswordModal();
     }
-  }, [user, masterPasswordSet, authLoading]);
-
-  const handleCloseModal = () => {
-    setIsMasterPasswordModalOpen(false);
-  };
+  }, [user, masterPasswordSet, authLoading, openMasterPasswordModal]);
 
   return (
     <>
-      {/* AuthGuard will redirect unauthenticated users to /login */}
       <AuthGuard />
 
       <Routes>
@@ -87,13 +82,15 @@ function MainApp() {
             <Route element={<ProjectDetailPage />} path="project/:projectId" />
             <Route element={<CredentialsPage />} path="credentials" />
             <Route element={<ProfilePage />} path="profile" />
-            {/* Other protected routes will go here, inheriting the App layout and protection */}
           </Route>
         </Route>
       </Routes>
       <MasterPasswordModal
-        isOpen={isMasterPasswordModalOpen}
-        onClose={handleCloseModal}
+        isOpen={
+          !!(user && !masterPasswordSet && !authLoading) ||
+          isMasterPasswordModalExplicitlyOpen
+        }
+        onClose={closeMasterPasswordModal}
       />
     </>
   );

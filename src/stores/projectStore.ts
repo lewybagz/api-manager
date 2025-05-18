@@ -8,31 +8,38 @@ import {
   serverTimestamp,
   Timestamp,
   updateDoc,
+  writeBatch,
 } from 'firebase/firestore';
+import {
+  deleteObject,
+  listAll,
+  ref as storageRef,
+} from 'firebase/storage';
 import { create } from 'zustand';
 
-import { 
-  auth, // Auth instance, to get current user if needed for userId
-  db // Firestore instance from firebase.ts
+import {
+  auth,
+  db,
+  storage,
 } from '../firebase';
-import useCredentialStore from './credentialStore'; // Import credential store
+import useCredentialStore from './credentialStore';
 
 export interface Project {
-  createdAt: null | Timestamp; // Firestore Timestamp
-  id: string; // Firestore document ID
+  createdAt: null | Timestamp;
+  id: string;
   lastCredentialSummary?: {
-    addedAt: FieldValue | null | Timestamp; // Allow serverTimestamp
+    addedAt: FieldValue | null | Timestamp;
     serviceName: string;
   };
-  lastUpdated?: null | Timestamp; // New: last time any credential was added/updated
+  lastUpdated?: null | Timestamp;
   projectName: string;
-  updatedAt: null | Timestamp; // Firestore Timestamp
+  updatedAt: null | Timestamp;
   userId: string;
 }
 
 interface ProjectState {
-  addProject: (projectData: { projectName: string; userId: string }) => Promise<null | string>; // Returns new project ID or null
-  clearProjects: () => void; // To clear projects on logout
+  addProject: (projectData: { projectName: string; userId: string }) => Promise<null | string>;
+  clearProjects: () => void;
   deleteProject: (projectId: string) => Promise<void>;
   error: Error | null;
   fetchProjects: () => Promise<void>;
@@ -43,7 +50,7 @@ interface ProjectState {
 
 interface ProjectUpdateData {
   lastCredentialSummary?: {
-    addedAt: FieldValue | null | Timestamp; // Allow serverTimestamp
+    addedAt: FieldValue | null | Timestamp;
     serviceName: string;
   };
   projectName?: string;
@@ -61,7 +68,6 @@ const useProjectStore = create<ProjectState>((set, get) => ({
     }
     set({ error: null, isLoading: true });
     try {
-      // Updated path to use nested collection under user document
       const projectsRef = collection(db, 'users', currentUser.uid, 'projects');
       const docRef = await addDoc(projectsRef, {
         createdAt: serverTimestamp(),
@@ -91,11 +97,27 @@ const useProjectStore = create<ProjectState>((set, get) => ({
     }
     set({ error: null, isLoading: true });
     try {
-      // First, delete all credentials associated with this project
+      const userId = currentUser.uid;
+
+      const projectFilesStoragePath = `users/${userId}/projects/${projectId}/files`;
+      const projectFilesStorageRef = storageRef(storage, projectFilesStoragePath);
+      const listResults = await listAll(projectFilesStorageRef);
+      const deleteFilePromises = listResults.items.map(itemRef => deleteObject(itemRef));
+      await Promise.all(deleteFilePromises);
+
+      const filesMetadataCollectionRef = collection(db, 'users', userId, 'projects', projectId, 'files');
+      const filesQuerySnapshot = await getDocs(filesMetadataCollectionRef);
+      if (!filesQuerySnapshot.empty) {
+        const batch = writeBatch(db);
+        filesQuerySnapshot.forEach(docSnapshot => {
+          batch.delete(docSnapshot.ref);
+        });
+        await batch.commit();
+      }
+
       await useCredentialStore.getState().deleteCredentialsByProject(projectId);
 
-      // Then, delete the project itself using the new nested path
-      const projectRef = doc(db, 'users', currentUser.uid, 'projects', projectId);
+      const projectRef = doc(db, 'users', userId, 'projects', projectId);
       await deleteDoc(projectRef);
       
       set(state => ({
@@ -103,7 +125,7 @@ const useProjectStore = create<ProjectState>((set, get) => ({
         projects: state.projects.filter(p => p.id !== projectId),
       }));
     } catch (e: unknown) {
-      console.error("Error deleting project and its credentials:", e);
+      console.error("Error deleting project, its credentials, and files:", e);
       set({ error: e as Error, isLoading: false });
     }
   },
@@ -116,7 +138,6 @@ const useProjectStore = create<ProjectState>((set, get) => ({
     }
     set({ error: null, isLoading: true });
     try {
-      // Updated path to use nested collection under user document
       const projectsRef = collection(db, 'users', currentUser.uid, 'projects');
       const querySnapshot = await getDocs(projectsRef);
       const projectsData: Project[] = querySnapshot.docs.map(doc => ({
@@ -143,7 +164,6 @@ const useProjectStore = create<ProjectState>((set, get) => ({
     }
     set({ error: null, isLoading: true });
     try {
-      // Updated path to use nested collection under user document
       const projectRef = doc(db, 'users', currentUser.uid, 'projects', projectId);
       const updateFields: Record<string, FieldValue | null | object | string> = {
         lastUpdated: serverTimestamp(),
@@ -177,9 +197,6 @@ const useProjectStore = create<ProjectState>((set, get) => ({
   }
 }));
 
-// Subscribe to auth changes to clear projects on logout
-// This could also be done in the component that uses both stores (e.g., App.tsx)
-// or by making authStore a dependency of projectStore, but this is simpler for now.
 auth.onAuthStateChanged(user => {
   if (!user) {
     useProjectStore.getState().clearProjects();

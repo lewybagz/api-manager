@@ -25,7 +25,8 @@ import useCredentialStore, {
 import useProjectStore from "../stores/projectStore";
 
 const CredentialsPage: React.FC = () => {
-  const { encryptionKey, masterPasswordSet } = useAuthStore();
+  const { encryptionKey, masterPasswordSet, openMasterPasswordModal } =
+    useAuthStore();
   const {
     credentials,
     deleteCredential,
@@ -316,19 +317,22 @@ const CredentialsPage: React.FC = () => {
 
   if (!masterPasswordSet) {
     return (
-      <div className="bg-brand-dark-secondary p-8 rounded-lg shadow-xl text-center">
-        <h2 className="text-2xl font-semibold text-brand-light mb-4">
-          Master Password Required
-        </h2>
-        <p className="text-brand-light-secondary mb-6">
-          Please enter your master password to view credentials.
-        </p>
-        <Link
-          className="bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold py-2 px-4 rounded-md"
-          to="/dashboard"
-        >
-          Back to Dashboard
-        </Link>
+      <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+        <div className="bg-brand-dark-blue-light shadow-xl rounded-lg p-6 text-center">
+          <h2 className="text-2xl font-semibold text-brand-light mb-4">
+            Master Password Not Set
+          </h2>
+          <p className="text-brand-gray mb-6">
+            You need to set a master password to encrypt and decrypt your
+            credentials.
+          </p>
+          <button
+            className="bg-brand-primary hover:bg-brand-primary-dark text-brand-light font-bold py-2 px-4 rounded transition duration-150 ease-in-out"
+            onClick={openMasterPasswordModal}
+          >
+            Set Master Password
+          </button>
+        </div>
       </div>
     );
   }

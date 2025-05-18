@@ -23,7 +23,7 @@ const HomePage: React.FC = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-brand-dark text-center text-brand-light px-4 py-12">
       {/* Hero Section */}
-      <div className="w-full max-w-2xl mx-auto flex flex-col items-center bg-brand-dark-secondary rounded-2xl shadow-2xl p-8 sm:p-12 mb-10 animate-fade-in">
+      <div className="w-full max-w-[65vw] mx-auto flex flex-col items-center bg-brand-dark-secondary rounded-2xl shadow-2xl p-8 sm:p-12 mb-10 animate-fade-in">
         <Shield className="h-14 w-14 text-brand-blue mb-4 animate-pop-in" />
         <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">
           API Credentials Manager
@@ -37,7 +37,7 @@ const HomePage: React.FC = () => {
           {user ? (
             <>
               <button
-                className="flex items-center gap-2 bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold py-3 px-6 rounded-lg text-md shadow-lg transition-all focus:outline-none"
+                className="flex items-center gap-2 bg-brand-blue/50 hover:bg-brand-blue text-white font-semibold py-3 px-6 rounded-lg text-md shadow-lg transition-all focus:outline-none"
                 onClick={() => {
                   void navigate("/dashboard");
                 }}
@@ -46,7 +46,7 @@ const HomePage: React.FC = () => {
                 Go to Dashboard
               </button>
               <button
-                className="flex items-center gap-2 bg-gray-700 hover:bg-brand-blue text-white font-semibold py-3 px-6 rounded-lg text-md shadow-lg transition-all focus:outline-none"
+                className="flex items-center gap-2 bg-brand-blue/70 hover:bg-brand-blue-hover text-white font-semibold py-3 px-6 rounded-lg text-md shadow-lg transition-all focus:outline-none"
                 onClick={() => {
                   void navigate("/dashboard", {
                     state: { quickAdd: "project" },
@@ -57,7 +57,7 @@ const HomePage: React.FC = () => {
                 Add Project
               </button>
               <button
-                className="flex items-center gap-2 bg-gray-700 hover:bg-brand-blue text-white font-semibold py-3 px-6 rounded-lg text-md shadow-lg transition-all focus:outline-none"
+                className="flex items-center gap-2 bg-brand-blue hover:bg-brand-blue text-white font-semibold py-3 px-6 rounded-lg text-md shadow-lg transition-all focus:outline-none"
                 onClick={() => {
                   void navigate("/dashboard", {
                     state: { quickAdd: "credential" },
@@ -81,7 +81,7 @@ const HomePage: React.FC = () => {
       </div>
 
       {/* Security Features Section */}
-      <div className="w-full max-w-4xl mx-auto mb-12">
+      <div className="w-full max-w-[70vw] mx-auto mb-12">
         <h2 className="text-2xl font-bold text-white mb-6">
           Enterprise-Grade Security
         </h2>
@@ -140,7 +140,7 @@ const HomePage: React.FC = () => {
       </div>
 
       {/* Features Grid */}
-      <div className="w-full max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-8 mt-4 animate-fade-in">
+      <div className="w-full max-w-[70vw] mx-auto grid grid-cols-1 sm:grid-cols-2 gap-8 mt-4 animate-fade-in">
         <div className="flex flex-col items-center bg-gray-800 rounded-xl p-6 shadow-md border border-gray-700 hover:border-brand-blue transition-all">
           <FolderPlus className="h-8 w-8 text-brand-blue mb-2" />
           <h3 className="text-lg font-semibold mb-1">Unlimited Projects</h3>

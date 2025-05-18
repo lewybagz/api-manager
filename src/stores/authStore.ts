@@ -10,10 +10,13 @@ import useUserStore from './userStore';
 interface AuthState {
   checkPersistedEncryptionKey: () => void;
   clearEncryptionKey: () => void;
+  closeMasterPasswordModal: () => void;
   encryptionKey: null | string;
   error: Error | null;
   isLoading: boolean;
+  isMasterPasswordModalExplicitlyOpen: boolean;
   masterPasswordSet: boolean;
+  openMasterPasswordModal: () => void;
   setError: (error: Error | null) => void;
   setLoading: (loading: boolean) => void;
   setMasterPassword: (password: string) => Promise<void>;
@@ -91,10 +94,13 @@ const useAuthStore = create<AuthState>((set, get) => ({
     // Clear any sensitive data from sessionStorage
     sessionStorage.removeItem('salt_random_component');
   },
+  closeMasterPasswordModal: () => { set({ isMasterPasswordModalExplicitlyOpen: false }); },
   encryptionKey: null,
   error: null,
   isLoading: true,
+  isMasterPasswordModalExplicitlyOpen: false,
   masterPasswordSet: false,
+  openMasterPasswordModal: () => { set({ isMasterPasswordModalExplicitlyOpen: true }); },
   setError: (error) => { set({ error }); },
   setLoading: (loading) => { set({ isLoading: loading }); },
   // This is a synchronous operation but we use async signature to indicate it could take time
@@ -137,6 +143,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
         encryptionKey: keyString,
         error: null,
         isLoading: false,
+        isMasterPasswordModalExplicitlyOpen: false,
         masterPasswordSet: true,
       });
       
@@ -180,6 +187,8 @@ const useAuthStore = create<AuthState>((set, get) => ({
         clearTimeout(parseInt(timeoutId));
         sessionStorage.removeItem('sessionTimeoutId');
       }
+      // Also close the explicit modal on logout if it was open
+      set({ isMasterPasswordModalExplicitlyOpen: false });
     }
   },
   subscribeToAuthState: () => {

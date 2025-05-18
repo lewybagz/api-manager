@@ -2,14 +2,27 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to check if a string is not empty and within a reasonable length
+    // Global Helper function to check if a string is not empty and within a reasonable length
     function isString(value, minLength, maxLength) {
       return value is string && value.size() >= minLength && value.size() <= maxLength;
     }
 
-    // Helper function to check if a value is a timestamp or null
-    function isTimestampOrNull(value) {
-      return value == null || value is timestamp;
+    // Global Helper function to validate fileName (allows most common characters, incl. spaces, dots, dashes, underscores)
+    function isValidFileName(name) {
+      // Allows \\w, \\s, and specific punctuation. Max 255 chars.
+      // Disallows names that are only "." or "..".
+      // Punctuation set: ! # $ % & ' ( ) * + , - . / : ; < = > ? @ [ ] ^ _ ` { | } ~
+      // Backslashes are doubled for Firestore string literals (e.g., \\w in regex becomes \\\\w in the string).
+      let pattern = '^[\\\\w\\\\s!#\\\\$%&\'\\\\(\\\\)\\\\\\*\\\\+,\\\\-\\\\.\\\\/:;<=>\\\\?\\\\@\\\\[\\\\]\\\\^\\\\_`\\\\{\\\\|\\\\}~]{1,255}$';
+      return name.matches(pattern) && !(name == '.' || name == '..') && isString(name, 1, 255);
+    }
+
+    // Global Helper function to validate contentType and ensure it's not video
+    function isValidContentTypeAndNotVideo(type) {
+      let generalMimePattern = '^[a-zA-Z0-9\\-\\+\\.]+\\/[a-zA-Z0-9\\-\\+\\.]+$';
+      let isGeneralMime = type.matches(generalMimePattern) && isString(type, 3, 128);
+      let isVideo = type.matches('^video\\/.*$'); // Match "video/*"
+      return isGeneralMime && !isVideo;
     }
 
     // Rate Limits Collection
@@ -93,6 +106,39 @@ service cloud.firestore {
                            request.resource.data.updatedAt == request.time;
 
           // DELETE: User can delete their credentials
+          allow delete: if request.auth != null &&
+                           request.auth.uid == userId;
+        }
+
+        // Rule for listing files in the 'files' collection
+        match /files {
+          allow list: if request.auth != null && request.auth.uid == userId;
+        }
+
+        // Nested Files Collection
+        match /files/{fileDocId} {
+
+          // CREATE: User can create file metadata in their projects
+          allow create: if request.auth != null &&
+                           request.auth.uid == userId &&
+                           isValidContentTypeAndNotVideo(request.resource.data.contentType) &&
+                           request.resource.data.size is number && 
+                           request.resource.data.size >= 0 && 
+                           request.resource.data.size <= 10 * 1024 * 1024 && // Max 10MB, consistent with storage rules
+                           request.resource.data.projectId == projectId &&
+                           request.resource.data.userId == userId;
+
+          // READ: User can read their file metadata
+          allow read: if request.auth != null &&
+                         request.auth.uid == userId;
+
+          // UPDATE: Disallow direct updates to file metadata.
+          // If a file's content or fundamental metadata (like name for storage path purposes) changes,
+          // it should typically be handled as a delete & new upload to ensure consistency.
+          // Specific non-critical metadata fields could be allowed if necessary in the future.
+          allow update: if false;
+
+          // DELETE: User can delete their file metadata (should accompany Storage file deletion)
           allow delete: if request.auth != null &&
                            request.auth.uid == userId;
         }

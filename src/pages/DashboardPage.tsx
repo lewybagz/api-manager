@@ -15,6 +15,7 @@ import { toast, Toaster } from "sonner";
 
 import useAuthStore from "../stores/authStore";
 import useCredentialStore from "../stores/credentialStore";
+import useFileStore, { type FileMetadata } from "../stores/fileStore";
 import useProjectStore, { type Project } from "../stores/projectStore";
 
 interface LastCredentialSummary {
@@ -32,13 +33,19 @@ const DashboardPage: React.FC = () => {
     projects,
     updateProject,
   } = useProjectStore();
-  const { masterPasswordSet, user } = useAuthStore();
+  const { masterPasswordSet, openMasterPasswordModal, user } = useAuthStore();
   const {
     credentials,
     fetchAllCredentials,
     isLoading: credentialsLoading,
   } = useCredentialStore();
   const navigate = useNavigate();
+
+  const {
+    fetchAllFilesForUser,
+    isLoading: filesLoading,
+    projectFiles,
+  } = useFileStore();
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -65,8 +72,15 @@ const DashboardPage: React.FC = () => {
     loadProjects();
     if (user && masterPasswordSet) {
       void fetchAllCredentials();
+      void fetchAllFilesForUser();
     }
-  }, [loadProjects, user, masterPasswordSet, fetchAllCredentials]);
+  }, [
+    loadProjects,
+    user,
+    masterPasswordSet,
+    fetchAllCredentials,
+    fetchAllFilesForUser,
+  ]);
 
   const handleAddProject = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -186,7 +200,7 @@ const DashboardPage: React.FC = () => {
     setIsSubmitting(false);
   };
 
-  if (projectsLoading || credentialsLoading) {
+  if (projectsLoading || credentialsLoading || filesLoading) {
     return (
       <div className="text-center p-8 text-brand-light flex flex-col items-center gap-2">
         <Loader2 className="h-4 w-4 inline animate-spin" />
@@ -197,7 +211,9 @@ const DashboardPage: React.FC = () => {
 
   if (!user) {
     return (
-      <p className="text-brand-light">Please log in to see your dashboard.</p>
+      <p className="text-brand-light">
+        Slow Your Roll Pimp. You're not logged in.
+      </p>
     );
   }
   if (!masterPasswordSet) {
@@ -209,6 +225,15 @@ const DashboardPage: React.FC = () => {
         <p className="text-brand-light-secondary mb-6">
           Please enter your master password to unlock and view your projects.
         </p>
+        <button
+          className="bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold py-2 px-4 rounded-md w-full sm:w-auto"
+          onClick={() => {
+            openMasterPasswordModal();
+          }}
+          type="button"
+        >
+          Set Master Password
+        </button>
       </div>
     );
   }
@@ -264,20 +289,60 @@ const DashboardPage: React.FC = () => {
               (c) => c.projectId === project.id
             );
             const numCredentials = projectCredentials.length;
-            let lastCred: LastCredentialSummary | undefined =
-              project.lastCredentialSummary;
-            if (!lastCred && projectCredentials.length > 0) {
-              const last = [...projectCredentials].sort(
+
+            const projectSpecificFiles = projectFiles[project.id] ?? [];
+            const numFiles = projectSpecificFiles.length;
+
+            let lastCred: LastCredentialSummary | undefined;
+            let lastCredentialTimestamp: null | Timestamp = null;
+
+            if (projectCredentials.length > 0) {
+              const sortedCredentials = [...projectCredentials].sort(
                 (a, b) =>
                   (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0)
-              )[0];
-              if (last.createdAt) {
+              );
+              if (sortedCredentials[0]?.createdAt) {
                 lastCred = {
-                  addedAt: last.createdAt,
-                  serviceName: last.serviceName,
+                  addedAt: sortedCredentials[0].createdAt,
+                  serviceName: sortedCredentials[0].serviceName,
                 };
+                lastCredentialTimestamp = sortedCredentials[0].createdAt;
               }
             }
+
+            let lastFile: FileMetadata | undefined;
+            let lastFileTimestamp: null | Timestamp = null;
+            if (projectSpecificFiles.length > 0) {
+              const sortedFiles = [...projectSpecificFiles].sort(
+                (a, b) => b.uploadedAt.seconds - a.uploadedAt.seconds
+              );
+              if (sortedFiles.length > 0) {
+                lastFile = sortedFiles[0];
+                lastFileTimestamp = sortedFiles[0].uploadedAt;
+              }
+            }
+
+            let lastAddedItemName: null | string = null;
+            let lastAddedItemTimestamp: null | Timestamp = null;
+            let itemType: "credential" | "file" | null = null;
+
+            if (lastCredentialTimestamp && lastCred) {
+              lastAddedItemName = lastCred.serviceName;
+              lastAddedItemTimestamp = lastCredentialTimestamp;
+              itemType = "credential";
+            }
+
+            if (lastFileTimestamp && lastFile) {
+              if (
+                !lastAddedItemTimestamp ||
+                lastFileTimestamp.seconds > lastAddedItemTimestamp.seconds
+              ) {
+                lastAddedItemName = lastFile.fileName;
+                lastAddedItemTimestamp = lastFileTimestamp;
+                itemType = "file";
+              }
+            }
+
             const lastUpdated = project.lastUpdated ?? project.updatedAt;
             return (
               <div
@@ -325,12 +390,25 @@ const DashboardPage: React.FC = () => {
                   </nav>
                 </div>
 
-                <div className="text-sm text-gray-400 mb-2">
-                  <span className="font-semibold text-brand-blue">
-                    {numCredentials}
-                  </span>{" "}
-                  API {numCredentials === 1 ? "key" : "keys"}
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="text-sm text-gray-400">
+                    <span className="font-semibold text-brand-blue">
+                      {numCredentials}
+                    </span>{" "}
+                    API {numCredentials === 1 ? "key" : "keys"}
+                  </div>
+                  <div className="font-white font-bold">
+                    <span className="text-gray-400">|</span>
+                  </div>
+
+                  <div className="text-sm text-gray-400">
+                    <span className="font-semibold text-[#48a324]">
+                      {numFiles}
+                    </span>{" "}
+                    {numFiles === 1 ? "file" : "files"}
+                  </div>
                 </div>
+
                 <div className="text-sm text-gray-400 flex items-center mb-2">
                   <Clock className="h-4 w-4 mr-1" />
                   Last updated:{" "}
@@ -341,22 +419,28 @@ const DashboardPage: React.FC = () => {
                     : "N/A"}
                 </div>
                 <div className="text-xs text-gray-500">
-                  {lastCred ? (
+                  {lastAddedItemTimestamp ? (
                     <>
                       Last added:{" "}
                       <span className="font-semibold text-brand-light">
-                        {lastCred.serviceName}
+                        {lastAddedItemName}
                       </span>{" "}
-                      {lastCred.addedAt instanceof Timestamp
-                        ? formatDistanceToNow(lastCred.addedAt.toDate(), {
-                            addSuffix: true,
-                          })
-                        : lastCred.addedAt
-                        ? "Processing..."
-                        : "N/A"}
+                      {formatDistanceToNow(lastAddedItemTimestamp.toDate(), {
+                        addSuffix: true,
+                      })}
+                      {itemType === "file" && (
+                        <span className="text-xs text-gray-400 ml-1">
+                          (file)
+                        </span>
+                      )}
+                      {itemType === "credential" && (
+                        <span className="text-xs text-gray-400 ml-1">
+                          (credential)
+                        </span>
+                      )}
                     </>
                   ) : (
-                    <span>No credentials added yet.</span>
+                    <span>No credentials or files added yet.</span>
                   )}
                 </div>
               </div>
