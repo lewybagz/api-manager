@@ -268,6 +268,7 @@ const CredentialModal = ({
           {editingCredential ? "Edit Credential" : "Add New Credential"}
         </h2>
         <form
+          autoComplete="off"
           onSubmit={(e) => {
             console.log("Form submission initiated");
             return void handleSubmit(onSubmit)(e);
@@ -282,7 +283,7 @@ const CredentialModal = ({
             </label>
             <input
               aria-label="Service Name"
-              autoComplete="new-password"
+              autoComplete="off"
               className="w-full rounded-md border border-gray-600 bg-gray-700 p-2.5 text-white placeholder-gray-400"
               id="serviceName"
               placeholder="e.g., AWS, Stripe, OpenAI"
@@ -320,7 +321,7 @@ const CredentialModal = ({
             <div className="relative">
               <input
                 aria-label="API Key"
-                autoComplete="new-password"
+                autoComplete="off"
                 className="w-full rounded-md border border-gray-600 bg-gray-700 p-2.5 text-white placeholder-gray-400 pr-10"
                 id="apiKey"
                 placeholder="Enter API Key"

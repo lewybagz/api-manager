@@ -21,52 +21,51 @@ const ProjectFileCard: React.FC<ProjectFileCardProps> = ({
 }) => {
   return (
     <div
-      className="bg-brand-dark-secondary p-4 rounded-lg shadow-md flex flex-col justify-between"
-      key={file.id} // Key should ideally be on the mapped element in the parent, but can be here too if this is the top-level element returned by map's callback
+      className="bg-brand-dark-secondary p-3 rounded-lg shadow-md flex flex-col justify-between h-full"
+      key={file.id}
     >
       <div>
-        <div className="flex justify-between items-start mb-2">
+        <div className="flex justify-between items-start mb-1.5">
           <h3
-            className="text-lg font-semibold text-brand-blue truncate mr-2"
+            className="text-base font-semibold text-brand-blue truncate mr-2"
             title={file.fileName}
           >
             {file.fileName}
           </h3>
-          <div className="relative">
+          <div className="relative flex-shrink-0">
             <button
-              className="p-1 text-gray-400 hover:text-white"
-              onClick={onToggleMenu} // Use the passed-in handler
+              aria-label="Toggle file menu"
+              className="p-0.5 text-gray-400 hover:text-white"
+              onClick={onToggleMenu}
+              title="More options"
             >
-              <MoreVertical size={20} />
+              <MoreVertical size={18} />
             </button>
-            {isMenuOpen && ( // Use the passed-in boolean to control visibility
-              <div className="absolute right-0 mt-1 w-40 bg-gray-700 border border-gray-600 rounded-md shadow-lg z-10">
+            {isMenuOpen && (
+              <div className="absolute right-0 mt-1 w-36 bg-gray-700 border border-gray-600 rounded-md shadow-lg z-10">
                 <button
-                  className="w-full text-left px-3 py-2 text-sm text-gray-200 hover:bg-gray-600 flex items-center"
-                  onClick={onDownload} // Use the passed-in handler
+                  className="w-full text-left px-2.5 py-1.5 text-xs text-gray-200 hover:bg-gray-600 flex items-center"
+                  onClick={onDownload}
                 >
-                  <Download className="mr-2" size={16} /> Download
+                  <Download className="mr-1.5" size={14} /> Download
                 </button>
                 <button
-                  className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-gray-600 flex items-center"
-                  onClick={onDelete} // Use the passed-in handler
+                  className="w-full text-left px-2.5 py-1.5 text-xs text-red-400 hover:bg-gray-600 flex items-center"
+                  onClick={onDelete}
                 >
-                  <Trash2 className="mr-2" size={16} /> Delete
+                  <Trash2 className="mr-1.5" size={14} /> Delete
                 </button>
-                {/* Placeholder for a future 'View Details' or preview action 
-                 <button className="w-full text-left px-3 py-2 text-sm text-gray-200 hover:bg-gray-600 flex items-center">
-                   <Eye size={16} className="mr-2" /> View Details
-                 </button> 
-                 */}
               </div>
             )}
           </div>
         </div>
-        <p className="text-xs text-gray-400 mb-1">Type: {file.contentType}</p>
-        <p className="text-xs text-gray-400 mb-1">
+        <p className="text-2xs text-gray-400 mb-0.5">
+          Type: {file.contentType || "N/A"}
+        </p>
+        <p className="text-2xs text-gray-400 mb-0.5">
           Size: {formatFileSize(file.size)}
         </p>
-        <p className="text-xs text-gray-400 mb-3">
+        <p className="text-2xs text-gray-400 mb-2">
           Uploaded:{" "}
           {new Date(file.uploadedAt.seconds * 1000).toLocaleDateString()}
         </p>
