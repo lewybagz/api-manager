@@ -1,130 +1,185 @@
-import { UploadCloud, X } from "lucide-react";
+import { Loader2, UploadCloud } from "lucide-react";
 import React, { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 
+import useAuthStore from "../../stores/authStore";
 import useFileStore from "../../stores/fileStore";
+import SensitiveFileWarningModal from "./SensitiveFileWarningModal";
 
 interface FileUploadAreaProps {
   projectId: string;
 }
 
-const FileUploadArea: React.FC<FileUploadAreaProps> = ({ projectId }) => {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const { uploadFile } = useFileStore();
+const SENSITIVE_EXTENSIONS = [
+  ".env",
+  ".pem",
+  ".key",
+  ".secret",
+  ".ovpn",
+  ".credential",
+  ".cscfg",
+  ".rdp",
+];
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    if (acceptedFiles.length > 0) {
+const FileUploadArea: React.FC<FileUploadAreaProps> = ({ projectId }) => {
+  const { isLoading, uploadFile } = useFileStore();
+  const { masterPasswordSet } = useAuthStore();
+
+  // Default to true if master password is set, otherwise false.
+  const [shouldEncrypt, setShouldEncrypt] = useState(masterPasswordSet);
+
+  const [showSensitiveFileModal, setShowSensitiveFileModal] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [uploadingFileName, setUploadingFileName] = useState<null | string>(
+    null
+  );
+  const [uploadError, setUploadError] = useState<null | string>(null);
+
+  const handleFileUpload = useCallback(
+    async (file: File, encrypt: boolean) => {
+      setShowSensitiveFileModal(false);
+      setPendingFile(null);
+      setUploadingFileName(file.name);
+      setUploadError(null);
+      try {
+        await uploadFile(projectId, file, encrypt);
+        toast.success(`File "${file.name}" uploaded successfully!`);
+        setUploadingFileName(null);
+      } catch (error) {
+        setUploadError(
+          error instanceof Error ? error.message : "Failed to upload file."
+        );
+        toast.error(
+          error instanceof Error ? error.message : "Failed to upload file."
+        );
+        setUploadingFileName(null);
+      }
+    },
+    [projectId, uploadFile]
+  );
+
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
       const file = acceptedFiles[0];
+
       if (file.size > 10 * 1024 * 1024) {
         // 10MB limit
-        toast.error("File too large", {
-          description: "Maximum file size is 10MB.",
+        toast.error("File exceeds 10MB limit.", {
+          description: `The file "${file.name}" is too large.`,
         });
-        setSelectedFile(null);
         return;
       }
-      setSelectedFile(file);
-    }
-  }, []);
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+      const isSensitive = SENSITIVE_EXTENSIONS.some((ext) =>
+        file.name.toLowerCase().endsWith(ext)
+      );
+
+      if (isSensitive) {
+        setPendingFile(file);
+        setShowSensitiveFileModal(true);
+      } else {
+        void handleFileUpload(file, shouldEncrypt);
+      }
+    },
+    [handleFileUpload, shouldEncrypt]
+  );
+
   const { getInputProps, getRootProps, isDragActive } = useDropzone({
+    disabled: isLoading,
     multiple: false,
     onDrop,
   });
 
-  const handleUpload = async () => {
-    if (!selectedFile) {
-      toast.error("No file selected", {
-        description: "Please select a file to upload.",
-      });
-      return;
-    }
-
-    setIsUploading(true);
-    try {
-      const uploadedFileMetadata = await uploadFile(projectId, selectedFile);
-      if (uploadedFileMetadata) {
-        toast.success("File uploaded successfully", {
-          description: `${selectedFile.name} has been uploaded.`,
-        });
-        setSelectedFile(null); // Clear selection after successful upload
-      } else {
-        // Error handling is done within the store, but we can show a generic message if null is returned
-        toast.error("Upload failed", {
-          description: "Could not upload the file. Please try again.",
-        });
-      }
-    } catch (error: unknown) {
-      console.error("Upload error:", error);
-      toast.error("Upload failed", {
-        description: "An unexpected error occurred. Please try again.",
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const handleRemoveFile = () => {
-    setSelectedFile(null);
-  };
+  // Effect to sync checkbox state if master password is set/removed after component mounts
+  React.useEffect(() => {
+    setShouldEncrypt(masterPasswordSet);
+  }, [masterPasswordSet]);
 
   return (
-    <div className="mb-6 p-4 border border-dashed border-gray-600 rounded-lg bg-brand-dark-secondary">
+    <>
       <div
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         {...getRootProps()}
-        className={`p-6 border-2 border-dashed rounded-md cursor-pointer text-center transition-colors 
+        className={`p-6 border-2 border-dashed rounded-lg text-center cursor-pointer transition-colors
           ${
             isDragActive
               ? "border-brand-blue bg-blue-900/20"
-              : "border-gray-500 hover:border-brand-blue"
-          }`}
+              : "border-gray-600 hover:border-gray-500"
+          }
+          ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
       >
-        {/* eslint-disable-next-line @typescript-eslint/no-unsafe-call */}
         <input {...getInputProps()} />
-        <UploadCloud className="h-12 w-12 mx-auto text-gray-400 mb-2" />
-        {isDragActive ? (
-          <p className="text-brand-light">Drop the file here ...</p>
+        {isLoading && uploadingFileName ? (
+          <>
+            <Loader2 className="mx-auto h-10 w-10 text-brand-blue animate-spin mb-2" />
+            <p className="text-brand-blue font-semibold">
+              Uploading "{uploadingFileName}"...
+            </p>
+          </>
         ) : (
-          <p className="text-brand-light-secondary">
-            Drag & drop a file here, or click to select file (Max 10MB)
-          </p>
+          <>
+            <UploadCloud className="mx-auto h-12 w-12 text-brand-blue" />
+            <p className="mt-2 text-sm text-gray-400">
+              {isDragActive ? (
+                "Drop the file here ..."
+              ) : (
+                <span>
+                  Drag & drop a file, or{" "}
+                  <span className="text-brand-blue font-bold">
+                    click to select
+                  </span>
+                </span>
+              )}
+            </p>
+            <p className="text-xs text-gray-500">Max file size: 10MB</p>
+          </>
+        )}
+        {uploadError && (
+          <p className="mt-2 text-xs text-red-500">{uploadError}</p>
         )}
       </div>
-
-      {selectedFile && (
-        <div className="mt-4 p-3 bg-gray-700 rounded-md flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-brand-light truncate max-w-xs sm:max-w-sm md:max-w-md">
-              {selectedFile.name}
-            </p>
-            <p className="text-xs text-gray-400">
-              {(selectedFile.size / 1024).toFixed(2)} KB
-            </p>
-          </div>
-          <div className="flex items-center">
-            <button
-              className="p-1.5 text-red-400 hover:text-red-300 transition-colors mr-2"
-              onClick={handleRemoveFile}
-              title="Remove file"
-              type="button"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <button
-              className="bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold py-2 px-4 rounded-md text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-              disabled={isUploading}
-              onClick={() => void handleUpload()}
-            >
-              {isUploading ? "Uploading..." : "Upload File"}
-            </button>
-          </div>
-        </div>
+      <div className="mt-4 flex items-center">
+        <input
+          checked={shouldEncrypt}
+          className="h-4 w-4 rounded border-gray-500 bg-brand-dark text-brand-blue focus:ring-brand-blue disabled:opacity-50"
+          disabled={!masterPasswordSet}
+          id="encrypt-checkbox"
+          onChange={(e) => {
+            setShouldEncrypt(e.target.checked);
+          }}
+          type="checkbox"
+        />
+        <label
+          className="ml-2 block text-sm text-brand-light-secondary"
+          htmlFor="encrypt-checkbox"
+        >
+          Encrypt file with master password
+        </label>
+      </div>
+      {!masterPasswordSet && (
+        <p className="text-xs text-yellow-500 mt-1">
+          Set a master password to enable client-side encryption.
+        </p>
       )}
-    </div>
+
+      {pendingFile && (
+        <SensitiveFileWarningModal
+          fileName={pendingFile.name}
+          isOpen={showSensitiveFileModal}
+          isSessionLocked={!masterPasswordSet}
+          onCancel={() => {
+            setPendingFile(null);
+            setShowSensitiveFileModal(false);
+          }}
+          onConfirmEncrypt={() => {
+            void handleFileUpload(pendingFile, true);
+          }}
+          onConfirmUploadWithoutEncryption={() => {
+            void handleFileUpload(pendingFile, false);
+          }}
+        />
+      )}
+    </>
   );
 };
 

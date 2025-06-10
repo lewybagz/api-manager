@@ -1,3 +1,4 @@
+import { cn } from "@/utils/cn";
 import {
   CheckCircle,
   Copy,
@@ -51,39 +52,40 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
   onUpdateNeeded,
 }) => {
   return (
-    <div
-      className="bg-brand-dark-secondary p-4 rounded-lg shadow-lg flex flex-col h-full"
-      key={credential.id}
-    >
-      <div className="flex justify-between items-center mb-2.5">
-        <h2 className="w-full text-base sm:text-lg font-semibold text-brand-blue truncate mr-2 pr-2 pb-1 border-b border-white/10">
+    <div className="relative bg-brand-dark-secondary border border-border border-l-4 border-l-brand-blue border-r-4 border-r-brand-blue rounded-lg shadow-sm p-6 flex flex-col gap-4 min-w-0 w-[85vw] md:w-[25vw] mx-auto transition-shadow hover:shadow-md min-h-[320px] h-full">
+      {/* Header: Service Name and Actions */}
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-y-2 gap-x-2">
+        <div className="flex-1 min-w-0 w-full md:w-auto">
           <button
             aria-label="Copy service name to clipboard"
-            className="group flex items-center w-full text-left text-brand-blue truncate bg-transparent border-none p-0 m-0 focus:outline-none hover:text-white transition-colors"
+            className="group flex items-center w-full text-left text-brand-blue font-semibold text-lg truncate bg-transparent border-none p-0 m-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue/30 focus-visible:ring-offset-2 rounded-md"
             onClick={onCopyServiceName}
             style={{ WebkitTapHighlightColor: "transparent" }}
             title="Copy service name to clipboard"
           >
-            <span className="truncate flex-1">{credential.serviceName}</span>
-            <span className="ml-1.5 align-middle flex-shrink-0">
+            <span className="truncate flex-1 group-hover:text-brand-blue transition-colors">
+              {credential.serviceName}
+            </span>
+            <span className="ml-2 align-middle flex-shrink-0">
               {isServiceNameCopied ? (
-                <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                <CheckCircle className="h-4 w-4 text-green-500" />
               ) : (
-                <Copy className="h-4 w-4 group-hover:text-white text-gray-400" />
+                <Copy className="h-4 w-4 text-gray-400 group-hover:text-brand-blue" />
               )}
             </span>
           </button>
-        </h2>
-        <div className="flex space-x-1.5 flex-shrink-0">
+          <div className="text-xs text-gray-400 mt-1">Project Credential</div>
+        </div>
+        <div className="flex gap-1.5 md:justify-end flex-shrink-0 w-full md:w-auto">
           <button
-            className="text-sm text-yellow-400 hover:text-yellow-300 transition-colors p-1"
+            className="text-sm text-amber-500 hover:text-amber-400 p-1.5 rounded-md transition-colors"
             onClick={onEdit}
             title="Edit credential"
           >
             <SquarePen className="h-4 w-4" />
           </button>
           <button
-            className="text-sm text-red-500 hover:text-red-400 transition-colors p-1"
+            className="text-sm text-red-500 hover:text-red-400 p-1.5 rounded-md transition-colors"
             onClick={onDelete}
             title="Delete credential"
           >
@@ -92,113 +94,125 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
           {credential.apiKey === "PLACEHOLDER-RESET-VALUE" &&
             onUpdateNeeded && (
               <button
-                className="text-xs text-green-500 hover:text-green-400 transition-colors flex items-center p-1"
+                className="text-xs text-green-500 hover:text-green-400 flex items-center p-1.5 rounded-md transition-colors"
                 onClick={onUpdateNeeded}
                 title="This credential needs to be updated with correct values"
               >
-                <RefreshCw className="h-3.5 w-3.5 mr-0.5" />
-                Update
+                <RefreshCw className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">Update</span>
               </button>
             )}
         </div>
       </div>
 
-      <div className="space-y-2.5 text-xs sm:text-sm flex-grow">
+      {/* Credential fields */}
+      <div className="space-y-3 text-xs sm:text-sm">
+        {/* API Key field */}
         <div>
-          <span className="font-medium text-gray-300">API Key:</span>
-          <div className="flex items-center justify-between mt-0.5">
-            <span
-              className={`font-mono p-1.5 rounded bg-gray-800 overflow-x-hidden whitespace-nowrap text-ellipsis block ${
-                isApiKeyRevealed ? "text-gray-200" : "text-gray-200"
-              } transition-colors duration-300 w-full mr-1.5`}
-              title={isApiKeyRevealed ? credential.apiKey : "Masked API Key"}
-            >
-              {maskCredential(credential.apiKey, isApiKeyRevealed)}
-            </span>
-            <div className="flex-shrink-0 flex space-x-1.5">
+          <div className="flex items-center justify-between mb-1">
+            <span className="font-medium text-gray-300">API Key</span>
+            <div className="flex-shrink-0 flex gap-1.5">
               <button
-                className="p-1.5 text-gray-400 hover:text-white transition-colors"
+                className={cn(
+                  "p-1.5 rounded-md transition-colors",
+                  isApiKeyCopied || clipboardTimeoutApiKey
+                    ? "text-green-500"
+                    : "text-gray-400 hover:text-brand-blue hover:bg-brand-blue/10"
+                )}
                 onClick={onCopyApiKey}
                 title="Copy API Key"
               >
                 {isApiKeyCopied || clipboardTimeoutApiKey ? (
-                  <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                  <CheckCircle className="h-4 w-4" />
                 ) : (
-                  <Copy className="h-3.5 w-3.5" />
+                  <Copy className="h-4 w-4" />
                 )}
               </button>
               <button
-                className="p-1.5 text-gray-400 hover:text-white transition-colors"
+                className={cn(
+                  "p-1.5 rounded-md transition-colors",
+                  isApiKeyRevealed
+                    ? "text-amber-500 hover:text-amber-400 hover:bg-amber-500/10"
+                    : "text-gray-400 hover:text-brand-blue hover:bg-brand-blue/10"
+                )}
                 onClick={onToggleApiKeyReveal}
                 title={isApiKeyRevealed ? "Hide API Key" : "Show API Key"}
               >
                 {isApiKeyRevealed ? (
-                  <EyeOff className="h-3.5 w-3.5" />
+                  <EyeOff className="h-4 w-4" />
                 ) : (
-                  <Eye className="h-3.5 w-3.5" />
+                  <Eye className="h-4 w-4" />
                 )}
               </button>
             </div>
           </div>
+          <div className="font-mono p-2 rounded bg-gray-800 text-gray-200 overflow-x-auto whitespace-nowrap text-ellipsis border border-gray-700">
+            {maskCredential(credential.apiKey, isApiKeyRevealed)}
+          </div>
         </div>
 
+        {/* API Secret field (if exists) */}
         {credential.apiSecret && (
           <div>
-            <span className="font-medium text-gray-300">API Secret:</span>
-            <div className="flex items-center justify-between mt-0.5">
-              <span
-                className={`font-mono p-1.5 rounded bg-gray-800 overflow-x-hidden whitespace-nowrap text-ellipsis block ${
-                  isApiSecretRevealed ? "text-gray-200" : "text-gray-200"
-                } transition-colors duration-300 w-full mr-1.5`}
-                title={
-                  isApiSecretRevealed
-                    ? credential.apiSecret
-                    : "Masked API Secret"
-                }
-              >
-                {maskCredential(credential.apiSecret, isApiSecretRevealed)}
-              </span>
-              <div className="flex-shrink-0 flex space-x-1.5">
+            <div className="flex items-center justify-between mb-1">
+              <span className="font-medium text-gray-300">API Secret</span>
+              <div className="flex-shrink-0 flex gap-1.5">
                 <button
-                  className="p-1.5 text-gray-400 hover:text-white transition-colors"
+                  className={cn(
+                    "p-1.5 rounded-md transition-colors",
+                    isApiSecretCopied || clipboardTimeoutApiSecret
+                      ? "text-green-500"
+                      : "text-gray-400 hover:text-brand-blue hover:bg-brand-blue/10"
+                  )}
                   onClick={onCopyApiSecret}
                   title="Copy API Secret"
                 >
                   {isApiSecretCopied || clipboardTimeoutApiSecret ? (
-                    <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                    <CheckCircle className="h-4 w-4" />
                   ) : (
-                    <Copy className="h-3.5 w-3.5" />
+                    <Copy className="h-4 w-4" />
                   )}
                 </button>
                 <button
-                  className="p-1.5 text-gray-400 hover:text-white transition-colors"
+                  className={cn(
+                    "p-1.5 rounded-md transition-colors",
+                    isApiSecretRevealed
+                      ? "text-amber-500 hover:text-amber-400 hover:bg-amber-500/10"
+                      : "text-gray-400 hover:text-brand-blue hover:bg-brand-blue/10"
+                  )}
                   onClick={onToggleApiSecretReveal}
                   title={
                     isApiSecretRevealed ? "Hide API Secret" : "Show API Secret"
                   }
                 >
                   {isApiSecretRevealed ? (
-                    <EyeOff className="h-3.5 w-3.5" />
+                    <EyeOff className="h-4 w-4" />
                   ) : (
-                    <Eye className="h-3.5 w-3.5" />
+                    <Eye className="h-4 w-4" />
                   )}
                 </button>
               </div>
             </div>
+            <div className="font-mono p-2 rounded bg-gray-800 text-gray-200 overflow-x-auto whitespace-nowrap text-ellipsis border border-gray-700">
+              {maskCredential(credential.apiSecret, isApiSecretRevealed)}
+            </div>
           </div>
         )}
 
+        {/* Notes field (if exists) */}
         {credential.notes && (
           <div>
-            <span className="font-medium text-gray-300">Notes:</span>
-            <p className="mt-0.5 p-1.5 rounded bg-gray-800 text-gray-300 whitespace-pre-wrap break-words">
+            <span className="font-medium text-gray-300 block mb-1">Notes</span>
+            <div className="p-2 rounded bg-gray-800 text-gray-300 whitespace-pre-wrap break-words border border-gray-700">
               {credential.notes}
-            </p>
+            </div>
           </div>
         )}
       </div>
+
+      {/* Timestamp footer */}
       {(credential.createdAt ?? credential.updatedAt) && (
-        <div className="mt-3 pt-2 border-t border-gray-700/50 text-2xs text-gray-500 flex justify-between">
+        <div className="mt-2 pt-2 border-t border-gray-700/50 text-[11px] text-gray-500 flex justify-between">
           <span>
             {credential.createdAt &&
               `Created: ${new Date(

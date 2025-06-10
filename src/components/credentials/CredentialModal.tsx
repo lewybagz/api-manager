@@ -3,6 +3,7 @@ import type { SubmitHandler } from "react-hook-form";
 import { Eye, EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import useCredentialStore, {
   type DecryptedCredential,
@@ -29,6 +30,8 @@ const CredentialModal = ({
   projectId,
 }: CredentialModalProps) => {
   const { addCredential, updateCredential } = useCredentialStore();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const {
     formState: { errors },
@@ -243,6 +246,15 @@ const CredentialModal = ({
           }`
         );
         onClose(true, "add");
+
+        // Check if modal was opened via command palette
+        const modalParam = searchParams.get("modal");
+        if (modalParam === "credential") {
+          console.log(
+            "Modal opened via command palette, navigating to dashboard"
+          );
+          void navigate("/dashboard");
+        }
       }
       reset();
       console.log("=== FORM SUBMISSION COMPLETED SUCCESSFULLY ===");

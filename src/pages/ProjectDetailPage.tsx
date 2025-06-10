@@ -1,6 +1,11 @@
 import { Loader2 } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { toast, Toaster } from "sonner";
 
 import CredentialModal from "../components/credentials/CredentialModal";
@@ -13,9 +18,11 @@ import useCredentialStore, {
   type DecryptedCredential,
 } from "../stores/credentialStore";
 import useProjectStore from "../stores/projectStore";
+import useRecentItemsStore from "../stores/recentItemsStore";
 
 const ProjectDetailPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { isLoading: projectsLoading, projects } = useProjectStore();
   const {
@@ -27,6 +34,7 @@ const ProjectDetailPage: React.FC = () => {
   } = useCredentialStore();
   const { encryptionKey, masterPasswordSet, openMasterPasswordModal } =
     useAuthStore();
+  const { addRecentItem } = useRecentItemsStore();
 
   const [project, setProject] = useState<
     null | ReturnType<typeof useProjectStore.getState>["projects"][0]
@@ -59,6 +67,26 @@ const ProjectDetailPage: React.FC = () => {
     }
   }, [navigate, projectId]);
 
+  useEffect(() => {
+    const modalType = searchParams.get("modal");
+    const credentialId = searchParams.get("id");
+
+    if (modalType === "credential") {
+      if (credentialId) {
+        // Find the credential to edit
+        const credentialToEdit = credentials.find((c) => c.id === credentialId);
+        if (credentialToEdit) {
+          setEditingCredential(credentialToEdit);
+          setIsModalOpen(true);
+        }
+      } else {
+        // Open modal for new credential
+        setEditingCredential(null);
+        setIsModalOpen(true);
+      }
+    }
+  }, [searchParams, credentials]);
+
   const loadCredentials = useCallback(() => {
     if (masterPasswordSet && encryptionKey && projectId) {
       void fetchCredentials(projectId).catch((error: unknown) => {
@@ -78,8 +106,13 @@ const ProjectDetailPage: React.FC = () => {
     const currentProject = projects.find((p) => p.id === projectId);
     if (currentProject) {
       setProject(currentProject);
+      addRecentItem({
+        id: currentProject.id,
+        name: currentProject.projectName,
+        type: "project",
+      });
     }
-  }, [projectId, projects]);
+  }, [projectId, projects, addRecentItem]);
 
   const handleAddCredential = () => {
     setEditingCredential(null);

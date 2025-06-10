@@ -1,6 +1,8 @@
 import { Menu, Shield } from "lucide-react";
 import React from "react";
 
+import EncryptionStatusIndicator from "../auth/EncryptionStatusIndicator";
+
 interface MobileHeaderProps {
   onMenuOpen: () => void;
 }
@@ -13,13 +15,16 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ onMenuOpen }) => {
         <Shield className="h-6 w-6 text-brand-blue" />
         <span className="ml-2 text-lg font-bold text-white">Zeker</span>
       </div>
-      <button
-        aria-label="Open navigation menu"
-        className="text-gray-300 hover:text-white focus:outline-none rounded-md p-1 -mr-1"
-        onClick={onMenuOpen}
-      >
-        <Menu className="h-6 w-6" />
-      </button>
+      <div className="flex items-center space-x-2">
+        <EncryptionStatusIndicator />
+        <button
+          aria-label="Open navigation menu"
+          className="text-gray-300 hover:text-white focus:outline-none rounded-md p-1"
+          onClick={onMenuOpen}
+        >
+          <Menu className="h-6 w-6" />
+        </button>
+      </div>
     </header>
   );
 };

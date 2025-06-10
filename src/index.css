@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap");
 
 @tailwind base;
@@ -9,10 +10,42 @@
   h2 {
     font-family: "IBM Plex Serif", serif;
   }
+  p,
+  span {
+    font-family: "Barlow Semi Condensed", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+  }
+  label {
+    font-family: "Barlow Semi Condensed", sans-serif;
+    font-weight: 600;
+    font-style: bold;
+  }
 }
 
 body {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   /* Basic dark theme background and text color, Tailwind will override where specified */
   @apply bg-gray-900 text-gray-100;
+}
+
+@layer utilities {
+  .bg-lines-pattern-light {
+    background-image: repeating-linear-gradient(
+      135deg,
+      #3b82f6 0px,
+      #3b82f6 2px,
+      transparent 2px,
+      transparent 30px
+    );
+  }
+  .bg-lines-pattern {
+    background-image: repeating-linear-gradient(
+      135deg,
+      #3b82f6 0px,
+      #3b82f6 2px,
+      transparent 2px,
+      transparent 30px
+    );
+  }
 }

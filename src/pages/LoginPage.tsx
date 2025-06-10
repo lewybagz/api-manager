@@ -338,9 +338,38 @@ const LoginPage: React.FC = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-transparent px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md">
-        <div className="bg-transparent flex flex-col items-center animate-fade-in">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-transparent relative overflow-hidden">
+      {/* SVG Background */}
+      <div className="fixed inset-0 w-full h-full -z-10 pointer-events-none">
+        <svg
+          height="100%"
+          viewBox="0 0 1600 800"
+          width="100%"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <rect fill="#F7FAFC" height="800" width="1600" />
+          <g fillOpacity="0.66">
+            <polygon
+              fill="#c9dfee"
+              points="800 100 0 200 0 800 1600 800 1600 200"
+            />
+            <polygon
+              fill="#98c4e3"
+              points="800 200 0 400 0 800 1600 800 1600 400"
+            />
+            <polygon
+              fill="#64a9db"
+              points="800 300 0 600 0 800 1600 800 1600 600"
+            />
+            <polygon fill="#2c8ed7" points="1600 800 800 400 0 800" />
+            <polygon fill="#1a6eac" points="1280 800 800 500 320 800" />
+            <polygon fill="#0e4c7c" points="533.3 800 1066.7 800 800 600" />
+            <polygon fill="#062B48" points="684.1 800 914.3 800 800 700" />
+          </g>
+        </svg>
+      </div>
+      <div className="w-full max-w-md bg-white/10 dark:bg-brand-dark/80 backdrop-blur border border-brand-blue/30 shadow-lg rounded-2xl p-8 pt-0 animate-fade-in">
+        <div className="flex flex-col items-center">
           {/* <Shield className="h-12 w-12 text-brand-blue mb-3 animate-pop-in" /> */}
           <img
             alt="Zeker Logo"

@@ -7,267 +7,246 @@ import {
   query,
   serverTimestamp,
   Timestamp,
-  where,
-} from 'firebase/firestore';
+} from "firebase/firestore";
 import {
   deleteObject,
-  getDownloadURL,
+  getBlob,
   ref,
   uploadBytes,
-} from 'firebase/storage';
-import { v4 as uuidv4 } from 'uuid'; // For generating unique file IDs
-import { create } from 'zustand';
+} from "firebase/storage";
+import { create } from "zustand";
 
-import { auth, db, storage } from '../firebase'; // Assuming storage is exported from firebase.ts
+import { db, storage } from "../firebase";
+import {
+  decryptWithKey,
+  encryptWithKey,
+} from "../services/encryptionService";
+import { ErrorCategory, logger } from "../services/logger";
+import useAuthStore from "./authStore";
 
-// Defined in FILE_UPLOAD_PLAN.md
+// Interface for file metadata stored in Firestore
 export interface FileMetadata {
   contentType: string;
   fileName: string;
   id: string;
+  isEncrypted: boolean;
+  iv?: string; // Stored as base64 string
   projectId: string;
-  size: number;
+  size: number; // Original file size
   storagePath: string;
   uploadedAt: Timestamp;
   userId: string;
 }
 
-interface FileState {
+// Interface for the file store's state
+interface FileStoreState {
   clearFilesOnLogout: () => void;
-  deleteFile: (fileMetadata: FileMetadata) => Promise<boolean>;
+  deleteFile: (fileMetadata: FileMetadata) => Promise<void>;
   error: Error | null;
   fetchAllFilesForUser: () => Promise<void>;
-  fetchFiles: (projectId: string) => Promise<void>;
-  getDownloadUrl: (fileMetadata: FileMetadata) => Promise<null | string>;
+  fetchFilesForProject: (projectId: string) => Promise<void>;
+  fileCache: Record<string, string>; // { [fileId]: objectUrl }
   isLoading: boolean;
+  prepareDownloadableFile: (
+    fileMetadata: FileMetadata
+  ) => Promise<null | string>;
   projectFiles: Record<string, FileMetadata[]>;
+  setDecryptedFileUrl: (fileId: string, url: string) => void;
   uploadFile: (
     projectId: string,
     file: File,
-  ) => Promise<FileMetadata | null>;
+    encrypt: boolean
+  ) => Promise<void>;
 }
 
-const useFileStore = create<FileState>((set, get) => ({
+const useFileStore = create<FileStoreState>((set, get) => ({
   clearFilesOnLogout: () => {
-    set({ error: null, isLoading: false, projectFiles: {} });
+    // Revoke any cached blob URLs to prevent memory leaks
+    Object.values(get().fileCache).forEach((url) => {
+      URL.revokeObjectURL(url);
+    });
+    set({ error: null, fileCache: {}, projectFiles: {} });
   },
   deleteFile: async (fileMetadata: FileMetadata) => {
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
-      set({
-        error: new Error('User not authenticated.'),
-        isLoading: false,
-      });
-      return false;
-    }
-    if (currentUser.uid !== fileMetadata.userId) {
-      set({
-        error: new Error(
-          'User unauthorized to delete this file.',
-        ),
-        isLoading: false,
-      });
-      return false;
+    const { user } = useAuthStore.getState();
+    if (!user || user.uid !== fileMetadata.userId) {
+      const e = new Error("User is not authorized to delete this file.");
+      set({ error: e });
+      throw e;
     }
 
     set({ error: null, isLoading: true });
     try {
-      const fileStorageRef = ref(storage, fileMetadata.storagePath);
-      await deleteObject(fileStorageRef);
+      const storageRef = ref(storage, fileMetadata.storagePath);
+      await deleteObject(storageRef);
 
-      const firestoreDocPath = `users/${currentUser.uid}/projects/${fileMetadata.projectId}/files/${fileMetadata.id}`;
-      const fileDocRef = doc(db, firestoreDocPath);
-      await deleteDoc(fileDocRef);
-
-      set(state => {
-        const updatedFilesForProject = (
-          state.projectFiles[fileMetadata.projectId] ?? []
-        ).filter(f => f.id !== fileMetadata.id);
+      const docRef = doc(db, `users/${user.uid}/projects/${fileMetadata.projectId}/files`, fileMetadata.id);
+      await deleteDoc(docRef);
+      
+      set((state) => {
+        const updatedFiles = (state.projectFiles[fileMetadata.projectId]).filter(
+          (f) => f.id !== fileMetadata.id
+        );
         return {
-          error: null,
-          isLoading: false,
-          projectFiles: {
-            ...state.projectFiles,
-            [fileMetadata.projectId]: updatedFilesForProject,
-          },
+          projectFiles: { ...state.projectFiles, [fileMetadata.projectId]: updatedFiles },
         };
       });
-      return true;
-    } catch (e: unknown) {
-      set({ error: e as Error, isLoading: false });
-      return false;
+    } catch (error) {
+      logger.error(ErrorCategory.UNKNOWN, "Failed to delete file", { error });
+      set({ error: error as Error });
+      throw error;
+    } finally {
+      set({ isLoading: false });
     }
   },
   error: null,
   fetchAllFilesForUser: async () => {
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
-      set({
-        error: new Error('User not authenticated.'),
-        isLoading: false,
-        projectFiles: {},
-      });
-      return;
+    const { user } = useAuthStore.getState();
+    if (!user) return;
+
+    set({ error: null, isLoading: true });
+    try {
+        const projectsQuery = query(collection(db, `users/${user.uid}/projects`));
+        const projectsSnapshot = await getDocs(projectsQuery);
+        const allFiles: Record<string, FileMetadata[]> = {};
+
+        for (const projectDoc of projectsSnapshot.docs) {
+            const projectId = projectDoc.id;
+            const filesQuery = query(collection(db, `users/${user.uid}/projects/${projectId}/files`));
+            const filesSnapshot = await getDocs(filesQuery);
+            allFiles[projectId] = filesSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as FileMetadata));
+        }
+        
+        set({ projectFiles: allFiles });
+    } catch (error) {
+        logger.error(ErrorCategory.UNKNOWN, "Failed to fetch all user files", { error });
+        set({ error: error as Error });
+    } finally {
+        set({ isLoading: false });
+    }
+  },
+
+  fetchFilesForProject: async (projectId: string) => {
+    const { user } = useAuthStore.getState();
+    if (!user) return;
+
+    set({ error: null, isLoading: true });
+    try {
+      const q = query(
+        collection(db, `users/${user.uid}/projects/${projectId}/files`)
+      );
+      const querySnapshot = await getDocs(q);
+      const files = querySnapshot.docs.map(
+        (doc) => ({ id: doc.id, ...doc.data() } as FileMetadata)
+      );
+      set((state) => ({
+        projectFiles: { ...state.projectFiles, [projectId]: files },
+      }));
+    } catch (error) {
+      logger.error(ErrorCategory.UNKNOWN, "Failed to fetch files", { error });
+      set({ error: error as Error });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  fileCache: {},
+
+  isLoading: false,
+  
+  prepareDownloadableFile: async (fileMetadata) => {
+    const { encryptionKey, openMasterPasswordModal } = useAuthStore.getState();
+    const { fileCache, setDecryptedFileUrl } = get();
+
+    if (typeof fileCache[fileMetadata.id] !== "undefined") return fileCache[fileMetadata.id];
+
+    if (fileMetadata.isEncrypted && !encryptionKey) {
+      openMasterPasswordModal();
+      return null;
     }
 
     set({ error: null, isLoading: true });
-    const allUserFiles: Record<string, FileMetadata[]> = {};
     try {
-      const userProjectsCollectionPath = `users/${currentUser.uid}/projects`;
-      const projectsSnapshot = await getDocs(collection(db, userProjectsCollectionPath));
+      const storageRef = ref(storage, fileMetadata.storagePath);
+      const blob = await getBlob(storageRef);
 
-      for (const projectDoc of projectsSnapshot.docs) {
-        const projectId = projectDoc.id;
-        const filesCollectionPath = `users/${currentUser.uid}/projects/${projectId}/files`;
-        const filesQuery = query(collection(db, filesCollectionPath), where('userId', '==', currentUser.uid));
-        const filesSnapshot = await getDocs(filesQuery);
-        
-        allUserFiles[projectId] = filesSnapshot.docs.map(docSnapshot => ({
-          id: docSnapshot.id,
-          ...docSnapshot.data(),
-        } as FileMetadata));
+      let fileBlob: Blob = blob;
+      if (fileMetadata.isEncrypted && encryptionKey && fileMetadata.iv) {
+        fileBlob = await decryptWithKey(encryptionKey, blob, fileMetadata.iv);
+      }
+      
+      const objectUrl = URL.createObjectURL(fileBlob);
+      setDecryptedFileUrl(fileMetadata.id, objectUrl);
+      return objectUrl;
+
+    } catch (error) {
+      logger.error(ErrorCategory.UNKNOWN, "Error preparing file for download", { error });
+      set({ error: error as Error });
+      return null;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+  
+  projectFiles: {},
+
+  setDecryptedFileUrl: (fileId, url) => {
+    set((state) => ({
+      fileCache: { ...state.fileCache, [fileId]: url },
+    }));
+  },
+
+  uploadFile: async (projectId, file, encrypt) => {
+    const { encryptionKey, user } = useAuthStore.getState();
+    if (!user) throw new Error("User not authenticated.");
+    if (encrypt && !encryptionKey) throw new Error("Encryption key not available.");
+
+    set({ error: null, isLoading: true });
+    try {
+      let fileToUpload: Blob = file;
+      let iv: string | undefined;
+
+      if (encrypt && encryptionKey) {
+        const result = await encryptWithKey(encryptionKey, file);
+        fileToUpload = result.encryptedBlob;
+        iv = result.iv;
       }
 
-      set({
-        error: null,
-        isLoading: false,
-        projectFiles: allUserFiles,
-      });
-    } catch (e: unknown) {
-      console.error("[FileStore] Error fetching all files for user:", e);
-      set({ error: e as Error, isLoading: false, projectFiles: {} });
-    }
-  },
-  fetchFiles: async (projectId: string) => {
-    const currentUser = auth.currentUser;
+      const storagePath = `users/${user.uid}/projects/${projectId}/files/${Date.now().toString()}_${file.name}`;
+      const fileRef = ref(storage, storagePath);
+      await uploadBytes(fileRef, fileToUpload);
 
-    if (!currentUser) {
-      set({
-        error: new Error('User not authenticated.'),
-        isLoading: false,
-        projectFiles: { ...get().projectFiles, [projectId]: [] },
-      });
-      return;
-    }
-
-    set({ error: null, isLoading: true });
-
-    try {
-      const firestorePath = `users/${currentUser.uid}/projects/${projectId}/files`;
-      const filesCollectionRef = collection(db, firestorePath);
-      const q = query(filesCollectionRef, where('userId', '==', currentUser.uid));
-      
-      const querySnapshot = await getDocs(q);
-
-      const filesData: FileMetadata[] = querySnapshot.docs.map(docSnapshot => {
-        const data = docSnapshot.data();
-        return {
-          id: docSnapshot.id,
-          ...data,
-        } as FileMetadata;
-      });
-      
-      set(state => ({
-        error: null,
-        isLoading: false,
-        projectFiles: { ...state.projectFiles, [projectId]: filesData },
-      }));
-    } catch (e: unknown) {
-      set({ error: e as Error, isLoading: false });
-    }
-  },
-  getDownloadUrl: async (fileMetadata: FileMetadata) => {
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
-      return null;
-    }
-    if (currentUser.uid !== fileMetadata.userId) {
-      return null;
-    }
-
-    const storageFileRef = ref(storage, fileMetadata.storagePath);
-    const url = await getDownloadURL(storageFileRef);
-    return url;
-  },
-  isLoading: false,
-  projectFiles: {},
-  uploadFile: async (projectId: string, file: File) => {
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
-      set({ error: new Error('User not authenticated.'), isLoading: false });
-      return null;
-    }
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (!file) {
-      set({ error: new Error('No file provided.'), isLoading: false });
-      return null;
-    }
-
-    set({ error: null, isLoading: true });
-
-    try {
-      const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const fileIdForStorage = `${uuidv4()}_${safeFileName}`;
-      const storagePath = `users/${currentUser.uid}/projects/${projectId}/files/${fileIdForStorage}`;
-      const storageFileRef = ref(storage, storagePath);
-
-      console.log(`[FileStore] Attempting to upload to Storage. File: ${file.name}, Type: ${file.type}, Size: ${String(file.size)}`);
-      console.log(`[FileStore] Storage path for upload: ${storagePath}`);
-
-      const uploadResult = await uploadBytes(storageFileRef, file, {
+      const metadata: Omit<FileMetadata, "id" | "uploadedAt"> = {
         contentType: file.type,
-      });
-
-      console.log(`[FileStore] Successfully uploaded to Storage. Firebase metadata:`, uploadResult.metadata);
-
-      const fileMetadataToSave: Omit<FileMetadata, 'id' | 'uploadedAt'> = {
-        contentType: file.type || 'application/octet-stream',
         fileName: file.name,
+        isEncrypted: encrypt,
+        iv,
         projectId,
-        size: uploadResult.metadata.size,
+        size: file.size,
         storagePath,
-        userId: currentUser.uid,
+        userId: user.uid,
       };
 
-      console.log('[FileStore] Constructed fileMetadataToSave for Firestore:', JSON.stringify(fileMetadataToSave, null, 2));
-      console.log(`[FileStore] Current User UID: ${currentUser.uid}, Project ID: ${projectId}`);
+      const docRef = await addDoc(
+        collection(db, `users/${user.uid}/projects/${projectId}/files`),
+        { ...metadata, uploadedAt: serverTimestamp() }
+      );
       
-      const firestorePath = `users/${currentUser.uid}/projects/${projectId}/files`;
-      console.log(`[FileStore] Firestore path for metadata: ${firestorePath}`);
-      const filesCollectionRef = collection(db, firestorePath);
-      const docRef = await addDoc(filesCollectionRef, {
-        ...fileMetadataToSave,
-        uploadedAt: serverTimestamp(),
-      });
-
-      const newFileDoc: FileMetadata = {
-        ...fileMetadataToSave,
-        id: docRef.id,
-        uploadedAt: Timestamp.now(),
-      };
-
-      set(state => ({
-        error: null,
-        isLoading: false,
+      const newFile = { ...metadata, id: docRef.id, uploadedAt: Timestamp.now() } as FileMetadata;
+      set((state) => ({
         projectFiles: {
           ...state.projectFiles,
-          [projectId]: [...(state.projectFiles[projectId] ?? []), newFileDoc],
+          [projectId]: [...(state.projectFiles[projectId]), newFile],
         },
       }));
-      return newFileDoc;
-    } catch (e: unknown) {
-      set({ error: e as Error, isLoading: false });
-      return null;
+
+    } catch (error) {
+      logger.error(ErrorCategory.UNKNOWN, "Error uploading file", { error });
+      set({ error: error as Error });
+    } finally {
+      set({ isLoading: false });
     }
   },
 }));
-
-// Optional: Subscribe to auth changes to clear files on logout
-// This could also be done in a component or App.tsx
-auth.onAuthStateChanged(user => {
-  if (!user) {
-    useFileStore.getState().clearFilesOnLogout();
-  }
-});
 
 export default useFileStore; 

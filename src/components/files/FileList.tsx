@@ -1,8 +1,10 @@
 import { FileText, Loader2, XCircle } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import useAuthStore from "../../stores/authStore";
 import useFileStore, { type FileMetadata } from "../../stores/fileStore";
+import FilePreviewModal from "./FilePreviewModal";
 import ProjectFileCard from "./ProjectFileCard";
 
 interface FileListProps {
@@ -13,11 +15,12 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
   const {
     deleteFile,
     error,
-    fetchFiles,
-    getDownloadUrl,
+    fetchFilesForProject,
     isLoading,
+    prepareDownloadableFile,
     projectFiles,
   } = useFileStore();
+  const { encryptionKey, openMasterPasswordModal } = useAuthStore();
 
   const filesForCurrentProject = projectFiles[projectId] ?? [];
 
@@ -25,38 +28,68 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
   const [fileToDelete, setFileToDelete] = useState<FileMetadata | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [openMenuFileId, setOpenMenuFileId] = useState<null | string>(null);
+  const [fileToDownloadAfterUnlock, setFileToDownloadAfterUnlock] =
+    useState<FileMetadata | null>(null);
+  const [isPreparingDownload, setIsPreparingDownload] = useState<
+    Record<string, boolean>
+  >({});
+  const [fileToPreview, setFileToPreview] = useState<FileMetadata | null>(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   useEffect(() => {
     if (projectId) {
-      fetchFiles(projectId).catch((err: unknown) => {
-        console.error("Error fetching files in component:", err);
-        toast.error("Failed to load files for project.");
-      });
+      void fetchFilesForProject(projectId);
     }
-  }, [projectId, fetchFiles]);
+  }, [projectId, fetchFilesForProject]);
 
-  const handleDownload = async (file: FileMetadata) => {
-    const toastId = toast.loading("Preparing download...");
-    try {
-      const url = await getDownloadUrl(file);
-      if (url) {
-        const link = document.createElement("a");
-        link.href = url;
-        link.target = "_blank";
-        link.download = file.fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast.success("Download started", { id: toastId });
-      } else {
-        toast.error("Could not get download link", { id: toastId });
+  const handleDownload = useCallback(
+    async (file: FileMetadata) => {
+      setIsPreparingDownload((prev) => ({ ...prev, [file.id]: true }));
+      const toastId = toast.loading(
+        `Preparing ${file.fileName} for download...`
+      );
+      try {
+        const objectUrl = await prepareDownloadableFile(file);
+        if (objectUrl) {
+          const link = document.createElement("a");
+          link.href = objectUrl;
+          link.download = file.fileName;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(objectUrl);
+          toast.success("Download started", { id: toastId });
+        } else if (file.isEncrypted && !encryptionKey) {
+          setFileToDownloadAfterUnlock(file);
+          openMasterPasswordModal();
+          toast.error("Session Locked", {
+            description: "Unlock your session to download this encrypted file.",
+            id: toastId,
+          });
+        } else {
+          toast.error("Could not prepare file for download", { id: toastId });
+        }
+      } catch (err) {
+        console.error("Download error:", err);
+        toast.error("Download failed", { id: toastId });
+      } finally {
+        setIsPreparingDownload((prev) => ({ ...prev, [file.id]: false }));
+        setOpenMenuFileId(null);
       }
-    } catch (err: unknown) {
-      console.error("Download error:", err);
-      toast.error("Download failed", { id: toastId });
+    },
+    [prepareDownloadableFile, encryptionKey, openMasterPasswordModal]
+  );
+
+  useEffect(() => {
+    if (fileToDownloadAfterUnlock && encryptionKey) {
+      const fileToRetry = fileToDownloadAfterUnlock;
+      setFileToDownloadAfterUnlock(null);
+      toast.info(
+        `Session unlocked. Retrying download for ${fileToRetry.fileName}...`
+      );
+      void handleDownload(fileToRetry);
     }
-    setOpenMenuFileId(null);
-  };
+  }, [encryptionKey, fileToDownloadAfterUnlock, handleDownload]);
 
   const handleDeleteRequest = (file: FileMetadata) => {
     setFileToDelete(file);
@@ -69,24 +102,28 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
     setShowDeleteConfirmModal(false);
   };
 
+  const handlePreviewRequest = (file: FileMetadata) => {
+    setFileToPreview(file);
+    setShowPreviewModal(true);
+    setOpenMenuFileId(null);
+  };
+
+  const closePreviewModal = () => {
+    setFileToPreview(null);
+    setShowPreviewModal(false);
+  };
+
   const confirmDelete = async () => {
     if (!fileToDelete) return;
     setIsDeleting(true);
     const toastId = toast.loading(`Deleting ${fileToDelete.fileName}...`);
     try {
-      const success = await deleteFile(fileToDelete);
-      if (success) {
-        toast.success("File deleted successfully", {
-          description: `${fileToDelete.fileName} has been deleted.`,
-          id: toastId,
-        });
-        closeDeleteConfirmModal();
-      } else {
-        toast.error("Failed to delete file", {
-          description: "Please try again.",
-          id: toastId,
-        });
-      }
+      await deleteFile(fileToDelete);
+      toast.success("File deleted successfully", {
+        description: `${fileToDelete.fileName} has been deleted.`,
+        id: toastId,
+      });
+      closeDeleteConfirmModal();
     } catch (err: unknown) {
       console.error("Delete error:", err);
       toast.error("Delete operation failed", { id: toastId });
@@ -119,9 +156,7 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
         <button
           className="mt-4 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-3 rounded-md text-sm"
           onClick={() => {
-            fetchFiles(projectId).catch((err: unknown) => {
-              console.error(err);
-            });
+            void fetchFilesForProject(projectId);
           }}
         >
           Try Again
@@ -153,6 +188,7 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
         {filesForCurrentProject.map((file) => (
           <ProjectFileCard
             file={file}
+            isDownloading={isPreparingDownload[file.id] || false}
             isMenuOpen={openMenuFileId === file.id}
             key={file.id}
             onDelete={() => {
@@ -161,12 +197,24 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
             onDownload={() => {
               void handleDownload(file);
             }}
+            onPreview={() => {
+              handlePreviewRequest(file);
+            }}
             onToggleMenu={() => {
               toggleMenu(file.id);
             }}
           />
         ))}
       </div>
+
+      {/* Preview Modal */}
+      {showPreviewModal && fileToPreview && (
+        <FilePreviewModal
+          file={fileToPreview}
+          isOpen={showPreviewModal}
+          onClose={closePreviewModal}
+        />
+      )}
 
       {/* Delete File Confirmation Modal */}
       {showDeleteConfirmModal && fileToDelete && (

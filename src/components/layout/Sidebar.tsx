@@ -5,6 +5,7 @@ import {
   ChevronRight,
   FolderPlus,
   Folders,
+  History,
   Home,
   Key,
   Layout,
@@ -20,15 +21,19 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { auth } from "../../firebase";
 import useAuthStore from "../../stores/authStore";
 import useProjectStore from "../../stores/projectStore";
+import useRecentItemsStore from "../../stores/recentItemsStore";
 import useUserStore from "../../stores/userStore";
+import EncryptionStatusIndicator from "../auth/EncryptionStatusIndicator";
 
 const Sidebar: React.FC = () => {
   const { fetchProjects, projects } = useProjectStore();
   const { clearEncryptionKey, setError, setUser, user } = useAuthStore();
   const { clearUserDoc, fetchUserDoc, userDoc } = useUserStore();
+  const { items: recentItems } = useRecentItemsStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [projectsExpanded, setProjectsExpanded] = useState(true);
+  const [recentItemsExpanded, setRecentItemsExpanded] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -221,6 +226,46 @@ const Sidebar: React.FC = () => {
             </li>
           </ul>
         </nav>
+        {/* Recently Accessed */}
+        {recentItems.length > 0 && (
+          <nav className="px-3 py-2">
+            <button
+              className="flex items-center w-full px-3 py-2 rounded-md text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+              onClick={() => {
+                setRecentItemsExpanded(!recentItemsExpanded);
+              }}
+            >
+              <History className="h-4 w-4 mr-3" />
+              Recently Accessed
+              {recentItemsExpanded ? (
+                <ChevronDown className="h-4 w-4 ml-auto" />
+              ) : (
+                <ChevronRight className="h-4 w-4 ml-auto" />
+              )}
+            </button>
+            {recentItemsExpanded && (
+              <div className="mt-1 ml-2 pl-6 border-l border-gray-700">
+                <ul className="space-y-1 py-1">
+                  {recentItems.map((item) => (
+                    <li key={item.id}>
+                      <Link
+                        className={`flex items-center px-3 py-2 rounded-md text-sm ${
+                          isActiveRoute(`/project/${item.id}`)
+                            ? "bg-gray-700/50 text-brand-blue font-medium"
+                            : "text-gray-300 hover:bg-gray-700/30"
+                        } transition-colors group`}
+                        to={`/project/${item.id}`}
+                      >
+                        <Layout className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+                        <span className="truncate">{item.name}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </nav>
+        )}
       </div>
 
       {/* User menu (from Navbar) and settings actions */}
@@ -236,6 +281,9 @@ const Sidebar: React.FC = () => {
                 <p className="font-medium text-sm text-white truncate">
                   {userDoc.displayName ?? user.email}
                 </p>
+              </div>
+              <div className="ml-auto">
+                <EncryptionStatusIndicator />
               </div>
             </div>
 

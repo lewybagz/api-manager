@@ -283,7 +283,7 @@ const DashboardPage: React.FC = () => {
       )}
 
       {projects.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {projects.map((project) => {
             const projectCredentials = credentials.filter(
               (c) => c.projectId === project.id
@@ -346,7 +346,7 @@ const DashboardPage: React.FC = () => {
             const lastUpdated = project.lastUpdated ?? project.updatedAt;
             return (
               <div
-                className="bg-brand-dark-secondary rounded-lg shadow-lg p-4 cursor-pointer group transition-all hover:shadow-2xl focus-within:ring-2 focus-within:ring-brand-blue"
+                className="bg-brand-dark-secondary max-w-[15vw] rounded-lg shadow-lg p-4 cursor-pointer group transition-all hover:shadow-2xl focus-within:ring-2 focus-within:ring-brand-blue"
                 key={project.id}
                 onClick={(e) => {
                   if ((e.target as HTMLElement).closest("button")) return;
@@ -361,7 +361,7 @@ const DashboardPage: React.FC = () => {
                 tabIndex={0}
               >
                 <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-xl font-semibold text-brand-light truncate">
+                  <h3 className="text-md font-semibold text-brand-light truncate">
                     <FolderPlus className="h-5 w-5 inline-block mr-2 text-brand-blue" />
                     {project.projectName}
                   </h3>
