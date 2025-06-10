@@ -385,7 +385,7 @@ const CredentialModal = ({
             <div className="relative">
               <input
                 aria-label="API Secret"
-                autoComplete="off"
+                autoComplete="new-password"
                 className="w-full rounded-md border border-gray-600 bg-gray-700 p-2.5 text-white placeholder-gray-400 pr-10"
                 id="apiSecret"
                 placeholder="Enter API Secret"
