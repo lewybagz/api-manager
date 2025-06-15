@@ -1,4 +1,4 @@
-import { FileText, Loader2, XCircle } from "lucide-react";
+import { FileText, FolderOpen, XCircle } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -138,23 +138,34 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
 
   if (isLoading && filesForCurrentProject.length === 0) {
     return (
-      <div className="text-center p-8 text-brand-light flex flex-col items-center gap-2">
-        <Loader2 className="h-8 w-8 animate-spin text-brand-blue" />
-        <p className="text-sm text-gray-400">Loading project files...</p>
+      <div className="text-center p-12 text-brand-light flex flex-col items-center gap-4 bg-gradient-to-br from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm rounded-2xl border border-gray-800/50">
+        <div className="relative">
+          <div className="w-12 h-12 border-4 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin"></div>
+          <div
+            className="absolute inset-0 w-12 h-12 border-4 border-transparent border-t-brand-primary rounded-full animate-spin"
+            style={{ animationDirection: "reverse", animationDuration: "1.5s" }}
+          ></div>
+        </div>
+        <div className="space-y-2">
+          <p className="text-lg font-semibold">Loading Project Files</p>
+          <p className="text-sm text-gray-400">Fetching your secure files...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center p-8 bg-red-900/20 border border-red-500/50 rounded-lg">
-        <XCircle className="h-12 w-12 mx-auto text-red-400 mb-3" />
-        <h3 className="text-xl font-semibold text-red-300 mb-2">
+      <div className="text-center p-8 bg-gradient-to-r from-red-900/40 to-red-800/30 border border-red-500/50 rounded-2xl backdrop-blur-sm">
+        <div className="w-16 h-16 bg-red-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+          <XCircle className="h-8 w-8 text-red-400" />
+        </div>
+        <h3 className="text-xl font-bold text-red-300 mb-3">
           Error Loading Files
         </h3>
-        <p className="text-red-400">{error.message}</p>
+        <p className="text-red-400 mb-6 leading-relaxed">{error.message}</p>
         <button
-          className="mt-4 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-3 rounded-md text-sm"
+          className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold py-3 px-6 rounded-xl text-sm transition-all duration-200 transform hover:scale-105 shadow-lg"
           onClick={() => {
             void fetchFilesForProject(projectId);
           }}
@@ -167,24 +178,44 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
 
   if (filesForCurrentProject.length === 0) {
     return (
-      <div className="text-center p-8 bg-brand-dark-secondary rounded-lg shadow-md">
-        <FileText className="h-12 w-12 mx-auto text-gray-500 mb-3" />
-        <h3 className="text-xl font-semibold text-brand-light mb-2">
+      <div className="text-center p-12 bg-gradient-to-br from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm rounded-2xl border border-gray-800/50">
+        <div className="w-20 h-20 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
+          <FolderOpen className="h-10 w-10 text-gray-400" />
+        </div>
+        <h3 className="text-2xl font-bold text-brand-light mb-4">
           No Files Uploaded
         </h3>
-        <p className="text-brand-light-secondary">
-          Upload files using the area above to see them listed here.
+        <p className="text-brand-light-secondary mb-6 max-w-md mx-auto leading-relaxed">
+          Upload files using the area above to see them listed here. Your files
+          will be securely stored and optionally encrypted.
         </p>
+        <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-brand-blue/20 to-brand-primary/20 border border-brand-blue/30 text-brand-blue rounded-xl text-sm">
+          <FileText className="h-4 w-4 mr-2" />
+          <span>Drag & drop files to get started</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-semibold text-brand-light mb-4">
-        Project Files
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="space-y-8">
+      {/* Enhanced Header */}
+      <div className="flex items-center space-x-3">
+        <div className="w-8 h-8 bg-gradient-to-br from-brand-blue to-brand-primary rounded-lg flex items-center justify-center">
+          <FileText className="h-4 w-4 text-white" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-brand-light">Project Files</h2>
+          <p className="text-sm text-gray-400">
+            {filesForCurrentProject.length}{" "}
+            {filesForCurrentProject.length === 1 ? "file" : "files"} in this
+            project
+          </p>
+        </div>
+      </div>
+
+      {/* Enhanced Files Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filesForCurrentProject.map((file) => (
           <ProjectFileCard
             file={file}
@@ -216,44 +247,50 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
         />
       )}
 
-      {/* Delete File Confirmation Modal */}
+      {/* Enhanced Delete File Confirmation Modal */}
       {showDeleteConfirmModal && fileToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-          <div className="bg-brand-dark p-6 rounded-lg shadow-xl w-full max-w-md">
-            <h2 className="text-2xl font-semibold mb-4 text-red-500">
-              Confirm File Deletion
-            </h2>
-            <p className="text-brand-light-secondary mb-2">
-              Are you sure you want to delete the file <br />
-              <strong className="text-red-400">
-                {"'"}
-                {fileToDelete.fileName}
-                {"'"}
-              </strong>
-              ?
-            </p>
-            <p className="text-sm text-yellow-400 mb-6">
-              This action cannot be undone.
-            </p>
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                className="px-4 py-2 border border-gray-600 text-brand-light-secondary rounded-md hover:bg-gray-700 disabled:opacity-50"
-                disabled={isDeleting}
-                onClick={closeDeleteConfirmModal}
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-md disabled:opacity-50"
-                disabled={isDeleting}
-                onClick={() => {
-                  void confirmDelete();
-                }}
-                type="button"
-              >
-                {isDeleting ? "Deleting..." : "Confirm Delete"}
-              </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-gradient-to-br from-brand-dark to-brand-dark-secondary border border-red-500/30 rounded-2xl shadow-2xl w-full max-w-md backdrop-blur-xl">
+            <div className="p-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FileText className="w-6 h-6 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold mb-4 text-red-400 text-center">
+                Delete File
+              </h2>
+              <p className="text-brand-light-secondary mb-2 text-center">
+                Are you sure you want to delete
+              </p>
+              <p className="text-center mb-6">
+                <strong className="text-red-400 text-lg bg-gray-800/50 px-3 py-1 rounded-lg">
+                  {fileToDelete.fileName}
+                </strong>
+              </p>
+              <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-3 mb-6">
+                <p className="text-sm text-yellow-400 text-center">
+                  ⚠️ This action cannot be undone
+                </p>
+              </div>
+              <div className="flex space-x-3">
+                <button
+                  className="flex-1 px-4 py-3 border border-gray-600 text-brand-light-secondary hover:bg-gray-700/50 hover:text-brand-light rounded-xl font-medium disabled:opacity-50 transition-all duration-200"
+                  disabled={isDeleting}
+                  onClick={closeDeleteConfirmModal}
+                  type="button"
+                >
+                  Cancel
+                </button>
+                <button
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl disabled:opacity-50 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                  disabled={isDeleting}
+                  onClick={() => {
+                    void confirmDelete();
+                  }}
+                  type="button"
+                >
+                  {isDeleting ? "Deleting..." : "Delete File"}
+                </button>
+              </div>
             </div>
           </div>
         </div>

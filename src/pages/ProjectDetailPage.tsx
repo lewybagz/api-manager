@@ -1,4 +1,3 @@
-import { Loader2 } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   Link,
@@ -263,8 +262,15 @@ const ProjectDetailPage: React.FC = () => {
 
   if (!projectId) {
     return (
-      <div className="text-center p-8 text-brand-light">
-        Error: Project ID not found. Redirecting...
+      <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary flex items-center justify-center p-4">
+        <div className="text-center bg-gradient-to-br from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm rounded-2xl p-8 border border-red-500/30">
+          <h2 className="text-2xl font-bold text-red-400 mb-4">
+            Project Not Found
+          </h2>
+          <p className="text-brand-light mb-6">
+            The project ID is missing or invalid. Redirecting to dashboard...
+          </p>
+        </div>
       </div>
     );
   }
@@ -274,40 +280,67 @@ const ProjectDetailPage: React.FC = () => {
     (credentialsLoading && credentials.length === 0 && !credentialsError)
   ) {
     return (
-      <div className="text-center p-8 text-brand-light flex flex-col items-center gap-2">
-        <Loader2 className="h-8 w-8 inline animate-spin text-brand-blue" />
-        <p className="text-sm text-gray-500">Loading project details...</p>
+      <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative mb-6">
+            <div className="w-16 h-16 border-4 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin"></div>
+            <div
+              className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-brand-primary rounded-full animate-spin"
+              style={{
+                animationDirection: "reverse",
+                animationDuration: "1.5s",
+              }}
+            ></div>
+          </div>
+          <p className="text-brand-light text-lg mb-2">Loading Project</p>
+          <p className="text-sm text-gray-500">Fetching project details...</p>
+        </div>
       </div>
     );
   }
 
   if (!masterPasswordSet) {
     return (
-      <div className="bg-brand-dark-secondary p-8 rounded-lg shadow-xl text-center">
-        <h2 className="text-2xl font-semibold text-brand-light mb-4">
-          Master Password Required
-        </h2>
-        <p className="text-brand-light-secondary mb-6">
-          Please enter your master password to view project details and
-          credentials.
-        </p>
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-          <button
-            className="bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold py-2 px-4 rounded-md w-full sm:w-auto"
-            onClick={() => {
-              openMasterPasswordModal();
-            }}
-            type="button"
-          >
-            Set Master Password
-          </button>
-          <button
-            className="border border-brand-light-secondary text-brand-light-secondary hover:bg-brand-dark font-semibold py-2 px-4 rounded-md w-full sm:w-auto"
-            onClick={handleNavigateToDashboard}
-            type="button"
-          >
-            Back to Dashboard
-          </button>
+      <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary flex items-center justify-center p-4">
+        <div className="bg-gradient-to-br from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm rounded-2xl p-8 text-center border border-brand-blue/30 max-w-md w-full">
+          <div className="w-16 h-16 bg-gradient-to-br from-brand-blue to-brand-primary rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg
+              className="w-8 h-8 text-white"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                clipRule="evenodd"
+                d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                fillRule="evenodd"
+              />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-brand-light mb-4">
+            Master Password Required
+          </h2>
+          <p className="text-brand-light-secondary mb-8 leading-relaxed">
+            Set your master password to view project details and access your
+            encrypted credentials.
+          </p>
+          <div className="flex flex-col space-y-3">
+            <button
+              className="w-full bg-gradient-to-r from-brand-blue to-brand-primary hover:from-brand-blue-hover hover:to-brand-primary-dark text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg"
+              onClick={() => {
+                openMasterPasswordModal();
+              }}
+              type="button"
+            >
+              Set Master Password
+            </button>
+            <button
+              className="w-full border border-brand-light-secondary text-brand-light-secondary hover:bg-brand-dark hover:text-brand-light font-semibold py-3 px-6 rounded-xl transition-all duration-200"
+              onClick={handleNavigateToDashboard}
+              type="button"
+            >
+              Back to Dashboard
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -315,93 +348,141 @@ const ProjectDetailPage: React.FC = () => {
 
   if (!project) {
     return (
-      <div className="text-center p-8 text-brand-light">
-        <h2 className="text-2xl font-semibold mb-4">Project Not Found</h2>
-        <Link className="text-brand-blue hover:underline" to="/dashboard">
-          Back to Dashboard
-        </Link>
+      <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary flex items-center justify-center p-4">
+        <div className="text-center bg-gradient-to-br from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm rounded-2xl p-8 border border-gray-800/50">
+          <h2 className="text-2xl font-bold text-brand-light mb-4">
+            Project Not Found
+          </h2>
+          <p className="text-gray-400 mb-6">
+            The requested project could not be found or you don't have access to
+            it.
+          </p>
+          <Link
+            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-brand-blue to-brand-primary hover:from-brand-blue-hover hover:to-brand-primary-dark text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg"
+            to="/dashboard"
+          >
+            Back to Dashboard
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 text-brand-light">
-      <Toaster position="top-right" richColors />
+    <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary">
+      <div className="p-4 sm:p-6 lg:p-8 text-brand-light">
+        <Toaster position="top-right" richColors />
 
-      <ProjectHeader
-        onAddCredential={handleAddCredential}
-        projectCreatedAt={project.createdAt}
-        projectName={project.projectName}
-      />
-
-      <ProjectTabs activeTab={activeTab} onTabChange={setActiveTab} />
-
-      {activeTab === "credentials" && (
-        <CredentialsView
-          clipboardTimeout={clipboardTimeout}
-          copiedStates={copiedStates}
-          credentials={credentials}
-          error={credentialsError}
-          isLoading={credentialsLoading}
-          maskCredential={maskCredential}
-          onCopy={handleCopyToClipboard}
-          onDeleteCredential={openCredentialDeleteConfirmModal}
-          onEditCredential={handleEditCredentialClick}
-          onToggleReveal={toggleReveal}
-          revealedStates={revealedStates}
-        />
-      )}
-
-      {activeTab === "files" && projectId && (
-        <FilesView projectId={projectId} />
-      )}
-
-      <CredentialModal
-        editingCredential={editingCredential}
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        projectId={projectId}
-      />
-
-      {showDeleteConfirmModal && credentialToDeleteDetails && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-          <div className="bg-brand-dark p-6 rounded-lg shadow-xl w-full max-w-md">
-            <h2 className="text-2xl font-semibold mb-4 text-red-500">
-              Confirm Credential Deletion
-            </h2>
-            <p className="text-brand-light-secondary mb-2">
-              Are you sure you want to delete the credential <br />
-              <strong className="text-red-400">
-                {" '"}
-                {credentialToDeleteDetails.serviceName}
-                {" '"}
-              </strong>
-              {` ?`}
-            </p>
-            <p className="text-sm text-yellow-400 mb-6">
-              This action cannot be undone.
-            </p>
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                className="px-4 py-2 border border-gray-600 text-brand-light-secondary rounded-md hover:bg-gray-700 disabled:opacity-50"
-                disabled={isDeleting}
-                onClick={closeCredentialDeleteConfirmModal}
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-md disabled:opacity-50"
-                disabled={isDeleting}
-                onClick={() => void executeCredentialDeletion()}
-                type="button"
-              >
-                {isDeleting ? "Deleting..." : "Confirm Delete"}
-              </button>
-            </div>
+        {/* Enhanced Project Header */}
+        <div className="mb-8">
+          <div className="rounded-2xl border border-gray-800/50 overflow-hidden">
+            <ProjectHeader
+              onAddCredential={handleAddCredential}
+              projectCreatedAt={project.createdAt}
+              projectName={project.projectName}
+            />
           </div>
         </div>
-      )}
+
+        {/* Enhanced Project Tabs */}
+        <div className="mb-8">
+          <div className="bg-gradient-to-r from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm rounded-2xl p-2 pb-0 border border-gray-800/50">
+            <ProjectTabs activeTab={activeTab} onTabChange={setActiveTab} />
+          </div>
+        </div>
+
+        {/* Enhanced Content Area */}
+        <div className="rounded-2xl border border-gray-800/50 overflow-hidden">
+          {activeTab === "credentials" && (
+            <CredentialsView
+              clipboardTimeout={clipboardTimeout}
+              copiedStates={copiedStates}
+              credentials={credentials}
+              error={credentialsError}
+              isLoading={credentialsLoading}
+              maskCredential={maskCredential}
+              onCopy={handleCopyToClipboard}
+              onDeleteCredential={openCredentialDeleteConfirmModal}
+              onEditCredential={handleEditCredentialClick}
+              onToggleReveal={toggleReveal}
+              revealedStates={revealedStates}
+            />
+          )}
+
+          {activeTab === "files" && projectId && (
+            <FilesView projectId={projectId} />
+          )}
+        </div>
+
+        <CredentialModal
+          editingCredential={editingCredential}
+          isOpen={isModalOpen}
+          onClose={closeModal}
+          projectId={projectId}
+        />
+
+        {/* Enhanced Delete Confirmation Modal */}
+        {showDeleteConfirmModal && credentialToDeleteDetails && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+            <div className="bg-gradient-to-br from-brand-dark to-brand-dark-secondary border border-red-500/30 rounded-2xl shadow-2xl w-full max-w-md">
+              <div className="p-6">
+                <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      clipRule="evenodd"
+                      d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"
+                      fillRule="evenodd"
+                    />
+                    <path
+                      clipRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 012 0v4a1 1 0 11-2 0V7zM8 13a1 1 0 112 0 1 1 0 01-2 0z"
+                      fillRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold mb-4 text-red-400 text-center">
+                  Delete Credential
+                </h2>
+                <p className="text-brand-light-secondary mb-2 text-center">
+                  Are you sure you want to delete
+                </p>
+                <p className="text-center mb-6">
+                  <strong className="text-red-400 text-lg">
+                    "{credentialToDeleteDetails.serviceName}"
+                  </strong>
+                </p>
+                <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-3 mb-6">
+                  <p className="text-sm text-yellow-400 text-center">
+                    ⚠️ This action cannot be undone
+                  </p>
+                </div>
+                <div className="flex space-x-3">
+                  <button
+                    className="flex-1 px-4 py-3 border border-gray-600 text-brand-light-secondary rounded-xl hover:bg-gray-700/50 disabled:opacity-50 transition-all duration-200"
+                    disabled={isDeleting}
+                    onClick={closeCredentialDeleteConfirmModal}
+                    type="button"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="flex-1 px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl disabled:opacity-50 transition-all duration-200"
+                    disabled={isDeleting}
+                    onClick={() => void executeCredentialDeletion()}
+                    type="button"
+                  >
+                    {isDeleting ? "Deleting..." : "Delete"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

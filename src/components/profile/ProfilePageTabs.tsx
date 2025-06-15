@@ -11,7 +11,7 @@ const ProfilePageTabs: React.FC<ProfilePageTabsProps> = ({
   onTabChange,
 }) => {
   return (
-    <div className="flex border-b border-gray-700 mb-6">
+    <div className="flex border-b border-gray-700 mb-3">
       <button
         className={`px-4 py-2 font-medium text-sm border-b-2 ${
           activeTab === "profile"

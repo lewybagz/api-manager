@@ -12,7 +12,6 @@ import {
   Lock,
   LogIn,
   Mail,
-  Shield,
   UserPlus,
 } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
@@ -326,11 +325,20 @@ const LoginPage: React.FC = () => {
 
   if ((isLoading && !user) || registerLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-brand-dark">
+      <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary flex items-center justify-center">
         <div className="flex flex-col items-center">
-          <Shield className="h-10 w-10 text-brand-blue animate-spin mb-4" />
+          <div className="relative mb-6">
+            <div className="w-16 h-16 border-4 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin"></div>
+            <div
+              className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-brand-primary rounded-full animate-spin"
+              style={{
+                animationDirection: "reverse",
+                animationDuration: "1.5s",
+              }}
+            ></div>
+          </div>
           <p className="text-brand-light text-lg animate-pulse">
-            Loading authentication...
+            Authenticating...
           </p>
         </div>
       </div>
@@ -338,68 +346,78 @@ const LoginPage: React.FC = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-transparent relative overflow-hidden">
-      {/* SVG Background */}
-      <div className="fixed inset-0 w-full h-full -z-10 pointer-events-none">
+    <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary flex items-center justify-center relative overflow-hidden">
+      {/* Enhanced SVG Background */}
+      <div className="fixed inset-0 w-full h-full -z-10 pointer-events-none opacity-30">
         <svg
           height="100%"
           viewBox="0 0 1600 800"
           width="100%"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <rect fill="#F7FAFC" height="800" width="1600" />
-          <g fillOpacity="0.66">
+          <rect fill="transparent" height="800" width="1600" />
+          <g fillOpacity="0.1">
             <polygon
-              fill="#c9dfee"
+              fill="#3b82f6"
               points="800 100 0 200 0 800 1600 800 1600 200"
             />
             <polygon
-              fill="#98c4e3"
+              fill="#1d4ed8"
               points="800 200 0 400 0 800 1600 800 1600 400"
             />
             <polygon
-              fill="#64a9db"
+              fill="#1e40af"
               points="800 300 0 600 0 800 1600 800 1600 600"
             />
-            <polygon fill="#2c8ed7" points="1600 800 800 400 0 800" />
-            <polygon fill="#1a6eac" points="1280 800 800 500 320 800" />
-            <polygon fill="#0e4c7c" points="533.3 800 1066.7 800 800 600" />
-            <polygon fill="#062B48" points="684.1 800 914.3 800 800 700" />
+            <polygon fill="#1e3a8a" points="1600 800 800 400 0 800" />
+            <polygon fill="#172554" points="1280 800 800 500 320 800" />
+            <polygon fill="#0f172a" points="533.3 800 1066.7 800 800 600" />
+            <polygon fill="#020617" points="684.1 800 914.3 800 800 700" />
           </g>
         </svg>
       </div>
-      <div className="w-full max-w-md bg-white/10 dark:bg-brand-dark/80 backdrop-blur border border-brand-blue/30 shadow-lg rounded-2xl p-8 pt-0 animate-fade-in">
+
+      <div className="w-full max-w-md bg-gradient-to-br from-brand-dark-secondary/90 to-brand-dark-secondary/70 backdrop-blur-xl border border-brand-blue/30 shadow-2xl rounded-3xl p-8 pt-4 animate-fade-in">
         <div className="flex flex-col items-center">
-          {/* <Shield className="h-12 w-12 text-brand-blue mb-3 animate-pop-in" /> */}
           <img
             alt="Zeker Logo"
-            className="h-40 w-40 animate-pop-in translate-y-6"
+            className="h-32 w-32 animate-pop-in mb-2"
             src="/assets/logos/logo-192x192.png"
           />
-          <h1 className="text-3xl font-bold text-white mb-1 tracking-tight">
-            Zeker
+          <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">
+            <span className="bg-gradient-to-r from-brand-light via-brand-blue to-brand-primary bg-clip-text text-transparent">
+              Zeker
+            </span>
           </h1>
-          <p className="text-brand-light-secondary mb-6 text-center text-base">
+          <p className="text-brand-light-secondary mb-8 text-center text-base leading-relaxed">
             Securely manage your API credentials in one place.
           </p>
 
           {isLimited && (
-            <div className="w-full mb-4 p-4 bg-red-900/50 border border-red-500 rounded-lg flex items-center space-x-2">
-              <Clock className="h-5 w-5 text-red-400" />
-              <p className="text-red-400">
-                Too many failed attempts. Please try again in{" "}
-                {String(Math.ceil(Number(remainingTime) / 60000))} minutes.
-              </p>
+            <div className="w-full mb-6 p-4 bg-gradient-to-r from-red-900/40 to-red-800/30 border border-red-500/50 rounded-xl flex items-center space-x-3 backdrop-blur-sm">
+              <div className="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Clock className="h-4 w-4 text-red-400" />
+              </div>
+              <div>
+                <p className="text-red-400 font-medium text-sm">
+                  Account Temporarily Locked
+                </p>
+                <p className="text-red-300 text-xs">
+                  Try again in{" "}
+                  {String(Math.ceil(Number(remainingTime) / 60000))} minutes
+                </p>
+              </div>
             </div>
           )}
 
-          <div className="flex w-full mb-6">
+          {/* Enhanced Tab Switcher */}
+          <div className="flex w-full mb-8 bg-gray-800/50 rounded-xl p-1 backdrop-blur-sm">
             <button
               aria-current={!isRegister}
-              className={`flex-1 py-2 rounded-l-lg text-lg font-semibold transition-all ${
+              className={`flex-1 py-3 rounded-lg text-base font-semibold transition-all duration-200 ${
                 !isRegister
-                  ? "bg-brand-blue text-white"
-                  : "bg-gray-800 text-brand-light-secondary hover:bg-brand-blue hover:text-white"
+                  ? "bg-gradient-to-r from-brand-blue to-brand-primary text-white shadow-lg"
+                  : "text-brand-light-secondary hover:text-white hover:bg-gray-700/50"
               }`}
               onClick={() => {
                 setIsRegister(false);
@@ -410,10 +428,10 @@ const LoginPage: React.FC = () => {
             </button>
             <button
               aria-current={isRegister}
-              className={`flex-1 py-2 rounded-r-lg text-lg font-semibold transition-all ${
+              className={`flex-1 py-3 rounded-lg text-base font-semibold transition-all duration-200 ${
                 isRegister
-                  ? "bg-brand-blue text-white"
-                  : "bg-gray-800 text-brand-light-secondary hover:bg-brand-blue hover:text-white"
+                  ? "bg-gradient-to-r from-brand-blue to-brand-primary text-white shadow-lg"
+                  : "text-brand-light-secondary hover:text-white hover:bg-gray-700/50"
               }`}
               onClick={() => {
                 setIsRegister(true);
@@ -423,7 +441,8 @@ const LoginPage: React.FC = () => {
               Register
             </button>
           </div>
-          {/* Login Form */}
+
+          {/* Enhanced Login Form */}
           {!isRegister && (
             <form
               autoComplete="on"
@@ -443,27 +462,29 @@ const LoginPage: React.FC = () => {
                 type="text"
                 value={email}
               />
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div className="relative">
                   <label
-                    className="text-sm font-medium text-brand-light-secondary mb-1 block"
+                    className="block text-sm font-medium text-brand-light-secondary mb-2"
                     htmlFor="email"
                   >
                     Email address
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 pointer-events-none" />
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <Mail className="h-5 w-5 text-gray-400" />
+                    </div>
                     <input
                       aria-label="Email address"
                       autoComplete="email"
-                      className="block w-full rounded-md border border-gray-700 bg-gray-800 py-2.5 pl-10 pr-3 text-white placeholder-gray-400  transition-all"
+                      className="block w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200"
                       disabled={isSubmitting}
                       id="email"
                       name="email"
                       onChange={(e) => {
                         setEmail(e.target.value);
                       }}
-                      placeholder="Email address"
+                      placeholder="Enter your email"
                       required
                       type="email"
                       value={email}
@@ -472,24 +493,26 @@ const LoginPage: React.FC = () => {
                 </div>
                 <div className="relative">
                   <label
-                    className="text-sm font-medium text-brand-light-secondary mb-1 block"
+                    className="block text-sm font-medium text-brand-light-secondary mb-2"
                     htmlFor="password"
                   >
                     Password
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 pointer-events-none" />
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <Lock className="h-5 w-5 text-gray-400" />
+                    </div>
                     <input
                       aria-label="Password"
                       autoComplete="current-password"
-                      className="block w-full rounded-md border border-gray-700 bg-gray-800 py-2.5 pl-10 pr-10 text-white placeholder-gray-400  transition-all"
+                      className="block w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm py-3 pl-12 pr-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200"
                       disabled={isSubmitting}
                       id="password"
                       name="password"
                       onChange={(e) => {
                         setPassword(e.target.value);
                       }}
-                      placeholder="Password"
+                      placeholder="Enter your password"
                       required
                       type={showPassword ? "text" : "password"}
                       value={password}
@@ -498,7 +521,7 @@ const LoginPage: React.FC = () => {
                       aria-label={
                         showPassword ? "Hide password" : "Show password"
                       }
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-brand-blue focus:outline-none"
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-brand-blue focus:outline-none transition-colors duration-200"
                       disabled={isSubmitting}
                       onClick={() => {
                         setShowPassword((v) => !v);
@@ -515,40 +538,46 @@ const LoginPage: React.FC = () => {
                   </div>
                 </div>
               </div>
+
               {authError && (
-                <div className="flex items-center mt-2 text-red-400 animate-fade-in">
-                  <AlertCircle className="h-4 w-4 mr-2" />
-                  <span className="text-sm">{authError.message}</span>
+                <div className="flex items-start p-4 bg-red-900/30 border border-red-500/50 rounded-xl animate-fade-in">
+                  <AlertCircle className="h-5 w-5 text-red-400 mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-sm text-red-400 leading-relaxed">
+                    {authError.message}
+                  </span>
                 </div>
               )}
+
               <button
-                className="group relative flex w-full justify-center rounded-md bg-brand-blue px-3 py-2 text-base font-semibold text-white hover:bg-brand-blue-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="w-full bg-gradient-to-r from-brand-blue to-brand-primary hover:from-brand-blue-hover hover:to-brand-primary-dark text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none focus:outline-none focus:ring-2 focus:ring-brand-blue/50"
                 disabled={isSubmitting}
                 type="submit"
               >
                 {isSubmitting ? (
-                  <span className="flex items-center">
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    One Sec...
+                  <span className="flex items-center justify-center">
+                    <Loader2 className="h-5 w-5 mr-3 animate-spin" />
+                    Signing in...
                   </span>
                 ) : (
-                  <>
-                    <LogIn className="h-5 w-5 mr-2" />
+                  <span className="flex items-center justify-center">
+                    <LogIn className="h-5 w-5 mr-3" />
                     Sign in
-                  </>
+                  </span>
                 )}
               </button>
-              <div className="text-right mt-2">
+
+              <div className="text-center pt-2">
                 <a
-                  className="text-sm text-brand-blue hover:underline focus:outline-none"
+                  className="text-sm text-brand-blue hover:text-brand-blue-hover transition-colors duration-200"
                   href="/forgot-password"
                 >
-                  Forgot password?
+                  Forgot your password?
                 </a>
               </div>
             </form>
           )}
-          {/* Register Form */}
+
+          {/* Enhanced Register Form */}
           {isRegister && (
             <form
               autoComplete="on"
@@ -568,25 +597,25 @@ const LoginPage: React.FC = () => {
                 type="text"
                 value={registerEmail}
               />
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div className="relative">
                   <label
-                    className="text-sm font-medium text-brand-light-secondary mb-1 block"
+                    className="block text-sm font-medium text-brand-light-secondary mb-2"
                     htmlFor="registerName"
                   >
-                    Display Name <span className="text-red-500">*</span>
+                    Display Name <span className="text-red-400">*</span>
                   </label>
                   <div className="relative">
                     <input
                       aria-label="Display Name"
                       autoComplete="name"
-                      className="block w-full rounded-md border border-gray-700 bg-gray-800 py-2.5 pl-3 pr-3 text-white placeholder-gray-400  transition-all"
+                      className="block w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm py-3 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200"
                       id="registerName"
                       name="registerName"
                       onChange={(e) => {
                         setRegisterName(e.target.value);
                       }}
-                      placeholder="Your name (required)"
+                      placeholder="Your full name"
                       required
                       type="text"
                       value={registerName}
@@ -595,23 +624,25 @@ const LoginPage: React.FC = () => {
                 </div>
                 <div className="relative">
                   <label
-                    className="text-sm font-medium text-brand-light-secondary mb-1 block"
+                    className="block text-sm font-medium text-brand-light-secondary mb-2"
                     htmlFor="registerEmail"
                   >
                     Email address
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 pointer-events-none" />
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <Mail className="h-5 w-5 text-gray-400" />
+                    </div>
                     <input
                       aria-label="Email address"
                       autoComplete="email"
-                      className="block w-full rounded-md border border-gray-700 bg-gray-800 py-2.5 pl-10 pr-3 text-white placeholder-gray-400  transition-all"
+                      className="block w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200"
                       id="registerEmail"
                       name="registerEmail"
                       onChange={(e) => {
                         setRegisterEmail(e.target.value);
                       }}
-                      placeholder="Email address"
+                      placeholder="Enter your email"
                       required
                       type="email"
                       value={registerEmail}
@@ -620,23 +651,25 @@ const LoginPage: React.FC = () => {
                 </div>
                 <div className="relative">
                   <label
-                    className="text-sm font-medium text-brand-light-secondary mb-1 block"
+                    className="block text-sm font-medium text-brand-light-secondary mb-2"
                     htmlFor="registerPassword"
                   >
                     Password
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 pointer-events-none" />
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <Lock className="h-5 w-5 text-gray-400" />
+                    </div>
                     <input
                       aria-label="Password"
                       autoComplete="new-password"
-                      className="block w-full rounded-md border border-gray-700 bg-gray-800 py-2.5 pl-10 pr-10 text-white placeholder-gray-400  transition-all"
+                      className="block w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm py-3 pl-12 pr-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200"
                       id="registerPassword"
                       name="registerPassword"
                       onChange={(e) => {
                         setRegisterPassword(e.target.value);
                       }}
-                      placeholder="Password"
+                      placeholder="Create a strong password"
                       required
                       type={showRegisterPassword ? "text" : "password"}
                       value={registerPassword}
@@ -645,7 +678,7 @@ const LoginPage: React.FC = () => {
                       aria-label={
                         showRegisterPassword ? "Hide password" : "Show password"
                       }
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-brand-blue focus:outline-none"
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-brand-blue focus:outline-none transition-colors duration-200"
                       onClick={() => {
                         setShowRegisterPassword((v) => !v);
                       }}
@@ -659,49 +692,60 @@ const LoginPage: React.FC = () => {
                       )}
                     </button>
                   </div>
-                  {/* Password Strength Meter */}
+                  {/* Enhanced Password Strength Meter */}
                   {registerPassword && (
-                    <div className="mt-2 flex flex-col items-start justify-start gap-px">
-                      <div
-                        className={`h-1 rounded w-24 ${passwordStrength.color} transition-all`}
-                      />
-                      <span
-                        className={`text-xs font-semibold ${passwordStrength.color.replace(
-                          "bg-",
-                          "text-"
-                        )}`}
-                      >
-                        {passwordStrength.label}
-                      </span>
+                    <div className="mt-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex space-x-1">
+                          {[1, 2, 3, 4, 5].map((level) => (
+                            <div
+                              className={`h-1.5 w-6 rounded-full transition-all duration-300 ${
+                                passwordStrength.score >= level
+                                  ? passwordStrength.color
+                                  : "bg-gray-700"
+                              }`}
+                              key={level}
+                            />
+                          ))}
+                        </div>
+                        <span
+                          className={`text-xs font-semibold ${passwordStrength.color.replace(
+                            "bg-",
+                            "text-"
+                          )}`}
+                        >
+                          {passwordStrength.label}
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
+
               {registerError && (
-                <div className="flex items-center mt-2 text-red-400 animate-fade-in">
-                  <AlertCircle className="h-4 w-4 mr-2" />
-                  <span className="text-sm">{registerError}</span>
+                <div className="flex items-start p-4 bg-red-900/30 border border-red-500/50 rounded-xl animate-fade-in">
+                  <AlertCircle className="h-5 w-5 text-red-400 mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-sm text-red-400 leading-relaxed">
+                    {registerError}
+                  </span>
                 </div>
               )}
+
               <button
-                className="group relative flex w-full justify-center rounded-md bg-brand-blue px-3 py-2 text-base font-semibold text-white hover:bg-brand-blue-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="w-full bg-gradient-to-r from-brand-blue to-brand-primary hover:from-brand-blue-hover hover:to-brand-primary-dark text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none focus:outline-none focus:ring-2 focus:ring-brand-blue/50"
                 disabled={!registerName.trim() || passwordStrength.score < 4}
                 type="submit"
               >
-                <span className="flex items-center">
+                <span className="flex items-center justify-center">
                   {isLoading ? (
                     <>
-                      <span className="flex items-center gap-2">
-                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                        <p className="text-sm text-brand-light-secondary">
-                          Checking Aura...
-                        </p>
-                      </span>
+                      <Loader2 className="h-5 w-5 mr-3 animate-spin" />
+                      Creating account...
                     </>
                   ) : (
                     <>
-                      <UserPlus className="h-5 w-5 mr-2" />
-                      Register
+                      <UserPlus className="h-5 w-5 mr-3" />
+                      Create Account
                     </>
                   )}
                 </span>

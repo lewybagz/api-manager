@@ -2,7 +2,6 @@ import { signOut } from "firebase/auth";
 import {
   BookOpenText,
   ChevronDown,
-  ChevronRight,
   FolderPlus,
   Folders,
   History,
@@ -12,6 +11,7 @@ import {
   Mail,
   PlusCircle,
   Search,
+  Sparkles,
   Star,
   User,
 } from "lucide-react";
@@ -74,27 +74,32 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <div className="w-64 bg-brand-dark-secondary h-screen p-0 fixed left-0 top-0 overflow-y-auto border-r border-gray-800 hidden md:flex flex-col">
-      {/* App branding */}
+    <div className="w-64 bg-gradient-to-b from-brand-dark-secondary via-brand-dark-secondary to-brand-dark h-screen p-0 fixed left-0 top-0 overflow-y-auto border-r border-gray-800/50 backdrop-blur-xl hidden md:flex flex-col shadow-2xl custom-scrollbar">
+      {/* Enhanced App Branding */}
       <Link
-        className="px-4 py-1 flex items-center border-b border-gray-800"
+        className="px-4 py-4 flex items-center border-b border-gray-800/50 bg-gradient-to-r from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm hover:from-brand-blue/10 hover:to-brand-primary/10 transition-all duration-300 group"
         to="/"
       >
-        <img
-          alt="Zeker Logo"
-          className="h-12 w-12 animate-pop-in translate-y-1"
-          src="/assets/logos/logo-sidebar-40x40.png"
-        />
-        <h1 className="ml-2 text-lg font-bold text-white tracking-wide -translate-x-1">
+        <div className="relative">
+          <img
+            alt="Zeker Logo"
+            className="h-12 w-12 animate-pop-in translate-y-1 group-hover:scale-110 transition-transform duration-300"
+            src="/assets/logos/logo-sidebar-40x40.png"
+          />
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-brand-blue to-brand-primary rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <Sparkles className="w-2 h-2 text-white m-0.5" />
+          </div>
+        </div>
+        <h1 className="ml-3 text-xl font-bold text-white tracking-wide -translate-x-1 group-hover:text-brand-blue transition-colors duration-300">
           Zeker
         </h1>
       </Link>
 
-      {/* Search box */}
-      <div className="px-3 pt-3 pb-2">
-        <div className="relative">
+      {/* Enhanced Search Box */}
+      <div className="px-4 pt-4 pb-3">
+        <div className="relative group">
           <input
-            className="w-full bg-gray-800 text-gray-200 text-sm rounded-md pl-8 pr-3 py-2 focus:outline-none"
+            className="w-full bg-gradient-to-r from-gray-800/80 to-gray-900/60 backdrop-blur-sm text-gray-200 text-sm rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:bg-gray-800/90 border border-gray-700/50 hover:border-brand-blue/30 transition-all duration-300 placeholder-gray-400"
             onChange={(e) => {
               setSearchQuery(e.target.value);
             }}
@@ -102,66 +107,88 @@ const Sidebar: React.FC = () => {
             type="text"
             value={searchQuery}
           />
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 bg-gradient-to-r from-brand-blue to-brand-primary rounded-full flex items-center justify-center group-focus-within:scale-110 transition-transform duration-200">
+            <Search className="h-3 w-3 text-white" />
+          </div>
         </div>
       </div>
 
-      {/* Navigation Menu */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Enhanced Navigation Menu */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
         <nav className="px-3 py-2">
-          <ul className="space-y-1">
+          <ul className="space-y-2">
             <li>
               <Link
-                className={`flex items-center px-3 py-2 rounded-md text-sm transition-colors ${
+                className={`flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 group ${
                   isActiveRoute("/dashboard")
-                    ? "bg-brand-blue text-white"
-                    : "text-gray-300 hover:bg-gray-700"
+                    ? "bg-gradient-to-r from-brand-blue to-brand-primary text-white shadow-lg shadow-brand-blue/20"
+                    : "text-gray-300 hover:bg-gradient-to-r hover:from-gray-700/50 hover:to-gray-800/30 hover:text-brand-blue backdrop-blur-sm"
                 }`}
                 to="/dashboard"
               >
-                <Home className="h-4 w-4 mr-3" />
+                <div
+                  className={`w-5 h-5 rounded-lg flex items-center justify-center mr-3 ${
+                    isActiveRoute("/dashboard")
+                      ? "bg-white/20"
+                      : "bg-gray-700/50 group-hover:bg-brand-blue/20"
+                  } transition-all duration-300`}
+                >
+                  <Home className="h-3 w-3" />
+                </div>
                 Dashboard
               </Link>
             </li>
             <li>
               <button
-                className="flex items-center w-full px-3 py-2 rounded-md text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+                className="flex items-center w-full px-4 py-3 rounded-xl text-sm font-medium text-gray-300 hover:bg-gradient-to-r hover:from-gray-700/50 hover:to-gray-800/30 hover:text-brand-blue transition-all duration-300 group backdrop-blur-sm"
                 onClick={() => {
                   setProjectsExpanded(!projectsExpanded);
                 }}
               >
-                <Folders className="h-4 w-4 mr-3" />
+                <div className="w-5 h-5 rounded-lg bg-gray-700/50 group-hover:bg-brand-blue/20 flex items-center justify-center mr-3 transition-all duration-300">
+                  <Folders className="h-3 w-3" />
+                </div>
                 Projects
-                {projectsExpanded ? (
-                  <ChevronDown className="h-4 w-4 ml-auto" />
-                ) : (
-                  <ChevronRight className="h-4 w-4 ml-auto" />
-                )}
+                <div
+                  className={`ml-auto transition-transform duration-300 ${
+                    projectsExpanded ? "rotate-0" : "-rotate-90"
+                  }`}
+                >
+                  <ChevronDown className="h-4 w-4" />
+                </div>
               </button>
 
               {projectsExpanded && (
-                <div className="mt-1 ml-2 pl-6 border-l border-gray-700">
+                <div className="mt-2 ml-2 pl-6 border-l border-gradient-to-b from-gray-700/50 to-transparent">
                   {filteredProjects.length > 0 ? (
-                    <ul className="space-y-1 py-1">
+                    <ul className="space-y-1 py-2">
                       {filteredProjects.map((project) => (
                         <li key={project.id}>
                           <Link
-                            className={`flex items-center px-3 py-2 rounded-md text-sm ${
+                            className={`flex items-center px-3 py-2.5 rounded-lg text-sm transition-all duration-300 group ${
                               isActiveRoute(`/project/${project.id}`)
-                                ? "bg-gray-700/50 text-brand-blue font-medium"
-                                : "text-gray-300 hover:bg-gray-700/30"
-                            } transition-colors group`}
+                                ? "bg-gradient-to-r from-gray-700/60 to-gray-800/40 text-brand-blue font-semibold border border-brand-blue/20 shadow-lg shadow-brand-blue/10"
+                                : "text-gray-300 hover:bg-gradient-to-r hover:from-gray-700/30 hover:to-gray-800/20 hover:text-brand-blue backdrop-blur-sm"
+                            }`}
                             to={`/project/${project.id}`}
                           >
-                            <Layout className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
-                            <span className="truncate">
+                            <div
+                              className={`w-4 h-4 rounded-md flex items-center justify-center mr-3 ${
+                                isActiveRoute(`/project/${project.id}`)
+                                  ? "bg-brand-blue/20"
+                                  : "bg-gray-600/50 group-hover:bg-brand-blue/20"
+                              } transition-all duration-300`}
+                            >
+                              <Layout className="h-2.5 w-2.5" />
+                            </div>
+                            <span className="truncate flex-1">
                               {project.projectName}
                             </span>
                             <Star
-                              className={`h-3 w-3 ml-auto opacity-0 group-hover:opacity-70 ${
+                              className={`h-3 w-3 ml-2 transition-all duration-300 ${
                                 isActiveRoute(`/project/${project.id}`)
-                                  ? "opacity-70"
-                                  : ""
+                                  ? "opacity-70 text-brand-blue"
+                                  : "opacity-0 group-hover:opacity-70 group-hover:text-brand-blue"
                               }`}
                             />
                           </Link>
@@ -169,16 +196,19 @@ const Sidebar: React.FC = () => {
                       ))}
                     </ul>
                   ) : searchQuery ? (
-                    <div className="text-sm text-gray-400 py-2 px-3">
+                    <div className="text-sm text-gray-400 py-3 px-3 bg-gray-800/30 rounded-lg backdrop-blur-sm">
                       No matching projects
                     </div>
                   ) : (
-                    <div className="bg-gray-800/50 rounded-lg p-4 my-2 border border-gray-700/50 text-center">
+                    <div className="bg-gradient-to-br from-gray-800/60 to-gray-900/40 backdrop-blur-sm rounded-xl p-4 my-2 border border-gray-700/50 text-center">
+                      <div className="w-8 h-8 bg-gradient-to-r from-brand-blue to-brand-primary rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Folders className="h-4 w-4 text-white" />
+                      </div>
                       <p className="text-gray-400 text-sm mb-3">
                         No projects yet
                       </p>
                       <button
-                        className="flex items-center justify-center gap-2 bg-brand-blue hover:bg-brand-blue-hover text-white font-medium py-1.5 px-3 rounded-md text-xs w-full transition-colors"
+                        className="flex items-center justify-center gap-2 bg-gradient-to-r from-brand-blue to-brand-primary hover:from-brand-blue-hover hover:to-brand-primary text-white font-semibold py-2 px-3 rounded-lg text-xs w-full transition-all duration-300 transform hover:scale-105 shadow-lg"
                         onClick={() => {
                           void navigate("/dashboard", {
                             state: { quickAdd: "project" },
@@ -192,14 +222,16 @@ const Sidebar: React.FC = () => {
                   )}
 
                   <button
-                    className="flex items-center w-full px-3 py-2 mt-1 rounded-md text-sm text-gray-400 hover:text-gray-300 hover:bg-gray-700/30 transition-colors"
+                    className="flex items-center w-full px-3 py-2.5 mt-2 rounded-lg text-sm text-gray-400 hover:text-brand-blue hover:bg-gradient-to-r hover:from-gray-700/30 hover:to-gray-800/20 transition-all duration-300 group backdrop-blur-sm"
                     onClick={() => {
                       void navigate("/dashboard", {
                         state: { quickAdd: "project" },
                       });
                     }}
                   >
-                    <FolderPlus className="h-3.5 w-3.5 mr-2" />
+                    <div className="w-4 h-4 rounded-md bg-gray-600/50 group-hover:bg-brand-blue/20 flex items-center justify-center mr-3 transition-all duration-300">
+                      <FolderPlus className="h-2.5 w-2.5" />
+                    </div>
                     Add Project
                   </button>
                 </div>
@@ -208,55 +240,92 @@ const Sidebar: React.FC = () => {
 
             <li>
               <Link
-                className="flex items-center px-3 py-2 rounded-md text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+                className={`flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 group ${
+                  isActiveRoute("/credentials")
+                    ? "bg-gradient-to-r from-brand-blue to-brand-primary text-white shadow-lg shadow-brand-blue/20"
+                    : "text-gray-300 hover:bg-gradient-to-r hover:from-gray-700/50 hover:to-gray-800/30 hover:text-brand-blue backdrop-blur-sm"
+                }`}
                 to="/credentials"
               >
-                <Key className="h-4 w-4 mr-3" />
+                <div
+                  className={`w-5 h-5 rounded-lg flex items-center justify-center mr-3 ${
+                    isActiveRoute("/credentials")
+                      ? "bg-white/20"
+                      : "bg-gray-700/50 group-hover:bg-brand-blue/20"
+                  } transition-all duration-300`}
+                >
+                  <Key className="h-3 w-3" />
+                </div>
                 All Credentials
               </Link>
             </li>
             <li>
               <Link
-                className="flex items-center px-3 py-2 rounded-md text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+                className={`flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 group ${
+                  isActiveRoute("/docs")
+                    ? "bg-gradient-to-r from-brand-blue to-brand-primary text-white shadow-lg shadow-brand-blue/20"
+                    : "text-gray-300 hover:bg-gradient-to-r hover:from-gray-700/50 hover:to-gray-800/30 hover:text-brand-blue backdrop-blur-sm"
+                }`}
                 to="/docs"
               >
-                <BookOpenText className="h-4 w-4 mr-3" />
+                <div
+                  className={`w-5 h-5 rounded-lg flex items-center justify-center mr-3 ${
+                    isActiveRoute("/docs")
+                      ? "bg-white/20"
+                      : "bg-gray-700/50 group-hover:bg-brand-blue/20"
+                  } transition-all duration-300`}
+                >
+                  <BookOpenText className="h-3 w-3" />
+                </div>
                 Documentation
               </Link>
             </li>
           </ul>
         </nav>
-        {/* Recently Accessed */}
+
+        {/* Enhanced Recently Accessed */}
         {recentItems.length > 0 && (
-          <nav className="px-3 py-2">
+          <nav className="px-3 py-2 mt-4">
             <button
-              className="flex items-center w-full px-3 py-2 rounded-md text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+              className="flex items-center w-full px-4 py-3 rounded-xl text-sm font-medium text-gray-300 hover:bg-gradient-to-r hover:from-gray-700/50 hover:to-gray-800/30 hover:text-brand-blue transition-all duration-300 group backdrop-blur-sm"
               onClick={() => {
                 setRecentItemsExpanded(!recentItemsExpanded);
               }}
             >
-              <History className="h-4 w-4 mr-3" />
+              <div className="w-5 h-5 rounded-lg bg-gray-700/50 group-hover:bg-brand-blue/20 flex items-center justify-center mr-3 transition-all duration-300">
+                <History className="h-3 w-3" />
+              </div>
               Recently Accessed
-              {recentItemsExpanded ? (
-                <ChevronDown className="h-4 w-4 ml-auto" />
-              ) : (
-                <ChevronRight className="h-4 w-4 ml-auto" />
-              )}
+              <div
+                className={`ml-auto transition-transform duration-300 ${
+                  recentItemsExpanded ? "rotate-0" : "-rotate-90"
+                }`}
+              >
+                <ChevronDown className="h-4 w-4" />
+              </div>
             </button>
             {recentItemsExpanded && (
-              <div className="mt-1 ml-2 pl-6 border-l border-gray-700">
-                <ul className="space-y-1 py-1">
+              <div className="mt-2 ml-2 pl-6 border-l border-gradient-to-b from-gray-700/50 to-transparent">
+                <ul className="space-y-1 py-2">
                   {recentItems.map((item) => (
                     <li key={item.id}>
                       <Link
-                        className={`flex items-center px-3 py-2 rounded-md text-sm ${
+                        className={`flex items-center px-3 py-2.5 rounded-lg text-sm transition-all duration-300 group ${
                           isActiveRoute(`/project/${item.id}`)
-                            ? "bg-gray-700/50 text-brand-blue font-medium"
-                            : "text-gray-300 hover:bg-gray-700/30"
-                        } transition-colors group`}
+                            ? "bg-gradient-to-r from-gray-700/60 to-gray-800/40 text-brand-blue font-semibold border border-brand-blue/20 shadow-lg shadow-brand-blue/10"
+                            : "text-gray-300 hover:bg-gradient-to-r hover:from-gray-700/30 hover:to-gray-800/20 hover:text-brand-blue backdrop-blur-sm"
+                        }`}
                         to={`/project/${item.id}`}
                       >
-                        <Layout className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+                        <div
+                          className={`w-4 h-4 rounded-md flex items-center justify-center mr-3 ${
+                            isActiveRoute(`/project/${item.id}`)
+                              ? "bg-brand-blue/20"
+                              : "bg-gray-600/50 group-hover:bg-brand-blue/20"
+                          } transition-all duration-300`}
+                        >
+                          <Layout className="h-2.5 w-2.5" />
+                        </div>
                         <span className="truncate">{item.name}</span>
                       </Link>
                     </li>
@@ -268,45 +337,46 @@ const Sidebar: React.FC = () => {
         )}
       </div>
 
-      {/* User menu (from Navbar) and settings actions */}
-      <div className="mt-auto pt-2 pb-4">
-        {/* User profile section */}
+      {/* Enhanced User Menu */}
+      <div className="mt-auto pt-4 pb-4">
         {user && userDoc && (
-          <div className="bg-gray-800/70 m-3 mb-2 p-3 rounded-lg border border-gray-700/50">
-            <div className="flex items-center mb-2">
-              <div className="h-9 w-9 rounded-full bg-brand-blue flex items-center justify-center flex-shrink-0">
+          <div className="bg-gradient-to-br from-gray-800/80 to-gray-900/60 backdrop-blur-sm m-3 mb-3 p-4 rounded-xl border border-gray-700/50 shadow-lg">
+            <div className="flex items-center mb-3">
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-r from-brand-blue to-brand-primary flex items-center justify-center flex-shrink-0 shadow-lg">
                 <User className="h-5 w-5 text-white" />
               </div>
-              <div className="ml-2 overflow-hidden">
-                <p className="font-medium text-sm text-white truncate">
+              <div className="ml-3 overflow-hidden flex-1">
+                <p className="font-semibold text-sm text-white truncate">
                   {userDoc.displayName ?? user.email}
                 </p>
               </div>
-              <div className="ml-auto">
+              <div className="ml-2">
                 <EncryptionStatusIndicator />
               </div>
             </div>
 
-            <div className="flex items-center text-xs text-gray-400 mb-2 pl-1">
-              <Mail className="h-3.5 w-3.5 mr-2 text-brand-blue flex-shrink-0" />
+            <div className="flex items-center text-xs text-gray-400 mb-3 pl-1">
+              <div className="w-4 h-4 rounded-md bg-brand-blue/20 flex items-center justify-center mr-2">
+                <Mail className="h-2.5 w-2.5 text-brand-blue" />
+              </div>
               <p className="truncate">{userDoc.email}</p>
             </div>
 
-            <div className="flex mt-2 pt-2 border-t border-gray-700/70">
+            <div className="grid grid-cols-3 gap-1 mt-3 pt-3 border-t border-gray-700/50">
               <Link
-                className="flex-1 text-center text-xs py-1 rounded-l-md bg-gray-700/50 text-gray-300 hover:bg-gray-700 transition-colors border-r border-gray-500"
+                className="text-center text-xs py-2 px-2 rounded-lg bg-gradient-to-r from-gray-700/60 to-gray-800/40 text-gray-300 hover:from-brand-blue/20 hover:to-brand-primary/20 hover:text-brand-blue transition-all duration-300 backdrop-blur-sm font-medium"
                 to="/profile"
               >
                 Profile
               </Link>
               <Link
-                className="flex-1 text-center text-xs py-1 bg-gray-700/50 text-gray-300 hover:bg-gray-700 transition-colors border-r border-gray-500"
+                className="text-center text-xs py-2 px-2 rounded-lg bg-gradient-to-r from-gray-700/60 to-gray-800/40 text-gray-300 hover:from-brand-blue/20 hover:to-brand-primary/20 hover:text-brand-blue transition-all duration-300 backdrop-blur-sm font-medium"
                 to="/settings"
               >
                 Settings
               </Link>
               <button
-                className="flex-1 text-center text-xs py-1 rounded-r-md bg-gray-700/50 text-gray-300 hover:bg-red-900/50 transition-colors"
+                className="text-center text-xs py-2 px-2 rounded-lg bg-gradient-to-r from-gray-700/60 to-gray-800/40 text-gray-300 hover:from-red-900/50 hover:to-red-800/40 hover:text-red-300 transition-all duration-300 backdrop-blur-sm font-medium"
                 onClick={() => void handleLogout()}
               >
                 Sign out
@@ -315,8 +385,8 @@ const Sidebar: React.FC = () => {
           </div>
         )}
 
-        <div className="px-3">
-          <p className="px-3 py-px text-xs text-gray-500">
+        <div className="px-4">
+          <p className="px-3 py-2 text-xs text-gray-500 text-center bg-gray-800/30 rounded-lg backdrop-blur-sm">
             Zeker&copy; {new Date().getFullYear()}
           </p>
         </div>

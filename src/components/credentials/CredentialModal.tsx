@@ -1,6 +1,6 @@
 import type { SubmitHandler } from "react-hook-form";
 
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, FileText, Key, Lock, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -274,223 +274,258 @@ const CredentialModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-      <div className="w-full max-w-lg rounded-lg bg-brand-dark p-6 shadow-xl">
-        <h2 className="mb-6 text-2xl font-semibold text-white">
-          {editingCredential ? "Edit Credential" : "Add New Credential"}
-        </h2>
-        <form
-          autoComplete="off"
-          onSubmit={(e) => {
-            console.log("Form submission initiated");
-            return void handleSubmit(onSubmit)(e);
-          }}
-        >
-          <div className="mb-4">
-            <label
-              className="mb-2 block text-sm font-medium text-gray-300"
-              htmlFor="serviceName"
-            >
-              Service Name
-            </label>
-            <input
-              aria-label="Service Name"
-              autoComplete="off"
-              className="w-full rounded-md border border-gray-600 bg-gray-700 p-2.5 text-white placeholder-gray-400"
-              id="serviceName"
-              placeholder="e.g., AWS, Stripe, OpenAI"
-              type="text"
-              {...register("serviceName", {
-                maxLength: {
-                  message: "Service name must be less than 50 characters",
-                  value: 50,
-                },
-                minLength: {
-                  message: "Service name must be at least 2 characters",
-                  value: 2,
-                },
-                pattern: {
-                  message: "Service name contains invalid characters",
-                  value: /^[a-zA-Z0-9\s\-_]+$/,
-                },
-                required: "Service name is required",
-              })}
-            />
-            {errors.serviceName && (
-              <p className="mt-1 text-sm text-red-500">
-                {errors.serviceName.message}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+      <div className="w-full max-w-lg bg-gradient-to-br from-brand-dark to-brand-dark-secondary border border-brand-blue/30 rounded-2xl shadow-2xl backdrop-blur-xl">
+        <div className="p-6">
+          {/* Enhanced Header */}
+          <div className="flex items-center space-x-3 mb-8">
+            <div className="w-12 h-12 bg-gradient-to-br from-brand-blue to-brand-primary rounded-xl flex items-center justify-center">
+              <Shield className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-white">
+                {editingCredential ? "Edit Credential" : "Add New Credential"}
+              </h2>
+              <p className="text-sm text-gray-400">
+                {editingCredential
+                  ? "Update your API credentials"
+                  : "Securely store your API credentials"}
               </p>
-            )}
+            </div>
           </div>
 
-          <div className="mb-4">
-            <label
-              className="mb-2 block text-sm font-medium text-gray-300"
-              htmlFor="apiKey"
-            >
-              API Key
-            </label>
-            <div className="relative">
+          <form
+            autoComplete="off"
+            onSubmit={(e) => {
+              console.log("Form submission initiated");
+              return void handleSubmit(onSubmit)(e);
+            }}
+          >
+            {/* Enhanced Service Name Field */}
+            <div className="mb-6">
+              <label
+                className="flex items-center space-x-2 mb-3 text-sm font-semibold text-brand-light"
+                htmlFor="serviceName"
+              >
+                <div className="w-4 h-4 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full"></div>
+                <span>Service Name</span>
+              </label>
               <input
-                aria-label="API Key"
+                aria-label="Service Name"
                 autoComplete="off"
-                className="w-full rounded-md border border-gray-600 bg-gray-700 p-2.5 text-white placeholder-gray-400 pr-10"
-                id="apiKey"
-                placeholder="Enter API Key"
-                type={showPassword ? "text" : "password"}
-                {...register("apiKey", {
-                  onBlur: clearSensitiveData,
-                  onChange: (e) => {
-                    console.log(
-                      `API Key field changed (length: ${String(
-                        (e as React.ChangeEvent<HTMLInputElement>).target.value
-                          .length
-                      )})`
-                    );
-                    handleInputChange();
+                className="w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200"
+                id="serviceName"
+                placeholder="e.g., AWS, Stripe, OpenAI"
+                type="text"
+                {...register("serviceName", {
+                  maxLength: {
+                    message: "Service name must be less than 50 characters",
+                    value: 50,
                   },
-                  required: "API Key is required",
-                  validate: validateApiKey,
+                  minLength: {
+                    message: "Service name must be at least 2 characters",
+                    value: 2,
+                  },
+                  pattern: {
+                    message: "Service name contains invalid characters",
+                    value: /^[a-zA-Z0-9\s\-_]+$/,
+                  },
+                  required: "Service name is required",
                 })}
               />
-              <button
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-                onClick={() => {
-                  setShowPassword(!showPassword);
-                }}
-                title={showPassword ? "Hide" : "Show"}
-                type="button"
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
+              {errors.serviceName && (
+                <p className="mt-2 text-sm text-red-400 flex items-center space-x-2">
+                  <div className="w-1 h-1 bg-red-400 rounded-full"></div>
+                  <span>{errors.serviceName.message}</span>
+                </p>
+              )}
             </div>
-            {errors.apiKey && (
-              <p className="mt-1 text-sm text-red-500">
-                {errors.apiKey.message}
-              </p>
-            )}
-          </div>
 
-          <div className="mb-4">
-            <label
-              className="mb-2 block text-sm font-medium text-gray-300"
-              htmlFor="apiSecret"
-            >
-              API Secret (Optional)
-            </label>
-            <div className="relative">
-              <input
-                aria-label="API Secret"
-                autoComplete="new-password"
-                className="w-full rounded-md border border-gray-600 bg-gray-700 p-2.5 text-white placeholder-gray-400 pr-10"
-                id="apiSecret"
-                placeholder="Enter API Secret"
-                type={showSecret ? "text" : "password"}
-                {...register("apiSecret", {
-                  onBlur: clearSensitiveData,
+            {/* Enhanced API Key Field */}
+            <div className="mb-6">
+              <label
+                className="flex items-center space-x-2 mb-3 text-sm font-semibold text-brand-light"
+                htmlFor="apiKey"
+              >
+                <Key className="w-4 h-4 text-brand-blue" />
+                <span>API Key</span>
+              </label>
+              <div className="relative">
+                <input
+                  aria-label="API Key"
+                  autoComplete="off"
+                  className="w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm p-3 pr-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200"
+                  id="apiKey"
+                  placeholder="Enter API Key"
+                  type={showPassword ? "text" : "password"}
+                  {...register("apiKey", {
+                    onBlur: clearSensitiveData,
+                    onChange: (e) => {
+                      console.log(
+                        `API Key field changed (length: ${String(
+                          (e as React.ChangeEvent<HTMLInputElement>).target
+                            .value.length
+                        )})`
+                      );
+                      handleInputChange();
+                    },
+                    required: "API Key is required",
+                    validate: validateApiKey,
+                  })}
+                />
+                <button
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-blue p-1 rounded-lg hover:bg-brand-blue/10 transition-all duration-200"
+                  onClick={() => {
+                    setShowPassword(!showPassword);
+                  }}
+                  title={showPassword ? "Hide" : "Show"}
+                  type="button"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+              {errors.apiKey && (
+                <p className="mt-2 text-sm text-red-400 flex items-center space-x-2">
+                  <div className="w-1 h-1 bg-red-400 rounded-full"></div>
+                  <span>{errors.apiKey.message}</span>
+                </p>
+              )}
+            </div>
+
+            {/* Enhanced API Secret Field */}
+            <div className="mb-6">
+              <label
+                className="flex items-center space-x-2 mb-3 text-sm font-semibold text-brand-light"
+                htmlFor="apiSecret"
+              >
+                <Lock className="w-4 h-4 text-purple-400" />
+                <span>API Secret</span>
+                <span className="text-xs text-gray-500 bg-gray-800/50 px-2 py-1 rounded-full">
+                  Optional
+                </span>
+              </label>
+              <div className="relative">
+                <input
+                  aria-label="API Secret"
+                  autoComplete="new-password"
+                  className="w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm p-3 pr-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200"
+                  id="apiSecret"
+                  placeholder="Enter API Secret"
+                  type={showSecret ? "text" : "password"}
+                  {...register("apiSecret", {
+                    onBlur: clearSensitiveData,
+                    onChange: (e) => {
+                      console.log(
+                        `API Secret field changed (length: ${String(
+                          (e as React.ChangeEvent<HTMLInputElement>).target
+                            .value.length
+                        )})`
+                      );
+                      handleInputChange();
+                    },
+                    validate: validateApiSecret,
+                  })}
+                />
+                <button
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-blue p-1 rounded-lg hover:bg-brand-blue/10 transition-all duration-200"
+                  onClick={() => {
+                    setShowSecret(!showSecret);
+                  }}
+                  title={showSecret ? "Hide" : "Show"}
+                  type="button"
+                >
+                  {showSecret ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+              {errors.apiSecret && (
+                <p className="mt-2 text-sm text-red-400 flex items-center space-x-2">
+                  <div className="w-1 h-1 bg-red-400 rounded-full"></div>
+                  <span>{errors.apiSecret.message}</span>
+                </p>
+              )}
+            </div>
+
+            {/* Enhanced Notes Field */}
+            <div className="mb-8">
+              <label
+                className="flex items-center space-x-2 mb-3 text-sm font-semibold text-brand-light"
+                htmlFor="notes"
+              >
+                <FileText className="w-4 h-4 text-green-400" />
+                <span>Notes</span>
+                <span className="text-xs text-gray-500 bg-gray-800/50 px-2 py-1 rounded-full">
+                  Optional
+                </span>
+              </label>
+              <textarea
+                aria-label="Notes"
+                autoComplete="off"
+                className="w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200 resize-none"
+                id="notes"
+                placeholder="Any additional notes, e.g., usage instructions, scopes"
+                rows={4}
+                {...register("notes", {
+                  maxLength: {
+                    message: "Notes must be less than 500 characters",
+                    value: 500,
+                  },
                   onChange: (e) => {
                     console.log(
-                      `API Secret field changed (length: ${String(
-                        (e as React.ChangeEvent<HTMLInputElement>).target.value
-                          .length
+                      `Notes field changed (length: ${String(
+                        (e as React.ChangeEvent<HTMLTextAreaElement>).target
+                          .value.length
                       )})`
                     );
-                    handleInputChange();
                   },
-                  validate: validateApiSecret,
+                  validate: validateNotesPotentialApiKey,
                 })}
               />
+              {errors.notes && (
+                <p className="mt-2 text-sm text-red-400 flex items-center space-x-2">
+                  <div className="w-1 h-1 bg-red-400 rounded-full"></div>
+                  <span>{errors.notes.message}</span>
+                </p>
+              )}
+            </div>
+
+            {/* Enhanced Action Buttons */}
+            <div className="flex justify-end space-x-3">
               <button
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                className="px-6 py-3 border border-gray-600 text-brand-light-secondary hover:bg-gray-700/50 hover:text-brand-light font-semibold rounded-xl focus:outline-none disabled:opacity-50 transition-all duration-200"
+                disabled={isSubmitting}
                 onClick={() => {
-                  setShowSecret(!showSecret);
+                  console.log("Form cancelled by user");
+                  reset();
+                  onClose();
                 }}
-                title={showSecret ? "Hide" : "Show"}
                 type="button"
               >
-                {showSecret ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
+                Cancel
+              </button>
+              <button
+                className="px-6 py-3 bg-gradient-to-r from-brand-blue to-brand-primary hover:from-brand-blue-hover hover:to-brand-primary-dark text-white font-semibold rounded-xl focus:outline-none disabled:opacity-50 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                disabled={isSubmitting}
+                type="submit"
+              >
+                {isSubmitting
+                  ? editingCredential
+                    ? "Saving..."
+                    : "Adding..."
+                  : editingCredential
+                  ? "Save Changes"
+                  : "Add Credential"}
               </button>
             </div>
-            {errors.apiSecret && (
-              <p className="mt-1 text-sm text-red-500">
-                {errors.apiSecret.message}
-              </p>
-            )}
-          </div>
-
-          <div className="mb-6">
-            <label
-              className="mb-2 block text-sm font-medium text-gray-300"
-              htmlFor="notes"
-            >
-              Notes (Optional)
-            </label>
-            <textarea
-              aria-label="Notes"
-              autoComplete="off"
-              className="w-full rounded-md border border-gray-600 bg-gray-700 p-2.5 text-white placeholder-gray-400"
-              id="notes"
-              placeholder="Any additional notes, e.g., usage instructions, scopes"
-              rows={4}
-              {...register("notes", {
-                maxLength: {
-                  message: "Notes must be less than 500 characters",
-                  value: 500,
-                },
-                onChange: (e) => {
-                  console.log(
-                    `Notes field changed (length: ${String(
-                      (e as React.ChangeEvent<HTMLTextAreaElement>).target.value
-                        .length
-                    )})`
-                  );
-                },
-                validate: validateNotesPotentialApiKey,
-              })}
-            />
-            {errors.notes && (
-              <p className="mt-1 text-sm text-red-500">
-                {errors.notes.message}
-              </p>
-            )}
-          </div>
-
-          <div className="flex justify-end space-x-3">
-            <button
-              className="rounded-md border border-gray-600 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 focus:outline-none disabled:opacity-50"
-              disabled={isSubmitting}
-              onClick={() => {
-                console.log("Form cancelled by user");
-                reset();
-                onClose();
-              }}
-              type="button"
-            >
-              Cancel
-            </button>
-            <button
-              className="rounded-md bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-hover focus:outline-none disabled:opacity-50"
-              disabled={isSubmitting}
-              type="submit"
-            >
-              {isSubmitting
-                ? editingCredential
-                  ? "Saving..."
-                  : "Adding..."
-                : editingCredential
-                ? "Save Changes"
-                : "Add Credential"}
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );

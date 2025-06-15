@@ -1,0 +1,71 @@
+{
+  "id": "zeker",
+  "title": "Zeker - Secure API Management",
+  "subtitle": "A comprehensive tool for managing API keys and project credentials.",
+  "description": "Zeker is a web application designed to help developers and teams securely store, manage, and share API keys and other sensitive credentials. It provides a centralized dashboard to organize projects, control access, and monitor usage, streamlining the development workflow and enhancing security.",
+  "longDescription": "In modern development, managing a growing number of API keys, tokens, and credentials across different environments and projects can be a significant challenge. Zeker addresses this by providing a secure, centralized platform for credential and project management. The application allows users to create, update, and delete projects, providing a clear and organized structure for their work. Within each project, users can store various credentials with associated metadata. It features role-based access control, ensuring that team members only have access to the credentials they need. The dashboard offers a clear overview of all projects, with at-a-glance statistics and quick access to recent activity. The system is built with security as a priority, using encryption to protect sensitive data. By simplifying credential and project management, Zeker helps development teams improve their security posture, reduce the risk of accidental exposure, and increase overall efficiency. It's a vital tool for any organization that relies on multiple APIs and services.",
+  "category": "business",
+  "businessValue": [
+    "Improved security by centralizing and encrypting sensitive credentials.",
+    "Increased developer productivity by simplifying access to API keys.",
+    "Enhanced collaboration with role-based access controls for team members."
+  ],
+  "keyFeatures": [
+    "Complete project lifecycle management (Create, Read, Update, Delete).",
+    "Secure credential storage with encryption at rest.",
+    "Project-based organization of API keys and secrets with expandable/collapsible views.",
+    "Advanced search, filtering, and sorting capabilities for projects and credentials.",
+    "Ability to securely view, copy, and manage individual credentials.",
+    "User authentication and profile management."
+  ],
+  "images": [
+    {
+      "url": "PLACEHOLDER_URL",
+      "alt": "Dashboard screenshot showing an overview of projects.",
+      "type": "screenshot"
+    },
+    {
+      "url": "PLACEHOLDER_URL",
+      "alt": "Project detail page with a list of credentials.",
+      "type": "screenshot"
+    }
+  ],
+  "liveUrl": "https://project-url.com",
+  "githubUrl": "https://github.com/repo",
+  "featured": false,
+  "completionDate": "2024-08-01",
+  "duration": "8 weeks",
+  "technologies": [
+    { "name": "React", "icon": "PLACEHOLDER" },
+    { "name": "TypeScript", "icon": "PLACEHOLDER" },
+    { "name": "Vite", "icon": "PLACEHOLDER" },
+    { "name": "Firebase", "icon": "PLACEHOLDER" },
+    { "name": "Tailwind CSS", "icon": "PLACEHOLDER" },
+    { "name": "Zustand", "icon": "PLACEHOLDER" }
+  ],
+  "client": {
+    "name": "Internal Project",
+    "industry": "Software Development",
+    "logo": "PLACEHOLDER_URL"
+  },
+  "challenge": "The primary challenge was to create a highly secure yet user-friendly interface for managing sensitive information. The system needed to ensure data was encrypted at rest and in transit, while still providing an intuitive workflow for developers.",
+  "solution": "We implemented a solution using Firebase for secure authentication and database services, with Firestore rules to enforce strict access control. On the frontend, we used React and TypeScript to build a robust and type-safe user interface. Sensitive data is encrypted before being stored in the database.",
+  "results": [
+    {
+      "metric": "Credential-related security incidents",
+      "value": "0",
+      "description": "Reduction in security incidents related to exposed API keys since implementation."
+    },
+    {
+      "metric": "Developer onboarding time",
+      "value": "40%",
+      "description": "Reduction in time for new developers to get access to necessary credentials."
+    }
+  ],
+  "testimonial": {
+    "text": "REQUIRES_CLIENT_INPUT",
+    "author": "Client Name",
+    "position": "Client Title",
+    "company": "Client Company"
+  }
+}

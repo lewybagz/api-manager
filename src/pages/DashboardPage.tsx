@@ -4,7 +4,7 @@ import {
   Clock,
   FolderEdit,
   FolderPlus,
-  Loader2,
+  Lock,
   Plus,
   Search,
   Trash2,
@@ -202,365 +202,462 @@ const DashboardPage: React.FC = () => {
 
   if (projectsLoading || credentialsLoading || filesLoading) {
     return (
-      <div className="text-center p-8 text-brand-light flex flex-col items-center gap-2">
-        <Loader2 className="h-4 w-4 inline animate-spin" />
-        <p className="text-sm text-gray-500">Checking Aura Levels...</p>
+      <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative mb-6">
+            <div className="w-16 h-16 border-4 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin"></div>
+            <div
+              className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-brand-primary rounded-full animate-spin"
+              style={{
+                animationDirection: "reverse",
+                animationDuration: "1.5s",
+              }}
+            ></div>
+          </div>
+          <p className="text-brand-light text-lg mb-2">Loading Dashboard</p>
+          <p className="text-sm text-gray-500">Checking Aura Levels...</p>
+        </div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <p className="text-brand-light">
-        Slow Your Roll Pimp. You're not logged in.
-      </p>
+      <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary flex items-center justify-center p-4">
+        <div className="bg-gradient-to-br from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm rounded-2xl p-8 text-center border border-gray-800/50">
+          <h2 className="text-2xl font-bold text-red-400 mb-4">
+            Authentication Required
+          </h2>
+          <p className="text-brand-light">
+            You need to be logged in to access the dashboard.
+          </p>
+        </div>
+      </div>
     );
   }
+
   if (!masterPasswordSet) {
     return (
-      <div className="text-center p-8 bg-brand-dark-secondary rounded-lg shadow-xl">
-        <h2 className="text-2xl font-semibold text-brand-light mb-4">
-          Master Password Required
-        </h2>
-        <p className="text-brand-light-secondary mb-6">
-          Please enter your master password to unlock and view your projects.
-        </p>
-        <button
-          className="bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold py-2 px-4 rounded-md w-full sm:w-auto"
-          onClick={() => {
-            openMasterPasswordModal();
-          }}
-          type="button"
-        >
-          Set Master Password
-        </button>
+      <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary flex items-center justify-center p-4">
+        <div className="bg-gradient-to-br from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm rounded-2xl p-8 text-center border border-brand-blue/30 max-w-md w-full">
+          <div className="w-16 h-16 bg-gradient-to-br from-brand-blue to-brand-primary rounded-full flex items-center justify-center mx-auto mb-6">
+            <Lock className="h-8 w-8 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-brand-light mb-4">
+            Master Password Required
+          </h2>
+          <p className="text-brand-light-secondary mb-8 leading-relaxed">
+            Set your master password to unlock and securely access your
+            projects.
+          </p>
+          <button
+            className="w-full bg-gradient-to-r from-brand-blue to-brand-primary hover:from-brand-blue-hover hover:to-brand-primary-dark text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg"
+            onClick={() => {
+              openMasterPasswordModal();
+            }}
+            type="button"
+          >
+            Set Master Password
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 text-brand-light">
-      <Toaster position="top-right" richColors />
+    <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary">
+      <div className="p-4 sm:p-6 lg:p-8 text-brand-light">
+        <Toaster position="top-right" richColors />
 
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Project Dashboard</h1>
-        <button
-          className="bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold py-2 px-4 rounded-md transition-colors shadow-md"
-          onClick={openAddModal}
-        >
-          <Plus className="h-6 w-6" />
-        </button>
-      </div>
-
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-        <input
-          className="w-fit pl-10 pr-4 py-2 bg-brand-dark-secondary rounded-lg text-white placeholder-gray-400 focus:outline-none"
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-          }}
-          placeholder="Search projects..."
-          type="text"
-          value={searchQuery}
-        />
-      </div>
-
-      {projectsError && (
-        <p className="text-red-400">
-          Error loading projects: {projectsError.message}
-        </p>
-      )}
-
-      {projects.length === 0 && (
-        <div className="text-center p-8 bg-brand-dark-secondary rounded-lg shadow-xl">
-          <h2 className="text-2xl font-semibold text-brand-light mb-4">
-            No Projects Yet
-          </h2>
-          <p className="text-brand-light-secondary mb-6">
-            Click "Add New Project" to get started.
-          </p>
-        </div>
-      )}
-
-      {projects.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {projects.map((project) => {
-            const projectCredentials = credentials.filter(
-              (c) => c.projectId === project.id
-            );
-            const numCredentials = projectCredentials.length;
-
-            const projectSpecificFiles = projectFiles[project.id] ?? [];
-            const numFiles = projectSpecificFiles.length;
-
-            let lastCred: LastCredentialSummary | undefined;
-            let lastCredentialTimestamp: null | Timestamp = null;
-
-            if (projectCredentials.length > 0) {
-              const sortedCredentials = [...projectCredentials].sort(
-                (a, b) =>
-                  (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0)
-              );
-              if (sortedCredentials[0]?.createdAt) {
-                lastCred = {
-                  addedAt: sortedCredentials[0].createdAt,
-                  serviceName: sortedCredentials[0].serviceName,
-                };
-                lastCredentialTimestamp = sortedCredentials[0].createdAt;
-              }
-            }
-
-            let lastFile: FileMetadata | undefined;
-            let lastFileTimestamp: null | Timestamp = null;
-            if (projectSpecificFiles.length > 0) {
-              const sortedFiles = [...projectSpecificFiles].sort(
-                (a, b) => b.uploadedAt.seconds - a.uploadedAt.seconds
-              );
-              if (sortedFiles.length > 0) {
-                lastFile = sortedFiles[0];
-                lastFileTimestamp = sortedFiles[0].uploadedAt;
-              }
-            }
-
-            let lastAddedItemName: null | string = null;
-            let lastAddedItemTimestamp: null | Timestamp = null;
-            let itemType: "credential" | "file" | null = null;
-
-            if (lastCredentialTimestamp && lastCred) {
-              lastAddedItemName = lastCred.serviceName;
-              lastAddedItemTimestamp = lastCredentialTimestamp;
-              itemType = "credential";
-            }
-
-            if (lastFileTimestamp && lastFile) {
-              if (
-                !lastAddedItemTimestamp ||
-                lastFileTimestamp.seconds > lastAddedItemTimestamp.seconds
-              ) {
-                lastAddedItemName = lastFile.fileName;
-                lastAddedItemTimestamp = lastFileTimestamp;
-                itemType = "file";
-              }
-            }
-
-            const lastUpdated = project.lastUpdated ?? project.updatedAt;
-            return (
-              <div
-                className="bg-brand-dark-secondary max-w-[15vw] rounded-lg shadow-lg p-4 cursor-pointer group transition-all hover:shadow-2xl focus-within:ring-2 focus-within:ring-brand-blue"
-                key={project.id}
-                onClick={(e) => {
-                  if ((e.target as HTMLElement).closest("button")) return;
-                  void navigate(`/project/${project.id}`);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    void navigate(`/project/${project.id}`);
-                  }
-                }}
-                role="button"
-                tabIndex={0}
-              >
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-md font-semibold text-brand-light truncate">
-                    <FolderPlus className="h-5 w-5 inline-block mr-2 text-brand-blue" />
-                    {project.projectName}
-                  </h3>
-                  <nav
-                    aria-label="Project actions"
-                    className="flex space-x-2 z-10"
-                  >
-                    <button
-                      className="text-yellow-400 hover:text-yellow-300 transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditProject(project);
-                      }}
-                    >
-                      <FolderEdit className="h-5 w-5" />
-                    </button>
-                    <button
-                      className="text-red-500 hover:text-red-400 transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openDeleteConfirmModal(project);
-                      }}
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
-                  </nav>
-                </div>
-
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="text-sm text-gray-400">
-                    <span className="font-semibold text-brand-blue">
-                      {numCredentials}
-                    </span>{" "}
-                    API {numCredentials === 1 ? "key" : "keys"}
-                  </div>
-                  <div className="font-white font-bold">
-                    <span className="text-gray-400">|</span>
-                  </div>
-
-                  <div className="text-sm text-gray-400">
-                    <span className="font-semibold text-[#48a324]">
-                      {numFiles}
-                    </span>{" "}
-                    {numFiles === 1 ? "file" : "files"}
-                  </div>
-                </div>
-
-                <div className="text-sm text-gray-400 flex items-center mb-2">
-                  <Clock className="h-4 w-4 mr-1" />
-                  Last updated:{" "}
-                  {lastUpdated
-                    ? formatDistanceToNow(lastUpdated.toDate(), {
-                        addSuffix: true,
-                      })
-                    : "N/A"}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {lastAddedItemTimestamp ? (
-                    <>
-                      Last added:{" "}
-                      <span className="font-semibold text-brand-light">
-                        {lastAddedItemName}
-                      </span>{" "}
-                      {formatDistanceToNow(lastAddedItemTimestamp.toDate(), {
-                        addSuffix: true,
-                      })}
-                      {itemType === "file" && (
-                        <span className="text-xs text-gray-400 ml-1">
-                          (file)
-                        </span>
-                      )}
-                      {itemType === "credential" && (
-                        <span className="text-xs text-gray-400 ml-1">
-                          (credential)
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    <span>No credentials or files added yet.</span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {(showAddModal || showEditModal) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-          <div className="bg-brand-dark p-6 rounded-lg shadow-xl w-full max-w-md">
-            <h2 className="text-2xl font-semibold mb-6">
-              {showEditModal && editingProject
-                ? "Edit Project"
-                : "Add New Project"}
-            </h2>
-            <form
-              onSubmit={(e) => {
-                void (showEditModal
-                  ? handleEditSubmit(e)
-                  : handleAddProject(e));
-              }}
-            >
-              <div className="mb-4">
-                <label
-                  className="block text-sm font-medium text-brand-light-secondary mb-1"
-                  htmlFor="projectName"
-                >
-                  Project Name
-                </label>
-                <input
-                  aria-label="Project Name"
-                  autoCapitalize="words"
-                  autoComplete="off"
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-brand-light focus:outline-none"
-                  id="projectName"
-                  name="projectName"
-                  onChange={(e) => {
-                    const inputValue = e.target.value;
-                    const formattedValue = inputValue
-                      .split(" ")
-                      .map(
-                        (word) =>
-                          word.charAt(0).toUpperCase() +
-                          word.slice(1).toLowerCase()
-                      )
-                      .join(" ");
-                    setProjectName(formattedValue);
-                  }}
-                  required
-                  type="text"
-                  value={projectName}
-                />
-              </div>
-              <div className="flex justify-end space-x-3 mt-6">
-                <button
-                  className="px-4 py-2 border border-gray-600 text-brand-light-secondary rounded-md hover:bg-gray-700 disabled:opacity-50"
-                  disabled={isSubmitting}
-                  onClick={closeModal}
-                  type="button"
-                >
-                  Cancel
-                </button>
-                <button
-                  className="px-4 py-2 bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold rounded-md disabled:opacity-50"
-                  disabled={isSubmitting || !projectName.trim()}
-                  type="submit"
-                >
-                  {isSubmitting
-                    ? "Saving..."
-                    : showEditModal
-                    ? "Save Changes"
-                    : "Add Project"}
-                </button>
-              </div>
-            </form>
+        {/* Enhanced Header */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
+          <div className="mb-6 lg:mb-0">
+            <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-brand-light via-brand-blue to-brand-primary bg-clip-text text-transparent mb-2">
+              Project Dashboard
+            </h1>
+            <p className="text-lg text-gray-400">
+              Manage your API credentials and projects
+            </p>
           </div>
+          <button
+            className="bg-gradient-to-r from-brand-blue to-brand-primary hover:from-brand-blue-hover hover:to-brand-primary-dark text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center gap-2"
+            onClick={openAddModal}
+          >
+            <Plus className="h-5 w-5" />
+            New Project
+          </button>
         </div>
-      )}
 
-      {showDeleteConfirmModal && projectToDeleteDetails && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-          <div className="bg-brand-dark p-6 rounded-lg shadow-xl w-full max-w-md">
-            <h2 className="text-2xl font-semibold mb-4 text-red-500">
-              Confirm Deletion
+        {/* Enhanced Search */}
+        <div className="relative mb-8 max-w-md">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            className="w-full pl-12 pr-4 py-3 bg-brand-dark-secondary/80 backdrop-blur-sm border border-gray-700/50 focus:border-brand-blue/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all duration-200"
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+            }}
+            placeholder="Search projects..."
+            type="text"
+            value={searchQuery}
+          />
+        </div>
+
+        {projectsError && (
+          <div className="bg-gradient-to-r from-red-900/30 to-red-800/20 border border-red-500/50 rounded-xl p-4 mb-6 backdrop-blur-sm">
+            <p className="text-red-400">
+              Error loading projects: {projectsError.message}
+            </p>
+          </div>
+        )}
+
+        {projects.length === 0 && (
+          <div className="text-center py-16 bg-gradient-to-br from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm rounded-2xl border border-gray-800/50">
+            <div className="w-16 h-16 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
+              <FolderPlus className="h-8 w-8 text-gray-400" />
+            </div>
+            <h2 className="text-2xl font-bold text-brand-light mb-3">
+              No Projects Yet
             </h2>
-            <p className="text-brand-light-secondary mb-2">
-              Are you sure you want to delete the project <br />
-              <strong className="text-red-400">
-                {' "'}
-                {projectToDeleteDetails.name}
-                {'"'}
-              </strong>
-              {` ?`}
+            <p className="text-brand-light-secondary mb-8 max-w-md mx-auto leading-relaxed">
+              Create your first project to start organizing your API credentials
+              securely.
             </p>
-            <p className="text-sm text-yellow-400 mb-6">
-              This action will also delete all associated credentials and cannot
-              be undone.
-            </p>
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                className="px-4 py-2 border border-gray-600 text-brand-light-secondary rounded-md hover:bg-gray-700 disabled:opacity-50"
-                disabled={isSubmitting}
-                onClick={closeDeleteConfirmModal}
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-md disabled:opacity-50"
-                disabled={isSubmitting}
-                onClick={() => void executeProjectDeletion()}
-                type="button"
-              >
-                {isSubmitting ? "Deleting..." : "Confirm Delete"}
-              </button>
+            <button
+              className="bg-gradient-to-r from-brand-blue to-brand-primary hover:from-brand-blue-hover hover:to-brand-primary-dark text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg"
+              onClick={openAddModal}
+            >
+              Create First Project
+            </button>
+          </div>
+        )}
+
+        {/* Enhanced Projects Grid */}
+        {projects.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+            {projects
+              .filter((project) =>
+                project.projectName
+                  .toLowerCase()
+                  .includes(searchQuery.toLowerCase())
+              )
+              .map((project) => {
+                const projectCredentials = credentials.filter(
+                  (c) => c.projectId === project.id
+                );
+                const numCredentials = projectCredentials.length;
+
+                const projectSpecificFiles = projectFiles[project.id] ?? [];
+                const numFiles = projectSpecificFiles.length;
+
+                let lastCred: LastCredentialSummary | undefined;
+                let lastCredentialTimestamp: null | Timestamp = null;
+
+                if (projectCredentials.length > 0) {
+                  const sortedCredentials = [...projectCredentials].sort(
+                    (a, b) =>
+                      (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0)
+                  );
+                  if (sortedCredentials[0]?.createdAt) {
+                    lastCred = {
+                      addedAt: sortedCredentials[0].createdAt,
+                      serviceName: sortedCredentials[0].serviceName,
+                    };
+                    lastCredentialTimestamp = sortedCredentials[0].createdAt;
+                  }
+                }
+
+                let lastFile: FileMetadata | undefined;
+                let lastFileTimestamp: null | Timestamp = null;
+                if (projectSpecificFiles.length > 0) {
+                  const sortedFiles = [...projectSpecificFiles].sort(
+                    (a, b) => b.uploadedAt.seconds - a.uploadedAt.seconds
+                  );
+                  if (sortedFiles.length > 0) {
+                    lastFile = sortedFiles[0];
+                    lastFileTimestamp = sortedFiles[0].uploadedAt;
+                  }
+                }
+
+                let lastAddedItemName: null | string = null;
+                let lastAddedItemTimestamp: null | Timestamp = null;
+                let itemType: "credential" | "file" | null = null;
+
+                if (lastCredentialTimestamp && lastCred) {
+                  lastAddedItemName = lastCred.serviceName;
+                  lastAddedItemTimestamp = lastCredentialTimestamp;
+                  itemType = "credential";
+                }
+
+                if (lastFileTimestamp && lastFile) {
+                  if (
+                    !lastAddedItemTimestamp ||
+                    lastFileTimestamp.seconds > lastAddedItemTimestamp.seconds
+                  ) {
+                    lastAddedItemName = lastFile.fileName;
+                    lastAddedItemTimestamp = lastFileTimestamp;
+                    itemType = "file";
+                  }
+                }
+
+                const lastUpdated = project.lastUpdated ?? project.updatedAt;
+
+                return (
+                  <div
+                    className="bg-gradient-to-br from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm rounded-2xl border border-gray-800/50 hover:border-brand-blue/30 p-6 cursor-pointer group transition-all duration-300 hover:shadow-2xl hover:shadow-brand-blue/10 transform hover:scale-105"
+                    key={project.id}
+                    onClick={(e) => {
+                      if ((e.target as HTMLElement).closest("button")) return;
+                      void navigate(`/project/${project.id}`);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        void navigate(`/project/${project.id}`);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex items-center space-x-3 flex-grow min-w-0">
+                        <div className="w-10 h-10 bg-gradient-to-br from-brand-blue to-brand-primary rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                          <FolderPlus className="h-5 w-5 text-white" />
+                        </div>
+                        <h3 className="text-lg font-bold text-brand-light truncate group-hover:text-brand-blue transition-colors duration-300">
+                          {project.projectName}
+                        </h3>
+                      </div>
+                      <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <button
+                          className="p-1.5 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded-lg transition-all duration-200"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditProject(project);
+                          }}
+                        >
+                          <FolderEdit className="h-4 w-4" />
+                        </button>
+                        <button
+                          className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-all duration-200"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openDeleteConfirmModal(project);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Enhanced Stats */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-4">
+                        <div className="text-center">
+                          <div className="text-lg font-bold text-brand-blue">
+                            {numCredentials}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {numCredentials === 1 ? "Key" : "Keys"}
+                          </div>
+                        </div>
+                        <div className="w-px h-8 bg-gray-700"></div>
+                        <div className="text-center">
+                          <div className="text-lg font-bold text-green-400">
+                            {numFiles}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {numFiles === 1 ? "File" : "Files"}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Enhanced Timestamps */}
+                    <div className="space-y-2 text-xs text-gray-500">
+                      <div className="flex items-center space-x-2">
+                        <Clock className="h-3 w-3" />
+                        <span>
+                          Updated{" "}
+                          {lastUpdated
+                            ? formatDistanceToNow(lastUpdated.toDate(), {
+                                addSuffix: true,
+                              })
+                            : "N/A"}
+                        </span>
+                      </div>
+                      {lastAddedItemTimestamp && (
+                        <div className="bg-gray-800/50 rounded-lg p-2 border border-gray-700/50">
+                          <div className="font-medium text-brand-light text-xs mb-1">
+                            Latest Addition:
+                          </div>
+                          <div className="text-brand-blue font-semibold truncate">
+                            {lastAddedItemName}
+                          </div>
+                          <div className="flex items-center justify-between mt-1">
+                            <span className="text-xs">
+                              {formatDistanceToNow(
+                                lastAddedItemTimestamp.toDate(),
+                                {
+                                  addSuffix: true,
+                                }
+                              )}
+                            </span>
+                            <span
+                              className={`text-xs px-2 py-0.5 rounded-full ${
+                                itemType === "file"
+                                  ? "bg-green-500/20 text-green-400"
+                                  : "bg-blue-500/20 text-blue-400"
+                              }`}
+                            >
+                              {itemType}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      {!lastAddedItemTimestamp && (
+                        <div className="bg-gray-800/30 rounded-lg p-2 border border-gray-700/30">
+                          <span className="text-gray-500 text-xs">
+                            No items added yet
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        )}
+
+        {/* Enhanced Modals */}
+        {(showAddModal || showEditModal) && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+            <div className="bg-gradient-to-br from-brand-dark to-brand-dark-secondary border border-brand-blue/30 rounded-2xl shadow-2xl w-full max-w-md">
+              <div className="p-6">
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-10 h-10 bg-gradient-to-br from-brand-blue to-brand-primary rounded-lg flex items-center justify-center">
+                    <FolderPlus className="h-5 w-5 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-brand-light">
+                    {showEditModal && editingProject
+                      ? "Edit Project"
+                      : "Create New Project"}
+                  </h2>
+                </div>
+                <form
+                  onSubmit={(e) => {
+                    void (showEditModal
+                      ? handleEditSubmit(e)
+                      : handleAddProject(e));
+                  }}
+                >
+                  <div className="mb-6">
+                    <label
+                      className="block text-sm font-medium text-brand-light-secondary mb-2"
+                      htmlFor="projectName"
+                    >
+                      Project Name
+                    </label>
+                    <input
+                      aria-label="Project Name"
+                      autoCapitalize="words"
+                      autoComplete="off"
+                      className="w-full px-4 py-3 bg-gray-800/80 backdrop-blur-sm border border-gray-700/50 focus:border-brand-blue/50 rounded-xl text-brand-light focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all duration-200"
+                      id="projectName"
+                      name="projectName"
+                      onChange={(e) => {
+                        const inputValue = e.target.value;
+                        const formattedValue = inputValue
+                          .split(" ")
+                          .map(
+                            (word) =>
+                              word.charAt(0).toUpperCase() +
+                              word.slice(1).toLowerCase()
+                          )
+                          .join(" ");
+                        setProjectName(formattedValue);
+                      }}
+                      placeholder="Enter project name"
+                      required
+                      type="text"
+                      value={projectName}
+                    />
+                  </div>
+                  <div className="flex space-x-3">
+                    <button
+                      className="flex-1 px-4 py-3 border border-gray-600 text-brand-light-secondary rounded-xl hover:bg-gray-700/50 disabled:opacity-50 transition-all duration-200"
+                      disabled={isSubmitting}
+                      onClick={closeModal}
+                      type="button"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="flex-1 px-4 py-3 bg-gradient-to-r from-brand-blue to-brand-primary hover:from-brand-blue-hover hover:to-brand-primary-dark text-white font-semibold rounded-xl disabled:opacity-50 transition-all duration-200"
+                      disabled={isSubmitting || !projectName.trim()}
+                      type="submit"
+                    >
+                      {isSubmitting
+                        ? "Saving..."
+                        : showEditModal
+                        ? "Save Changes"
+                        : "Create Project"}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Enhanced Delete Confirmation Modal */}
+        {showDeleteConfirmModal && projectToDeleteDetails && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+            <div className="bg-gradient-to-br from-brand-dark to-brand-dark-secondary border border-red-500/30 rounded-2xl shadow-2xl w-full max-w-md">
+              <div className="p-6">
+                <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Trash2 className="w-6 h-6 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold mb-4 text-red-400 text-center">
+                  Delete Project
+                </h2>
+                <p className="text-brand-light-secondary mb-2 text-center">
+                  Are you sure you want to delete
+                </p>
+                <p className="text-center mb-6">
+                  <strong className="text-red-400 text-lg">
+                    "{projectToDeleteDetails.name}"
+                  </strong>
+                </p>
+                <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-3 mb-6">
+                  <p className="text-sm text-yellow-400 text-center">
+                    ⚠️ This will also delete all associated credentials and
+                    cannot be undone
+                  </p>
+                </div>
+                <div className="flex space-x-3">
+                  <button
+                    className="flex-1 px-4 py-3 border border-gray-600 text-brand-light-secondary rounded-xl hover:bg-gray-700/50 disabled:opacity-50 transition-all duration-200"
+                    disabled={isSubmitting}
+                    onClick={closeDeleteConfirmModal}
+                    type="button"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="flex-1 px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl disabled:opacity-50 transition-all duration-200"
+                    disabled={isSubmitting}
+                    onClick={() => void executeProjectDeletion()}
+                    type="button"
+                  >
+                    {isSubmitting ? "Deleting..." : "Delete Project"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

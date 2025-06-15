@@ -57,56 +57,57 @@ const ProjectFileCard: React.FC<ProjectFileCardProps> = ({
   ).toLocaleDateString();
 
   return (
-    <div className="relative bg-brand-dark-secondary border border-border border-l-4 border-l-brand-blue border-r-4 border-r-brand-blue rounded-lg shadow-sm p-6 flex flex-col gap-4 min-w-0 w-[85vw] md:w-[25vw] mx-auto transition-shadow hover:shadow-md min-h-[180px] h-full">
-      {/* Preview icon button (if supported) */}
+    <div className="relative bg-gradient-to-br from-brand-dark-secondary/90 to-brand-dark-secondary/70 backdrop-blur-xl border border-brand-blue/30 border-l-4 border-l-brand-blue border-r-4 border-r-brand-primary rounded-2xl shadow-2xl p-6 flex flex-col gap-4 min-w-0 w-[85vw] md:w-[25vw] mx-auto transition-all duration-300 hover:shadow-2xl hover:shadow-brand-blue/20 hover:border-brand-blue/50 transform hover:scale-105 min-h-[180px] h-full group">
+      {/* Enhanced Preview icon button (if supported) */}
       {isPreviewSupported(file.contentType) && (
         <button
           aria-label="Preview file"
-          className="absolute top-2 left-2 z-10 p-2 rounded-full bg-gray-800 text-gray-400 hover:text-brand-blue hover:bg-brand-blue/10 transition-colors shadow-sm"
+          className="absolute top-3 left-3 z-10 p-2.5 rounded-xl bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm text-gray-400 hover:text-brand-blue hover:bg-brand-blue/10 transition-all duration-200 shadow-lg border border-gray-700/50 hover:border-brand-blue/30"
           onClick={(e) => {
             e.stopPropagation();
             onPreview();
           }}
           title="Preview file"
         >
-          <Eye className="h-5 w-5" />
+          <Eye className="h-4 w-4" />
         </button>
       )}
-      {/* Absolutely positioned more options button */}
-      <div className="absolute top-2 right-2 z-10">
+
+      {/* Enhanced More options button */}
+      <div className="absolute top-3 right-3 z-10">
         <button
           aria-label="More options"
-          className="p-2 text-gray-400 hover:text-brand-blue rounded-full transition-colors"
+          className="p-2.5 text-gray-400 hover:text-brand-blue rounded-xl bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm transition-all duration-200 shadow-lg border border-gray-700/50 hover:border-brand-blue/30"
           onClick={(e) => {
             e.stopPropagation();
             onToggleMenu();
           }}
         >
           {isDownloading ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin text-brand-blue" />
           ) : (
-            <MoreVertical className="h-5 w-5" />
+            <MoreVertical className="h-4 w-4" />
           )}
         </button>
         {isMenuOpen && (
-          <div className="absolute right-0 mt-2 w-48 bg-brand-dark rounded-md shadow-lg z-10">
+          <div className="absolute right-0 mt-2 w-48 bg-gradient-to-br from-brand-dark to-brand-dark-secondary backdrop-blur-xl border border-brand-blue/30 rounded-xl shadow-2xl z-10 overflow-hidden">
             <button
-              className="w-full text-left px-4 py-2 text-sm text-brand-light-secondary hover:bg-gray-700 flex items-center gap-2"
+              className="w-full text-left px-4 py-3 text-sm text-brand-light-secondary hover:bg-brand-blue/10 hover:text-brand-light flex items-center gap-3 transition-all duration-200 border-b border-gray-700/30"
               onClick={onDownload}
             >
-              <Download className="h-4 w-4" />
+              <Download className="h-4 w-4 text-brand-blue" />
               Download
             </button>
             <button
-              className="w-full text-left px-4 py-2 text-sm text-brand-light-secondary hover:bg-gray-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full text-left px-4 py-3 text-sm text-brand-light-secondary hover:bg-brand-blue/10 hover:text-brand-light flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 border-b border-gray-700/30"
               disabled={!isPreviewSupported(file.contentType)}
               onClick={onPreview}
             >
-              <Eye className="h-4 w-4" />
+              <Eye className="h-4 w-4 text-green-400" />
               Preview
             </button>
             <button
-              className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-900/50 flex items-center gap-2"
+              className="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-900/30 hover:text-red-300 flex items-center gap-3 transition-all duration-200"
               onClick={onDelete}
             >
               <Trash2 className="h-4 w-4" />
@@ -115,38 +116,60 @@ const ProjectFileCard: React.FC<ProjectFileCardProps> = ({
           </div>
         )}
       </div>
-      {/* Header: Icon and filename */}
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-gray-800 rounded-md text-xs text-gray-300 border border-gray-700">
+
+      {/* Enhanced Header: Icon and filename */}
+      <div className="flex items-center gap-4 min-w-0 mt-2">
+        <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-xl text-xs text-gray-300 border border-gray-700/50 shadow-lg">
           <img
             alt={file.fileName + " icon"}
             className="w-8 h-8 object-contain"
             draggable={false}
-            src={iconPlaceholder}
+            src={iconPlaceholder || "/placeholder.svg"}
           />
         </div>
-        <span className="text-base font-semibold text-brand-blue truncate block min-w-0">
-          {file.fileName}
-        </span>
-      </div>
-      {/* File size and metadata */}
-      <div className="space-y-1">
-        <p className="text-xs text-gray-400">{fileSize}</p>
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
-          <span>Type: {file.contentType}</span>
-          <span>Uploaded: {uploadedDate}</span>
-          <span>ID: {file.id}</span>
+        <div className="min-w-0 flex-1">
+          <span className="text-base font-bold text-brand-blue truncate block group-hover:bg-gradient-to-r group-hover:from-brand-blue group-hover:to-brand-primary group-hover:bg-clip-text group-hover:text-transparent transition-all duration-200">
+            {file.fileName}
+          </span>
+          <div className="flex items-center space-x-2 mt-1">
+            <div className="w-1.5 h-1.5 bg-gradient-to-r from-brand-blue to-brand-primary rounded-full"></div>
+            <span className="text-xs text-gray-400">Project File</span>
+          </div>
         </div>
       </div>
-      {/* Encrypted badge, if needed */}
+
+      {/* Enhanced File size and metadata */}
+      <div className="space-y-3 bg-gray-800/30 backdrop-blur-sm rounded-xl p-4 border border-gray-700/30">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold text-brand-light">Size</span>
+          <span className="text-sm text-brand-blue font-mono">{fileSize}</span>
+        </div>
+        <div className="space-y-2 text-xs text-gray-400">
+          <div className="flex items-center justify-between">
+            <span>Type:</span>
+            <span className="font-mono bg-gray-700/50 px-2 py-1 rounded-lg">
+              {file.contentType}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span>Uploaded:</span>
+            <span className="text-brand-light-secondary">{uploadedDate}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span>ID:</span>
+            <span className="font-mono text-xs bg-gray-700/50 px-2 py-1 rounded-lg truncate max-w-[120px]">
+              {file.id}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Enhanced Encrypted badge */}
       {file.isEncrypted && (
-        <span
-          className="absolute bottom-2 right-4 flex items-center gap-1 bg-blue-900/30 px-2 py-1 rounded-md border border-blue-500 text-blue-400 text-xs font-medium shadow-sm"
-          title="This file is encrypted"
-        >
-          <Shield className="h-4 w-4 text-blue-400" />
-          Encrypted
-        </span>
+        <div className="absolute bottom-3 right-3 flex items-center gap-2 bg-gradient-to-r from-blue-900/60 to-blue-800/40 backdrop-blur-sm px-3 py-2 rounded-xl border border-blue-500/50 text-blue-300 text-xs font-semibold shadow-lg">
+          <Shield className="h-3 w-3 text-blue-400" />
+          <span>Encrypted</span>
+        </div>
       )}
     </div>
   );
