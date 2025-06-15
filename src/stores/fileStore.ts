@@ -136,9 +136,24 @@ const useFileStore = create<FileStoreState>((set, get) => ({
         collection(db, `users/${user.uid}/projects/${projectId}/files`)
       );
       const querySnapshot = await getDocs(q);
-      const files = querySnapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as FileMetadata)
-      );
+      const files: FileMetadata[] = [];
+      querySnapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        const docId = doc.id;
+        
+        // Detailed logging for each document
+        console.log(`[FileStore] Fetched doc ${docId}:`, data);
+
+        // Basic validation to ensure essential fields exist
+        if (data.fileName && data.storagePath && data.contentType) {
+          files.push({ id: docId, ...data } as FileMetadata);
+        } else {
+          // Log malformed documents
+          logger.warn(ErrorCategory.VALIDATION, "Skipping malformed file document", undefined, { data, docId });
+          console.warn(`[FileStore] Skipping malformed file doc ${docId}:`, data);
+        }
+      });
+      
       set((state) => ({
         projectFiles: { ...state.projectFiles, [projectId]: files },
       }));
@@ -216,32 +231,36 @@ const useFileStore = create<FileStoreState>((set, get) => ({
       const fileRef = ref(storage, storagePath);
       await uploadBytes(fileRef, fileToUpload);
 
-      const metadata: Omit<FileMetadata, "id" | "uploadedAt"> = {
-        contentType: file.type,
+      const metadata: Omit<FileMetadata, "id" | "iv" | "uploadedAt"> = {
+        contentType: file.type || "application/octet-stream",
         fileName: file.name,
         isEncrypted: encrypt,
-        iv,
         projectId,
         size: file.size,
         storagePath,
         userId: user.uid,
       };
 
-      const docRef = await addDoc(
-        collection(db, `users/${user.uid}/projects/${projectId}/files`),
-        { ...metadata, uploadedAt: serverTimestamp() }
-      );
-      
-      const newFile = { ...metadata, id: docRef.id, uploadedAt: Timestamp.now() } as FileMetadata;
-      set((state) => ({
-        projectFiles: {
-          ...state.projectFiles,
-          [projectId]: [...(state.projectFiles[projectId]), newFile],
-        },
-      }));
+      const dataToWrite = {
+        ...metadata,
+        uploadedAt: serverTimestamp(),
+        ...(iv && { iv }),
+      };
 
+      console.log("[FileStore] Attempting to write file metadata to Firestore:", dataToWrite);
+
+      await addDoc(
+        collection(db, `users/${user.uid}/projects/${projectId}/files`),
+        dataToWrite
+      );
+
+      console.log("[FileStore] Successfully wrote file metadata to Firestore.");
+
+      // Re-fetch files for the project to ensure the list is up-to-date
+      await get().fetchFilesForProject(projectId);
     } catch (error) {
       logger.error(ErrorCategory.UNKNOWN, "Error uploading file", { error });
+      console.error("[FileStore] Firestore write error:", error);
       set({ error: error as Error });
     } finally {
       set({ isLoading: false });
