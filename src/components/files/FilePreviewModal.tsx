@@ -65,7 +65,7 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
     if (isLoading) {
       return (
         <div className="flex justify-center items-center h-full">
-          <div className="text-center">
+          <div className="text-center flex flex-col items-center">
             <div className="relative mb-4">
               <div className="w-12 h-12 border-4 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin"></div>
               <div

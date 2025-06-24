@@ -55,7 +55,7 @@ const CredentialsView: React.FC<CredentialsViewProps> = ({
   }
 
   return (
-    <div className="p-6">
+    <div className="p-0">
       {error && (
         <div className="bg-gradient-to-r from-red-900/40 to-red-800/30 border border-red-500/50 p-6 rounded-2xl shadow-lg mb-8 backdrop-blur-sm">
           <div className="flex items-start space-x-4">
@@ -98,7 +98,7 @@ const CredentialsView: React.FC<CredentialsViewProps> = ({
 
       {showCredentials && (
         <div className="space-y-8">
-          <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-6 sm:gap-4">
+          <div className="flex flex-col gap-4">
             {credentials.map((cred) => (
               <CredentialCard
                 clipboardTimeoutApiKey={!!clipboardTimeout[`${cred.id}-apikey`]}

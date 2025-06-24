@@ -198,7 +198,7 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pt-4">
       {/* Enhanced Header */}
       <div className="flex items-center space-x-3">
         <div className="w-8 h-8 bg-gradient-to-br from-brand-blue to-brand-primary rounded-lg flex items-center justify-center">
