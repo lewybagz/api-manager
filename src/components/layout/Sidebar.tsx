@@ -74,7 +74,7 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <div className="w-64 bg-gradient-to-b from-brand-dark-secondary via-brand-dark-secondary to-brand-dark h-screen p-0 fixed left-0 top-0 overflow-y-auto border-r border-gray-800/50 backdrop-blur-xl hidden md:flex flex-col shadow-2xl custom-scrollbar">
+    <div className="w-64 lg:w-72  bg-gradient-to-b from-brand-dark-secondary via-brand-dark-secondary to-brand-dark h-screen p-0 fixed left-0 top-0 overflow-y-auto border-r border-gray-800/50 backdrop-blur-xl hidden md:flex flex-col shadow-2xl custom-scrollbar">
       {/* Enhanced App Branding */}
       <Link
         className="px-4 py-4 flex items-center border-b border-gray-300/50 bg-gradient-to-r from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm hover:from-brand-blue/10 hover:to-brand-primary/10 transition-all duration-300 group"
@@ -388,7 +388,7 @@ const Sidebar: React.FC = () => {
 
         <div className="px-4">
           <p className="px-3 py-2 text-xs text-gray-500 text-center bg-gray-800/30 rounded-lg backdrop-blur-sm">
-            Zeker&copy; {new Date().getFullYear()}
+            Zeker&copy; {new Date().getFullYear()} - Powered by Tovuti LLC
           </p>
         </div>
       </div>
