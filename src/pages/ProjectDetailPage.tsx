@@ -264,9 +264,7 @@ const ProjectDetailPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary flex items-center justify-center p-4">
         <div className="text-center bg-gradient-to-br from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm rounded-2xl p-8 border border-red-500/30">
-          <h2 className="text-2xl font-bold text-red-400 mb-4">
-            Project Not Found
-          </h2>
+          <h2 className="text-2xl text-red-400 mb-4">Project Not Found</h2>
           <p className="text-brand-light mb-6">
             The project ID is missing or invalid. Redirecting to dashboard...
           </p>
@@ -281,7 +279,7 @@ const ProjectDetailPage: React.FC = () => {
   ) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center flex flex-col items-center">
           <div className="relative mb-6">
             <div className="w-16 h-16 border-4 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin"></div>
             <div
@@ -316,7 +314,7 @@ const ProjectDetailPage: React.FC = () => {
               />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-brand-light mb-4">
+          <h2 className="text-2xl text-brand-light mb-4">
             Master Password Required
           </h2>
           <p className="text-brand-light-secondary mb-8 leading-relaxed">
@@ -350,9 +348,7 @@ const ProjectDetailPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary flex items-center justify-center p-4">
         <div className="text-center bg-gradient-to-br from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm rounded-2xl p-8 border border-gray-800/50">
-          <h2 className="text-2xl font-bold text-brand-light mb-4">
-            Project Not Found
-          </h2>
+          <h2 className="text-2xl text-brand-light mb-4">Project Not Found</h2>
           <p className="text-gray-400 mb-6">
             The requested project could not be found or you don't have access to
             it.
@@ -375,7 +371,7 @@ const ProjectDetailPage: React.FC = () => {
 
         {/* Enhanced Project Header */}
         <div className="mb-8">
-          <div className="rounded-2xl border border-gray-800/50 overflow-hidden">
+          <div className="rounded-2xl p-2 bg-brand-dark-secondary/60 backdrop-blur-xl border border-gray-700/50 overflow-hidden">
             <ProjectHeader
               onAddCredential={handleAddCredential}
               projectCreatedAt={project.createdAt}
@@ -392,7 +388,7 @@ const ProjectDetailPage: React.FC = () => {
         </div>
 
         {/* Enhanced Content Area */}
-        <div className="rounded-2xl border border-gray-800/50 overflow-hidden">
+        <div className="rounded-2xl border border-gray-800/50 overflow-visible">
           {activeTab === "credentials" && (
             <CredentialsView
               clipboardTimeout={clipboardTimeout}
@@ -444,7 +440,7 @@ const ProjectDetailPage: React.FC = () => {
                     />
                   </svg>
                 </div>
-                <h2 className="text-2xl font-bold mb-4 text-red-400 text-center">
+                <h2 className="text-2xl mb-4 text-red-400 text-center">
                   Delete Credential
                 </h2>
                 <p className="text-brand-light-secondary mb-2 text-center">

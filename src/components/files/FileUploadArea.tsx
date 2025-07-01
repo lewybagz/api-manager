@@ -127,9 +127,7 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({ projectId }) => {
               ></div>
             </div>
             <div>
-              <p className="text-brand-blue font-bold text-lg mb-2">
-                Uploading File
-              </p>
+              <p className="text-brand-blue text-lg mb-2">Uploading File</p>
               <p className="text-brand-light font-medium">
                 "{uploadingFileName}"
               </p>
@@ -150,7 +148,7 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({ projectId }) => {
                 ) : (
                   <span>
                     Drag & drop a file, or{" "}
-                    <span className="text-brand-blue font-bold hover:text-brand-blue-hover transition-colors duration-200">
+                    <span className="text-brand-blue hover:text-brand-blue-hover transition-colors duration-200">
                       click to select
                     </span>
                   </span>

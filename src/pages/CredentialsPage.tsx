@@ -332,7 +332,7 @@ const CredentialsPage: React.FC = () => {
               />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-brand-light mb-3">
+          <h2 className="text-2xl text-brand-light mb-3">
             Master Password Required
           </h2>
           <p className="text-brand-gray mb-8 leading-relaxed">
@@ -383,7 +383,7 @@ const CredentialsPage: React.FC = () => {
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
             <div className="mb-6 lg:mb-0">
-              <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-brand-light via-brand-blue to-brand-primary bg-clip-text text-transparent mb-2">
+              <h1 className="text-4xl sm:text-5xl bg-gradient-to-r from-brand-light via-brand-blue to-brand-primary bg-clip-text text-transparent mb-2">
                 All Credentials
               </h1>
               <p className="text-gray-400 text-lg">
@@ -426,7 +426,7 @@ const CredentialsPage: React.FC = () => {
                   <FileIcon className="w-4 h-4 text-white" />
                 </div>
               </div>
-              <p className="text-3xl font-bold text-brand-light mb-1">
+              <p className="text-3xl text-brand-light mb-1">
                 {stats.totalCredentials}
               </p>
               <p className="text-xs text-gray-500">Across all projects</p>
@@ -451,7 +451,7 @@ const CredentialsPage: React.FC = () => {
                   </svg>
                 </div>
               </div>
-              <p className="text-3xl font-bold text-brand-light mb-1">
+              <p className="text-3xl text-brand-light mb-1">
                 {stats.credentialsWithSecrets}
               </p>
               <p className="text-xs text-gray-500">Have API secrets</p>
@@ -466,7 +466,7 @@ const CredentialsPage: React.FC = () => {
                   <Folder className="w-4 h-4 text-white" />
                 </div>
               </div>
-              <p className="text-3xl font-bold text-brand-light mb-1">
+              <p className="text-3xl text-brand-light mb-1">
                 {stats.projectsWithCredentials}
               </p>
               <p className="text-xs text-gray-500">With credentials</p>
@@ -562,7 +562,7 @@ const CredentialsPage: React.FC = () => {
             <div className="w-16 h-16 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
               <FileIcon className="h-8 w-8 text-gray-400" />
             </div>
-            <h2 className="text-2xl font-bold text-brand-light mb-3">
+            <h2 className="text-2xl text-brand-light mb-3">
               No Credentials Found
             </h2>
             <p className="text-gray-400 mb-8 max-w-md mx-auto leading-relaxed">
@@ -601,7 +601,7 @@ const CredentialsPage: React.FC = () => {
                         <Folder className="text-white h-5 w-5" />
                       </div>
                       <div className="min-w-0 flex-grow">
-                        <h2 className="text-xl font-bold text-brand-light truncate">
+                        <h2 className="text-xl text-brand-light truncate">
                           {getProjectName(projectId) ?? "Unknown Project"}
                         </h2>
                         <div className="flex items-center space-x-4 mt-1">
@@ -655,7 +655,7 @@ const CredentialsPage: React.FC = () => {
                               transition={{ delay: 0.1, duration: 0.3 }}
                             >
                               <div className="flex justify-between items-start mb-4">
-                                <h3 className="text-lg font-bold text-brand-blue truncate flex-grow pr-3 group-hover:text-brand-blue-hover transition-colors">
+                                <h3 className="text-lg text-brand-blue truncate flex-grow pr-3 group-hover:text-brand-blue-hover transition-colors">
                                   {cred.serviceName}
                                 </h3>
                                 <div className="flex space-x-2 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -878,7 +878,7 @@ const CredentialsPage: React.FC = () => {
               <div className="w-16 h-16 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Search className="h-8 w-8 text-gray-400" />
               </div>
-              <h2 className="text-xl font-bold text-brand-light mb-2">
+              <h2 className="text-xl text-brand-light mb-2">
                 No matching credentials
               </h2>
               <p className="text-gray-400">
@@ -905,7 +905,7 @@ const CredentialsPage: React.FC = () => {
                 <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Trash2 className="w-6 h-6 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold mb-4 text-red-400 text-center">
+                <h2 className="text-2xl mb-4 text-red-400 text-center">
                   Delete Credential
                 </h2>
                 <p className="text-brand-light-secondary mb-2 text-center">

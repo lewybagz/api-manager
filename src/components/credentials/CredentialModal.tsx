@@ -101,15 +101,11 @@ const CredentialModal = ({
 
   useEffect(() => {
     if (editingCredential) {
-      console.log(
-        `Loading existing credential: ${editingCredential.id} for editing`
-      );
       setValue("serviceName", editingCredential.serviceName);
       setValue("apiKey", editingCredential.apiKey);
       setValue("apiSecret", editingCredential.apiSecret ?? "");
       setValue("notes", editingCredential.notes ?? "");
     } else {
-      console.log("Initializing empty form for new credential");
       reset({
         apiKey: "",
         apiSecret: "",
@@ -283,7 +279,7 @@ const CredentialModal = ({
               <Shield className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">
+              <h2 className="text-2xl text-white">
                 {editingCredential ? "Edit Credential" : "Add New Credential"}
               </h2>
               <p className="text-sm text-gray-400">
@@ -511,7 +507,7 @@ const CredentialModal = ({
                 Cancel
               </button>
               <button
-                className="px-6 py-3 bg-gradient-to-r from-brand-blue to-brand-primary hover:from-brand-blue-hover hover:to-brand-primary-dark text-white font-semibold rounded-xl focus:outline-none disabled:opacity-50 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                className="px-6 py-3 bg-brand-blue hover:from-brand-blue-hover hover:to-brand-primary-dark text-white font-semibold rounded-xl focus:outline-none disabled:opacity-50 transition-all duration-200 transform hover:scale-105 shadow-lg"
                 disabled={isSubmitting}
                 type="submit"
               >

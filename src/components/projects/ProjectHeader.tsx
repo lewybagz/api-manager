@@ -23,7 +23,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
         Back to Dashboard
       </Link>
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold truncate">{projectName}</h1>
+        <h1 className="text-3xl truncate">{projectName}</h1>
         <button
           className="bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold py-2 px-4 rounded-md transition-colors shadow-md whitespace-nowrap"
           onClick={onAddCredential}

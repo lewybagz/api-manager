@@ -384,9 +384,12 @@ const LoginPage: React.FC = () => {
             className="h-32 w-32 animate-pop-in mb-2"
             src="/assets/logos/logo-192x192.png"
           />
-          <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">
-            <span className="bg-gradient-to-r from-brand-light via-brand-blue to-brand-primary bg-clip-text text-transparent">
+          <h1 className="flex flex-col items-center justify-center text-4xl text-white mb-2 tracking-tight">
+            <span className="flex flex-col items-center justify-center bg-gradient-to-r from-brand-light via-brand-blue to-brand-primary bg-clip-text text-transparent">
               Zeker
+              <span className="text-brand-blue text-sm tracking-wide">
+                Powered by Tovuti
+              </span>
             </span>
           </h1>
           <p className="text-brand-light-secondary mb-8 text-center text-base leading-relaxed">

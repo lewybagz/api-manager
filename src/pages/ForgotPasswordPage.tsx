@@ -45,7 +45,7 @@ const ForgotPasswordPage: React.FC = () => {
           <div className="w-16 h-16 bg-gradient-to-br from-brand-blue to-brand-primary rounded-full flex items-center justify-center mb-6 animate-pop-in">
             <Shield className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
+          <h1 className="text-3xl text-white mb-2 tracking-tight">
             Reset Password
           </h1>
           <p className="text-brand-light-secondary mb-8 text-center text-base leading-relaxed">
@@ -58,9 +58,7 @@ const ForgotPasswordPage: React.FC = () => {
               <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mb-6">
                 <CheckCircle className="h-8 w-8 text-white" />
               </div>
-              <h2 className="text-xl font-bold text-green-400 mb-3">
-                Check Your Email
-              </h2>
+              <h2 className="text-xl text-green-400 mb-3">Check Your Email</h2>
               <p className="text-gray-300 mb-6 leading-relaxed">
                 We've sent a password reset link to your email address. Click
                 the link to create a new password.

@@ -21,19 +21,20 @@ const HomePage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary">
+    <div className="min-h-screen ">
       <div className="flex flex-col items-center justify-center min-h-screen text-center text-brand-light px-4 py-12">
         {/* Enhanced Hero Section */}
-        <div className="w-full max-w-5xl mx-auto flex flex-col items-center bg-gradient-to-br from-brand-dark-secondary/90 to-brand-dark-secondary/70 backdrop-blur-xl border border-brand-blue/30 rounded-3xl shadow-2xl p-8 sm:p-16 mb-16 animate-fade-in">
+        <div className="w-full max-w-3xl mx-auto flex flex-col items-center bg-gradient-to-br from-brand-dark-secondary/90 to-brand-dark-secondary/70 backdrop-blur-xl border border-brand-blue/30 rounded-3xl shadow-2xl p-8 sm:p-16 mb-16 animate-fade-in">
           <div className="w-20 h-20 bg-gradient-to-br from-brand-blue to-brand-primary rounded-full flex items-center justify-center mb-8 animate-pop-in shadow-lg">
             <Shield className="h-10 w-10 text-white" />
           </div>
-          <h1 className="text-5xl sm:text-6xl font-bold text-white mb-4 tracking-tight">
-            <span className="bg-gradient-to-r from-brand-light via-brand-blue to-brand-primary bg-clip-text text-transparent">
-              Zeker
+          <h1 className="flex flex-col items-center justify-center text-5xl sm:text-6xl text-white mb-4 tracking-tight">
+            <span className="text-white/80">Zeker</span>
+            <span className="text-brand-blue text-lg tracking-wide">
+              Powered by Tovuti
             </span>
           </h1>
-          <p className="text-xl sm:text-2xl text-brand-light-secondary mb-8 max-w-3xl leading-relaxed">
+          <p className="text-xl sm:text-xl text-brand-light-secondary mb-8 max-w-3xl leading-relaxed">
             Enterprise-grade security for your API keys and credentials. Your
             secrets are encrypted on your device and never leave unencrypted.
           </p>
@@ -89,7 +90,7 @@ const HomePage: React.FC = () => {
         {/* Enhanced Security Features Section */}
         <div className="w-full max-w-7xl mx-auto mb-16">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+            <h2 className="text-3xl sm:text-4xl text-white mb-4">
               <span className="bg-gradient-to-r from-brand-light via-brand-blue to-brand-primary bg-clip-text text-transparent">
                 Enterprise-Grade Security
               </span>
@@ -104,7 +105,7 @@ const HomePage: React.FC = () => {
               <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 <Fingerprint className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-brand-light">
+              <h3 className="text-xl mb-3 text-brand-light">
                 Zero-Knowledge Encryption
               </h3>
               <p className="text-brand-light-secondary leading-relaxed">
@@ -117,7 +118,7 @@ const HomePage: React.FC = () => {
               <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 <Lock className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-brand-light">
+              <h3 className="text-xl mb-3 text-brand-light">
                 AES-256 Encryption
               </h3>
               <p className="text-brand-light-secondary leading-relaxed">
@@ -130,9 +131,7 @@ const HomePage: React.FC = () => {
               <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 <Eye className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-brand-light">
-                Secure Display
-              </h3>
+              <h3 className="text-xl mb-3 text-brand-light">Secure Display</h3>
               <p className="text-brand-light-secondary leading-relaxed">
                 Credentials are masked by default and only revealed when needed,
                 protecting against shoulder surfing.
@@ -143,7 +142,7 @@ const HomePage: React.FC = () => {
               <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 <Clock className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-brand-light">
+              <h3 className="text-xl mb-3 text-brand-light">
                 Auto-Lock Protection
               </h3>
               <p className="text-brand-light-secondary leading-relaxed">
@@ -156,7 +155,7 @@ const HomePage: React.FC = () => {
               <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 <AlertTriangle className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-brand-light">
+              <h3 className="text-xl mb-3 text-brand-light">
                 Brute Force Protection
               </h3>
               <p className="text-brand-light-secondary leading-relaxed">
@@ -169,9 +168,7 @@ const HomePage: React.FC = () => {
               <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 <RefreshCw className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-brand-light">
-                Regular Updates
-              </h3>
+              <h3 className="text-xl mb-3 text-brand-light">Regular Updates</h3>
               <p className="text-brand-light-secondary leading-relaxed">
                 Continuous security updates and feature enhancements to keep
                 your data safe and secure.
@@ -183,7 +180,7 @@ const HomePage: React.FC = () => {
         {/* Enhanced Features Grid */}
         <div className="w-full max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+            <h2 className="text-3xl sm:text-4xl text-white mb-4">
               <span className="bg-gradient-to-r from-brand-light via-brand-blue to-brand-primary bg-clip-text text-transparent">
                 Powerful Features
               </span>
@@ -197,7 +194,7 @@ const HomePage: React.FC = () => {
               <div className="w-12 h-12 bg-gradient-to-br from-brand-blue to-brand-primary rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 <FolderPlus className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-brand-light">
+              <h3 className="text-xl mb-3 text-brand-light">
                 Unlimited Projects
               </h3>
               <p className="text-brand-light-secondary text-center leading-relaxed">
@@ -210,9 +207,7 @@ const HomePage: React.FC = () => {
               <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 <KeyRound className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-brand-light">
-                Secure Storage
-              </h3>
+              <h3 className="text-xl mb-3 text-brand-light">Secure Storage</h3>
               <p className="text-brand-light-secondary text-center leading-relaxed">
                 All secrets are encrypted client-side with your master password
                 before being stored securely.
@@ -223,9 +218,7 @@ const HomePage: React.FC = () => {
               <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 <Shield className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-brand-light">
-                Master Password
-              </h3>
+              <h3 className="text-xl mb-3 text-brand-light">Master Password</h3>
               <p className="text-brand-light-secondary text-center leading-relaxed">
                 Only you can decrypt your data. No one else, not even us, has
                 access to your credentials.
@@ -236,7 +229,7 @@ const HomePage: React.FC = () => {
               <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 <Plus className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-brand-light">
+              <h3 className="text-xl mb-3 text-brand-light">
                 Quick Add & Copy
               </h3>
               <p className="text-brand-light-secondary text-center leading-relaxed">

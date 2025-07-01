@@ -24,7 +24,7 @@ const ProfilePage: React.FC = () => {
   if (userLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center flex flex-col items-center">
           <div className="relative mb-6">
             <div className="w-16 h-16 border-4 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin"></div>
             <div
@@ -49,7 +49,7 @@ const ProfilePage: React.FC = () => {
           <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
             <ShieldAlert className="h-8 w-8 text-white" />
           </div>
-          <h2 className="text-2xl font-bold mb-3 text-red-400">
+          <h2 className="text-2xl mb-3 text-red-400">
             Authentication Required
           </h2>
           <p className="text-gray-400 mb-6 leading-relaxed">
@@ -108,7 +108,7 @@ const ProfilePage: React.FC = () => {
                       </svg>
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-brand-light">
+                      <h2 className="text-xl text-brand-light">
                         Profile Information
                       </h2>
                       <p className="text-sm text-gray-400">
@@ -145,7 +145,7 @@ const ProfilePage: React.FC = () => {
                       </svg>
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-brand-light">
+                      <h2 className="text-xl text-brand-light">
                         Security Settings
                       </h2>
                       <p className="text-sm text-gray-400">
@@ -178,7 +178,7 @@ const ProfilePage: React.FC = () => {
                     </svg>
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-brand-light">
+                    <h2 className="text-xl text-brand-light">
                       Account Information
                     </h2>
                     <p className="text-sm text-gray-400">

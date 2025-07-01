@@ -139,7 +139,7 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
   if (isLoading && filesForCurrentProject.length === 0) {
     return (
       <div className="text-center p-12 text-brand-light flex flex-col items-center gap-4 bg-gradient-to-br from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm rounded-2xl border border-gray-800/50">
-        <div className="relative">
+        <div className="relative flex flex-col items-center justify-center">
           <div className="w-12 h-12 border-4 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin"></div>
           <div
             className="absolute inset-0 w-12 h-12 border-4 border-transparent border-t-brand-primary rounded-full animate-spin"
@@ -160,9 +160,7 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
         <div className="w-16 h-16 bg-red-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
           <XCircle className="h-8 w-8 text-red-400" />
         </div>
-        <h3 className="text-xl font-bold text-red-300 mb-3">
-          Error Loading Files
-        </h3>
+        <h3 className="text-xl text-red-300 mb-3">Error Loading Files</h3>
         <p className="text-red-400 mb-6 leading-relaxed">{error.message}</p>
         <button
           className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold py-3 px-6 rounded-xl text-sm transition-all duration-200 transform hover:scale-105 shadow-lg"
@@ -182,9 +180,7 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
         <div className="w-20 h-20 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
           <FolderOpen className="h-10 w-10 text-gray-400" />
         </div>
-        <h3 className="text-2xl font-bold text-brand-light mb-4">
-          No Files Uploaded
-        </h3>
+        <h3 className="text-2xl text-brand-light mb-4">No Files Uploaded</h3>
         <p className="text-brand-light-secondary mb-6 max-w-md mx-auto leading-relaxed">
           Upload files using the area above to see them listed here. Your files
           will be securely stored and optionally encrypted.
@@ -205,7 +201,7 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
           <FileText className="h-4 w-4 text-white" />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-brand-light">Project Files</h2>
+          <h2 className="text-2xl text-brand-light">Project Files</h2>
           <p className="text-sm text-gray-400">
             {filesForCurrentProject.length}{" "}
             {filesForCurrentProject.length === 1 ? "file" : "files"} in this
@@ -255,7 +251,7 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
               <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <FileText className="w-6 h-6 text-white" />
               </div>
-              <h2 className="text-2xl font-bold mb-4 text-red-400 text-center">
+              <h2 className="text-2xl mb-4 text-red-400 text-center">
                 Delete File
               </h2>
               <p className="text-brand-light-secondary mb-2 text-center">

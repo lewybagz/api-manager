@@ -36,7 +36,7 @@ const CredentialsView: React.FC<CredentialsViewProps> = ({
 
   if (isLoading) {
     return (
-      <div className="text-center p-12 text-brand-light flex flex-col items-center gap-4 bg-gradient-to-br from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm rounded-2xl border border-gray-800/50">
+      <div className="text-center p-12 text-brand-light flex flex-col items-center gap-4 bg-transparent border-none">
         <div className="relative">
           <div className="w-12 h-12 border-4 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin"></div>
           <div
@@ -57,13 +57,13 @@ const CredentialsView: React.FC<CredentialsViewProps> = ({
   return (
     <div className="p-0">
       {error && (
-        <div className="bg-gradient-to-r from-red-900/40 to-red-800/30 border border-red-500/50 p-6 rounded-2xl shadow-lg mb-8 backdrop-blur-sm">
+        <div className="bg-transparent border-none">
           <div className="flex items-start space-x-4">
             <div className="w-10 h-10 bg-red-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
               <Shield className="h-5 w-5 text-red-400" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-red-400 mb-2">
+              <h3 className="text-xl text-red-400 mb-2">
                 Error Loading Credentials
               </h3>
               <p className="text-red-300 leading-relaxed">
@@ -76,13 +76,11 @@ const CredentialsView: React.FC<CredentialsViewProps> = ({
       )}
 
       {showEmptyState && (
-        <div className="text-center py-16 bg-gradient-to-br from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm rounded-2xl border border-gray-800/50">
+        <div className="text-center py-16 bg-transparent border-none">
           <div className="w-20 h-20 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
             <Plus className="h-10 w-10 text-gray-400" />
           </div>
-          <h2 className="text-3xl font-bold text-brand-light mb-4">
-            No Credentials Yet
-          </h2>
+          <h2 className="text-3xl text-brand-light mb-4">No Credentials Yet</h2>
           <p className="text-brand-light-secondary mb-8 max-w-md mx-auto leading-relaxed">
             Click "Add Credential" to secure your first API key for this
             project. Your credentials will be encrypted and stored safely.
@@ -97,8 +95,8 @@ const CredentialsView: React.FC<CredentialsViewProps> = ({
       )}
 
       {showCredentials && (
-        <div className="space-y-8">
-          <div className="flex flex-col gap-4">
+        <div className="space-y-8 overflow-visible">
+          <div className="flex flex-col gap-4 bg-transparent border-none overflow-visible">
             {credentials.map((cred) => (
               <CredentialCard
                 clipboardTimeoutApiKey={!!clipboardTimeout[`${cred.id}-apikey`]}
@@ -152,13 +150,13 @@ const CredentialsView: React.FC<CredentialsViewProps> = ({
           </div>
 
           {error && error.message.toLowerCase().includes("decrypt") && (
-            <div className="bg-gradient-to-r from-red-900/40 to-red-800/30 border border-red-500/50 p-6 rounded-2xl shadow-lg backdrop-blur-sm">
+            <div className="bg-transparent border-none">
               <div className="flex items-start space-x-4">
                 <div className="w-10 h-10 bg-red-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Shield className="h-5 w-5 text-red-400" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-red-400 mb-2">
+                  <h3 className="text-xl text-red-400 mb-2">
                     Decryption Issue Detected
                   </h3>
                   <p className="text-red-300 mb-4 leading-relaxed">

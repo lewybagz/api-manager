@@ -22,8 +22,9 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ onMenuOpen }) => {
             <Sparkles className="w-1.5 h-1.5 text-white m-0.5" />
           </div>
         </div>
-        <span className="ml-3 text-xl font-bold text-white group-hover:text-brand-blue transition-colors duration-300">
+        <span className="flex flex-col items-start justify-start ml-3 text-xl text-white group-hover:text-brand-blue transition-colors duration-300">
           Zeker
+          <span className="text-brand-blue text-sm">Powered by Tovuti</span>
         </span>
       </div>
       <div className="flex items-center space-x-3">

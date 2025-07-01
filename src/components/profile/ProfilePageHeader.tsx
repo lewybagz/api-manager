@@ -8,7 +8,7 @@ const ProfilePageHeader: React.FC = () => {
         <UserIcon className="h-6 w-6 text-white" />
       </div>
       <div className="ml-4">
-        <h1 className="text-2xl font-bold">Profile Settings</h1>
+        <h1 className="text-2xl ">Profile Settings</h1>
         <p className="text-gray-400">
           Manage your account information and password
         </p>

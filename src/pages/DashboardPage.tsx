@@ -203,7 +203,7 @@ const DashboardPage: React.FC = () => {
   if (projectsLoading || credentialsLoading || filesLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center flex flex-col items-center">
           <div className="relative mb-6">
             <div className="w-16 h-16 border-4 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin"></div>
             <div
@@ -225,7 +225,7 @@ const DashboardPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary flex items-center justify-center p-4">
         <div className="bg-gradient-to-br from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm rounded-2xl p-8 text-center border border-gray-800/50">
-          <h2 className="text-2xl font-bold text-red-400 mb-4">
+          <h2 className="text-2xl text-red-400 mb-4">
             Authentication Required
           </h2>
           <p className="text-brand-light">
@@ -243,7 +243,7 @@ const DashboardPage: React.FC = () => {
           <div className="w-16 h-16 bg-gradient-to-br from-brand-blue to-brand-primary rounded-full flex items-center justify-center mx-auto mb-6">
             <Lock className="h-8 w-8 text-white" />
           </div>
-          <h2 className="text-2xl font-bold text-brand-light mb-4">
+          <h2 className="text-2xl text-brand-light mb-4">
             Master Password Required
           </h2>
           <p className="text-brand-light-secondary mb-8 leading-relaxed">
@@ -265,22 +265,22 @@ const DashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary">
+    <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary rounded-2xl">
       <div className="p-4 sm:p-6 lg:p-8 text-brand-light">
         <Toaster position="top-right" richColors />
 
         {/* Enhanced Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
           <div className="mb-6 lg:mb-0">
-            <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-brand-light via-brand-blue to-brand-primary bg-clip-text text-transparent mb-2">
+            <h1 className="text-4xl sm:text-5xl text-gray-100 mb-2">
               Project Dashboard
             </h1>
-            <p className="text-lg text-gray-400">
+            <p className="text-lg text-gray-500">
               Manage your API credentials and projects
             </p>
           </div>
           <button
-            className="bg-gradient-to-r from-brand-blue to-brand-primary hover:from-brand-blue-hover hover:to-brand-primary-dark text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center gap-2"
+            className="bg-brand-blue hover:from-brand-blue-hover hover:to-brand-primary-dark text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center gap-2"
             onClick={openAddModal}
           >
             <Plus className="h-5 w-5" />
@@ -317,9 +317,7 @@ const DashboardPage: React.FC = () => {
             <div className="w-16 h-16 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
               <FolderPlus className="h-8 w-8 text-gray-400" />
             </div>
-            <h2 className="text-2xl font-bold text-brand-light mb-3">
-              No Projects Yet
-            </h2>
+            <h2 className="text-2xl text-brand-light mb-3">No Projects Yet</h2>
             <p className="text-brand-light-secondary mb-8 max-w-md mx-auto leading-relaxed">
               Create your first project to start organizing your API credentials
               securely.
@@ -424,7 +422,7 @@ const DashboardPage: React.FC = () => {
                         <div className="w-10 h-10 bg-gradient-to-br from-brand-blue to-brand-primary rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
                           <FolderPlus className="h-5 w-5 text-white" />
                         </div>
-                        <h3 className="text-lg font-bold text-brand-light truncate group-hover:text-brand-blue transition-colors duration-300">
+                        <h3 className="text-lg text-brand-light truncate group-hover:text-brand-blue transition-colors duration-300">
                           {project.projectName}
                         </h3>
                       </div>
@@ -454,7 +452,7 @@ const DashboardPage: React.FC = () => {
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-4">
                         <div className="text-center">
-                          <div className="text-lg font-bold text-brand-blue">
+                          <div className="text-lg text-brand-blue">
                             {numCredentials}
                           </div>
                           <div className="text-xs text-gray-400">
@@ -463,7 +461,7 @@ const DashboardPage: React.FC = () => {
                         </div>
                         <div className="w-px h-8 bg-gray-700"></div>
                         <div className="text-center">
-                          <div className="text-lg font-bold text-green-400">
+                          <div className="text-lg text-green-400">
                             {numFiles}
                           </div>
                           <div className="text-xs text-gray-400">
@@ -538,7 +536,7 @@ const DashboardPage: React.FC = () => {
                   <div className="w-10 h-10 bg-gradient-to-br from-brand-blue to-brand-primary rounded-lg flex items-center justify-center">
                     <FolderPlus className="h-5 w-5 text-white" />
                   </div>
-                  <h2 className="text-2xl font-bold text-brand-light">
+                  <h2 className="text-2xl text-brand-light">
                     {showEditModal && editingProject
                       ? "Edit Project"
                       : "Create New Project"}
@@ -618,7 +616,7 @@ const DashboardPage: React.FC = () => {
                 <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Trash2 className="w-6 h-6 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold mb-4 text-red-400 text-center">
+                <h2 className="text-2xl mb-4 text-red-400 text-center">
                   Delete Project
                 </h2>
                 <p className="text-brand-light-secondary mb-2 text-center">

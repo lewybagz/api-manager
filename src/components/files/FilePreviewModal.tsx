@@ -202,7 +202,7 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
             </div>
             <div className="min-w-0">
               <h2
-                className="text-lg font-bold text-brand-light truncate"
+                className="text-lg text-brand-light truncate"
                 id="preview-modal-title"
               >
                 {file.fileName}

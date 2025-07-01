@@ -128,7 +128,7 @@ const ProjectFileCard: React.FC<ProjectFileCardProps> = ({
           />
         </div>
         <div className="min-w-0 flex-1">
-          <span className="text-base font-bold text-brand-blue truncate block group-hover:bg-gradient-to-r group-hover:from-brand-blue group-hover:to-brand-primary group-hover:bg-clip-text group-hover:text-transparent transition-all duration-200">
+          <span className="text-base text-brand-blue truncate block group-hover:bg-gradient-to-r group-hover:from-brand-blue group-hover:to-brand-primary group-hover:bg-clip-text group-hover:text-transparent transition-all duration-200">
             {file.fileName}
           </span>
           <div className="flex items-center space-x-2 mt-1">

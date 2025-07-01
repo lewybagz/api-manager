@@ -37,15 +37,12 @@ const SensitiveFileWarningModal: React.FC<SensitiveFileWarningModalProps> = ({
               <AlertTriangle className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h2
-                className="text-xl font-bold text-yellow-400 mb-2"
-                id="modal-title"
-              >
+              <h2 className="text-xl text-yellow-400 mb-2" id="modal-title">
                 Sensitive File Detected
               </h2>
               <p className="text-sm text-brand-light-secondary leading-relaxed">
                 The file{" "}
-                <span className="font-bold text-brand-light bg-gray-800/50 px-2 py-1 rounded-lg">
+                <span className="text-brand-light bg-gray-800/50 px-2 py-1 rounded-lg">
                   {fileName}
                 </span>{" "}
                 has an extension that suggests it may contain sensitive

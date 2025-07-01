@@ -77,7 +77,7 @@ const Sidebar: React.FC = () => {
     <div className="w-64 bg-gradient-to-b from-brand-dark-secondary via-brand-dark-secondary to-brand-dark h-screen p-0 fixed left-0 top-0 overflow-y-auto border-r border-gray-800/50 backdrop-blur-xl hidden md:flex flex-col shadow-2xl custom-scrollbar">
       {/* Enhanced App Branding */}
       <Link
-        className="px-4 py-4 flex items-center border-b border-gray-800/50 bg-gradient-to-r from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm hover:from-brand-blue/10 hover:to-brand-primary/10 transition-all duration-300 group"
+        className="px-4 py-4 flex items-center border-b border-gray-300/50 bg-gradient-to-r from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm hover:from-brand-blue/10 hover:to-brand-primary/10 transition-all duration-300 group"
         to="/"
       >
         <div className="relative">
@@ -90,9 +90,10 @@ const Sidebar: React.FC = () => {
             <Sparkles className="w-2 h-2 text-white m-0.5" />
           </div>
         </div>
-        <h1 className="ml-3 text-xl font-bold text-white tracking-wide -translate-x-1 group-hover:text-brand-blue transition-colors duration-300">
+        <div className="flex flex-col items-start justify-start ml-3 text-xl text-white tracking-wide -translate-x-1 group-hover:text-brand-blue transition-colors duration-300">
           Zeker
-        </h1>
+          <span className="text-brand-blue text-sm ">Powered by Tovuti</span>
+        </div>
       </Link>
 
       {/* Enhanced Search Box */}
@@ -342,7 +343,7 @@ const Sidebar: React.FC = () => {
         {user && userDoc && (
           <div className="bg-gradient-to-br from-gray-800/80 to-gray-900/60 backdrop-blur-sm m-3 mb-3 p-4 rounded-xl border border-gray-700/50 shadow-lg">
             <div className="flex items-center mb-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-r from-brand-blue to-brand-primary flex items-center justify-center flex-shrink-0 shadow-lg">
+              <div className="h-10 w-10 rounded-xl bg-brand-blue flex items-center justify-center flex-shrink-0 shadow-lg">
                 <User className="h-5 w-5 text-white" />
               </div>
               <div className="ml-3 overflow-hidden flex-1">
@@ -364,19 +365,19 @@ const Sidebar: React.FC = () => {
 
             <div className="grid grid-cols-3 gap-1 mt-3 pt-3 border-t border-gray-700/50">
               <Link
-                className="text-center text-xs py-2 px-2 rounded-lg bg-gradient-to-r from-gray-700/60 to-gray-800/40 text-gray-300 hover:from-brand-blue/20 hover:to-brand-primary/20 hover:text-brand-blue transition-all duration-300 backdrop-blur-sm font-medium"
+                className="text-center text-xs py-2 px-2 rounded-lg bg-gray-700/60 text-gray-300 hover:from-brand-blue/20 hover:to-brand-primary/20 hover:text-brand-blue transition-all duration-300 backdrop-blur-sm font-medium"
                 to="/profile"
               >
                 Profile
               </Link>
               <Link
-                className="text-center text-xs py-2 px-2 rounded-lg bg-gradient-to-r from-gray-700/60 to-gray-800/40 text-gray-300 hover:from-brand-blue/20 hover:to-brand-primary/20 hover:text-brand-blue transition-all duration-300 backdrop-blur-sm font-medium"
+                className="text-center text-xs py-2 px-2 rounded-lg bg-gray-700/60 text-gray-300 hover:from-brand-blue/20 hover:to-brand-primary/20 hover:text-brand-blue transition-all duration-300 backdrop-blur-sm font-medium"
                 to="/settings"
               >
                 Settings
               </Link>
               <button
-                className="text-center text-xs py-2 px-2 rounded-lg bg-gradient-to-r from-gray-700/60 to-gray-800/40 text-gray-300 hover:from-red-900/50 hover:to-red-800/40 hover:text-red-300 transition-all duration-300 backdrop-blur-sm font-medium"
+                className="text-center text-xs py-2 px-2 rounded-lg bg-gray-700/60 text-gray-300 hover:from-red-900/50 hover:to-red-800/40 hover:text-red-300 transition-all duration-300 backdrop-blur-sm font-medium"
                 onClick={() => void handleLogout()}
               >
                 Sign out
