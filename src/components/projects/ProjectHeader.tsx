@@ -14,29 +14,29 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   projectName,
 }) => {
   return (
-    <div className="mb-8">
-      <Link
-        className="text-brand-blue hover:underline text-sm mb-2 block flex items-center"
-        to="/dashboard"
-      >
-        <ArrowLeft className="h-4 w-4 mr-1" />
-        Back to Dashboard
-      </Link>
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl truncate">{projectName}</h1>
-        <button
-          className="bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold py-2 px-4 rounded-md transition-colors shadow-md whitespace-nowrap"
-          onClick={onAddCredential}
+    <div className="py-2 px-4 flex justify-between items-center">
+      <div className="flex flex-col items-start gap-1">
+        <Link
+          className="text-brand-blue hover:underline text-sm block flex items-center"
+          to="/dashboard"
         >
-          Add Credential
-        </button>
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Back to Dashboard
+        </Link>
+        <h1 className="text-3xl truncate">{projectName}</h1>
+        {projectCreatedAt && (
+          <p className="text-sm text-gray-400 mt-1">
+            Created:{" "}
+            {new Date(projectCreatedAt.seconds * 1000).toLocaleDateString()}
+          </p>
+        )}
       </div>
-      {projectCreatedAt && (
-        <p className="text-sm text-gray-400 mt-1">
-          Created:{" "}
-          {new Date(projectCreatedAt.seconds * 1000).toLocaleDateString()}
-        </p>
-      )}
+      <button
+        className="bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold py-2 px-4 rounded-md transition-colors shadow-md whitespace-nowrap"
+        onClick={onAddCredential}
+      >
+        Add Credential
+      </button>
     </div>
   );
 };

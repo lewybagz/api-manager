@@ -31,8 +31,13 @@ const CredentialsView: React.FC<CredentialsViewProps> = ({
   onToggleReveal,
   revealedStates,
 }) => {
-  const showEmptyState = !isLoading && !error && credentials.length === 0;
-  const showCredentials = credentials.length > 0;
+  const sortedCredentials = [...credentials].sort(
+    (a, b) => (b.apiSecret ? 1 : 0) - (a.apiSecret ? 1 : 0)
+  );
+
+  const anyCredentialHasNote = sortedCredentials.some((c) => c.notes);
+  const showEmptyState = !isLoading && !error && sortedCredentials.length === 0;
+  const showCredentials = sortedCredentials.length > 0;
 
   if (isLoading) {
     return (
@@ -96,20 +101,23 @@ const CredentialsView: React.FC<CredentialsViewProps> = ({
 
       {showCredentials && (
         <div className="space-y-8 overflow-visible">
-          <div className="flex flex-col gap-0 bg-transparent border-none rounded-lg overflow-visible">
-            {credentials.map((cred, idx) => {
+          <div className="flex flex-col gap-2 md:gap-0 bg-transparent border-none rounded-lg overflow-visible rounded-lg md:rounded-none">
+            {sortedCredentials.map((cred, idx) => {
               const isFirst = idx === 0;
-              const isLast = idx === credentials.length - 1;
-              let rounded = "";
+              const isLast = idx === sortedCredentials.length - 1;
+              let rounded = "rounded-2xl ";
               if (isFirst && isLast) {
-                rounded = "rounded-t-2xl rounded-b-2xl";
+                rounded += "md:rounded-t-2xl md:rounded-b-2xl";
               } else if (isFirst) {
-                rounded = "rounded-t-2xl pt-2";
+                rounded += "md:rounded-t-2xl md:rounded-b-none pt-2";
               } else if (isLast) {
-                rounded = "rounded-b-2xl pb-2";
+                rounded += "md:rounded-b-2xl md:rounded-t-none pb-2";
+              } else {
+                rounded += "md:rounded-none";
               }
               return (
                 <CredentialCard
+                  anyCredentialHasNote={anyCredentialHasNote}
                   className={rounded}
                   clipboardTimeoutApiKey={
                     !!clipboardTimeout[`${cred.id}-apikey`]

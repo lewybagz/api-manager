@@ -34,10 +34,8 @@ function App() {
       />
       <div className="flex flex-1">
         <Sidebar />
-        <main className="flex-1 md:ml-64 pl-6 overflow-y-auto">
-          <div className="pt-4 md:pt-0">
-            <Outlet />
-          </div>
+        <main className="flex-1 md:ml-64 md:pl-6 overflow-y-auto">
+          <Outlet />
         </main>
       </div>
     </div>

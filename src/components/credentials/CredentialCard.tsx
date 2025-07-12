@@ -14,6 +14,7 @@ import React from "react";
 import { type DecryptedCredential } from "../../stores/credentialStore";
 
 interface CredentialCardProps {
+  anyCredentialHasNote: boolean;
   className?: string; // Optional, for custom styling
   clipboardTimeoutApiKey: boolean;
   clipboardTimeoutApiSecret: boolean;
@@ -35,6 +36,7 @@ interface CredentialCardProps {
 }
 
 const CredentialCard: React.FC<CredentialCardProps> = ({
+  anyCredentialHasNote,
   className,
   clipboardTimeoutApiKey,
   clipboardTimeoutApiSecret,
@@ -67,7 +69,14 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
         {/* Service Info */}
         <div className="flex items-center gap-3 min-w-0 pr-4">
           <div className="w-1 h-10 bg-gradient-to-b from-brand-blue to-slate-500 rounded-full -translate-x-2"></div>
-          <div className="min-w-0 max-w-fit">
+          <div
+            className={cn(
+              "min-w-0 flex-shrink-0",
+              anyCredentialHasNote && !credential.notes
+                ? "max-w-[188px]"
+                : "max-w-[160px]"
+            )}
+          >
             <button
               aria-label="Copy service name to clipboard"
               className="group/btn flex items-center w-full text-left bg-transparent border-none p-0 m-0 focus:outline-none"
@@ -101,8 +110,7 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
         <div className="flex-1 flex items-center justify-end gap-2">
           <div
             className={cn(
-              "flex-1 flex flex-col md:flex-row items-stretch md:items-center gap-2 font-mono text-xs w-full md:w-auto",
-              hasSecret ? "md:w-[40%]" : "md:w-[50%]"
+              "flex-1 flex flex-col md:flex-row items-stretch md:items-center gap-2 font-mono text-xs w-full md:w-auto "
             )}
           >
             {/* API Key */}

@@ -9,7 +9,7 @@ interface FilesViewProps {
 
 const FilesView: React.FC<FilesViewProps> = ({ projectId }) => {
   return (
-    <div className="mt-0">
+    <div className="mt-0 bg-transparent border-none">
       <FileUploadArea projectId={projectId} />
       <FileList projectId={projectId} />
     </div>

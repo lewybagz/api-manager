@@ -40,7 +40,7 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
     if (projectId) {
       void fetchFilesForProject(projectId);
     }
-  }, [projectId]);
+  }, [fetchFilesForProject, projectId]);
 
   const handleDownload = useCallback(
     async (file: FileMetadata) => {

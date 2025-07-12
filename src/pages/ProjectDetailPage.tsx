@@ -382,13 +382,13 @@ const ProjectDetailPage: React.FC = () => {
 
         {/* Enhanced Project Tabs */}
         <div className="mb-8">
-          <div className="bg-gradient-to-r from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm rounded-2xl p-2 pb-0 border border-gray-800/50">
+          <div className="px-4">
             <ProjectTabs activeTab={activeTab} onTabChange={setActiveTab} />
           </div>
         </div>
 
         {/* Enhanced Content Area */}
-        <div className="rounded-2xl border border-gray-800/50 overflow-visible">
+        <div className="rounded-2xl overflow-visible">
           {activeTab === "credentials" && (
             <CredentialsView
               clipboardTimeout={clipboardTimeout}
