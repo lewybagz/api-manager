@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Outlet, Route, Routes } from "react-router-dom";
+import { Outlet, Route, Routes, useLocation } from "react-router-dom";
 
 import AuthGuard from "./components/auth/AuthGuard";
 import MasterPasswordModal from "./components/auth/MasterPasswordModal";
@@ -34,7 +34,7 @@ function App() {
       />
       <div className="flex flex-1">
         <Sidebar />
-        <main className="flex-1 md:ml-64 p-2 sm:p-6 lg:p-8 overflow-y-auto">
+        <main className="flex-1 md:ml-64 pl-6 overflow-y-auto">
           <div className="pt-4 md:pt-0">
             <Outlet />
           </div>
@@ -54,6 +54,7 @@ function MainApp() {
     subscribeToAuthState,
     user,
   } = useAuthStore();
+  const location = useLocation();
 
   useEffect(() => {
     const unsubscribe = subscribeToAuthState();
@@ -71,13 +72,12 @@ function MainApp() {
   return (
     <>
       <AuthGuard />
-
       <Routes>
+        <Route element={<HomePage />} path="/" />
         <Route element={<LoginPage />} path="/login" />
         <Route element={<ForgotPasswordPage />} path="/forgot-password" />
         <Route element={<ProtectedRoute />}>
-          <Route element={<App />} path="/">
-            <Route element={<HomePage />} index />
+          <Route element={<App />}>
             <Route element={<DashboardPage />} path="dashboard" />
             <Route element={<ProjectDetailPage />} path="project/:projectId" />
             <Route element={<CredentialsPage />} path="credentials" />
@@ -85,13 +85,15 @@ function MainApp() {
           </Route>
         </Route>
       </Routes>
-      <MasterPasswordModal
-        isOpen={
-          !!(user && !masterPasswordSet && !authLoading) ||
-          isMasterPasswordModalExplicitlyOpen
-        }
-        onClose={closeMasterPasswordModal}
-      />
+      {location.pathname !== "/" && (
+        <MasterPasswordModal
+          isOpen={
+            !!(user && !masterPasswordSet && !authLoading) ||
+            isMasterPasswordModalExplicitlyOpen
+          }
+          onClose={closeMasterPasswordModal}
+        />
+      )}
     </>
   );
 }

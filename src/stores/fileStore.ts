@@ -59,6 +59,108 @@ interface FileStoreState {
   ) => Promise<void>;
 }
 
+// Utility: Map file extensions to content types
+function getContentTypeFromFilename(filename: string): string {
+  const ext = filename.split('.').pop()?.toLowerCase() ?? '';
+  const map: Record<string, string> = {
+    '7z': 'application/x-7z-compressed',
+    // Misc
+    'apk': 'application/vnd.android.package-archive',
+    'avi': 'video/x-msvideo',
+    'bash': 'application/x-sh',
+    'bat': 'application/x-bat',
+    'bmp': 'image/bmp',
+    'bz2': 'application/x-bzip2',
+    'c': 'text/x-c',
+    'conf': 'text/plain',
+    'cpp': 'text/x-c++',
+    'cs': 'text/x-csharp',
+    'css': 'text/css',
+    'csv': 'text/csv',
+    'dart': 'text/x-dart',
+    'deb': 'application/vnd.debian.binary-package',
+    'dll': 'application/x-msdownload',
+    'dmg': 'application/x-apple-diskimage',
+    'doc': 'application/msword',
+    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'env': 'text/x-env',
+    'exe': 'application/vnd.microsoft.portable-executable',
+    'gif': 'image/gif',
+    'go': 'text/x-go',
+    'gz': 'application/gzip',
+    'h': 'text/x-c',
+    'hpp': 'text/x-c++',
+    'htm': 'text/html',
+    'html': 'text/html',
+    'ico': 'image/x-icon',
+    'ini': 'text/plain',
+    'iso': 'application/x-iso9660-image',
+    'java': 'text/x-java-source',
+    'jpeg': 'image/jpeg',
+    'jpg': 'image/jpeg',
+    // Code
+    'js': 'application/javascript',
+    'json': 'application/json',
+    'jsx': 'text/jsx',
+    'kt': 'text/x-kotlin',
+    'less': 'text/x-less',
+    'log': 'text/plain',
+    'md': 'text/markdown',
+    'mkv': 'video/x-matroska',
+    'mov': 'video/quicktime',
+    // Audio/video
+    'mp3': 'audio/mpeg',
+    'mp4': 'video/mp4',
+    'ogg': 'audio/ogg',
+    'otf': 'font/otf',
+    // Documents
+    'pdf': 'application/pdf',
+    'php': 'application/x-httpd-php',
+    'pl': 'text/x-perl',
+    // Images
+    'png': 'image/png',
+    'ppt': 'application/vnd.ms-powerpoint',
+    'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'ps1': 'text/x-powershell',
+    'py': 'text/x-python',
+    'r': 'text/x-r',
+    'rar': 'application/vnd.rar',
+    'rb': 'text/x-ruby',
+    'rpm': 'application/x-rpm',
+    'rs': 'text/x-rustsrc',
+    'sass': 'text/x-sass',
+    'scala': 'text/x-scala',
+    'scss': 'text/x-scss',
+    'sh': 'application/x-sh',
+    'sql': 'application/sql',
+    'svelte': 'text/x-svelte',
+    'svg': 'image/svg+xml',
+    'swift': 'text/x-swift',
+    'tar': 'application/x-tar',
+    'ts': 'application/typescript',
+    'tsx': 'text/tsx',
+    // Fonts
+    'ttf': 'font/ttf',
+    // Text/code
+    'txt': 'text/plain',
+    'vue': 'text/x-vue',
+    'wav': 'audio/wav',
+    'webp': 'image/webp',
+    'woff': 'font/woff',
+    'woff2': 'font/woff2',
+    'xls': 'application/vnd.ms-excel',
+    'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'xml': 'application/xml',
+    'yaml': 'text/yaml',
+    'yml': 'text/yaml',
+    // Archives
+    'zip': 'application/zip',
+  };
+  return map[ext] ?? 'application/octet-stream';
+}
+
+
+
 const useFileStore = create<FileStoreState>((set, get) => ({
   clearFilesOnLogout: () => {
     // Revoke any cached blob URLs to prevent memory leaks
@@ -232,7 +334,7 @@ const useFileStore = create<FileStoreState>((set, get) => ({
       await uploadBytes(fileRef, fileToUpload);
 
       const metadata: Omit<FileMetadata, "id" | "iv" | "uploadedAt"> = {
-        contentType: file.type || "application/octet-stream",
+        contentType: getContentTypeFromFilename(file.name),
         fileName: file.name,
         isEncrypted: encrypt,
         projectId,

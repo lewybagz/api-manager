@@ -96,57 +96,74 @@ const CredentialsView: React.FC<CredentialsViewProps> = ({
 
       {showCredentials && (
         <div className="space-y-8 overflow-visible">
-          <div className="flex flex-col gap-4 bg-transparent border-none overflow-visible">
-            {credentials.map((cred) => (
-              <CredentialCard
-                clipboardTimeoutApiKey={!!clipboardTimeout[`${cred.id}-apikey`]}
-                clipboardTimeoutApiSecret={
-                  !!clipboardTimeout[`${cred.id}-apisecret`]
-                }
-                credential={cred}
-                isApiKeyCopied={copiedStates[`${cred.id}-apikey`] ?? false}
-                isApiKeyRevealed={revealedStates[`${cred.id}-apikey`] ?? false}
-                isApiSecretCopied={
-                  copiedStates[`${cred.id}-apisecret`] ?? false
-                }
-                isApiSecretRevealed={
-                  revealedStates[`${cred.id}-apisecret`] ?? false
-                }
-                isServiceNameCopied={copiedStates[cred.id] ?? false}
-                key={cred.id}
-                maskCredential={maskCredential}
-                onCopyApiKey={() => {
-                  onCopy(cred.apiKey, `${cred.id}-apikey`);
-                }}
-                onCopyApiSecret={() => {
-                  if (cred.apiSecret) {
-                    onCopy(cred.apiSecret, `${cred.id}-apisecret`);
+          <div className="flex flex-col gap-0 bg-transparent border-none rounded-lg overflow-visible">
+            {credentials.map((cred, idx) => {
+              const isFirst = idx === 0;
+              const isLast = idx === credentials.length - 1;
+              let rounded = "";
+              if (isFirst && isLast) {
+                rounded = "rounded-t-2xl rounded-b-2xl";
+              } else if (isFirst) {
+                rounded = "rounded-t-2xl pt-2";
+              } else if (isLast) {
+                rounded = "rounded-b-2xl pb-2";
+              }
+              return (
+                <CredentialCard
+                  className={rounded}
+                  clipboardTimeoutApiKey={
+                    !!clipboardTimeout[`${cred.id}-apikey`]
                   }
-                }}
-                onCopyServiceName={() => {
-                  onCopy(cred.serviceName, cred.id);
-                }}
-                onDelete={() => {
-                  onDeleteCredential(cred);
-                }}
-                onEdit={() => {
-                  onEditCredential(cred);
-                }}
-                onToggleApiKeyReveal={() => {
-                  onToggleReveal(`${cred.id}-apikey`);
-                }}
-                onToggleApiSecretReveal={() => {
-                  onToggleReveal(`${cred.id}-apisecret`);
-                }}
-                onUpdateNeeded={
-                  cred.apiKey === "PLACEHOLDER-RESET-VALUE"
-                    ? () => {
-                        onEditCredential(cred);
-                      }
-                    : undefined
-                }
-              />
-            ))}
+                  clipboardTimeoutApiSecret={
+                    !!clipboardTimeout[`${cred.id}-apisecret`]
+                  }
+                  credential={cred}
+                  isApiKeyCopied={copiedStates[`${cred.id}-apikey`] ?? false}
+                  isApiKeyRevealed={
+                    revealedStates[`${cred.id}-apikey`] ?? false
+                  }
+                  isApiSecretCopied={
+                    copiedStates[`${cred.id}-apisecret`] ?? false
+                  }
+                  isApiSecretRevealed={
+                    revealedStates[`${cred.id}-apisecret`] ?? false
+                  }
+                  isServiceNameCopied={copiedStates[cred.id] ?? false}
+                  key={cred.id}
+                  maskCredential={maskCredential}
+                  onCopyApiKey={() => {
+                    onCopy(cred.apiKey, `${cred.id}-apikey`);
+                  }}
+                  onCopyApiSecret={() => {
+                    if (cred.apiSecret) {
+                      onCopy(cred.apiSecret, `${cred.id}-apisecret`);
+                    }
+                  }}
+                  onCopyServiceName={() => {
+                    onCopy(cred.serviceName, cred.id);
+                  }}
+                  onDelete={() => {
+                    onDeleteCredential(cred);
+                  }}
+                  onEdit={() => {
+                    onEditCredential(cred);
+                  }}
+                  onToggleApiKeyReveal={() => {
+                    onToggleReveal(`${cred.id}-apikey`);
+                  }}
+                  onToggleApiSecretReveal={() => {
+                    onToggleReveal(`${cred.id}-apisecret`);
+                  }}
+                  onUpdateNeeded={
+                    cred.apiKey === "PLACEHOLDER-RESET-VALUE"
+                      ? () => {
+                          onEditCredential(cred);
+                        }
+                      : undefined
+                  }
+                />
+              );
+            })}
           </div>
 
           {error && error.message.toLowerCase().includes("decrypt") && (

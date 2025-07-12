@@ -346,7 +346,7 @@ const LoginPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary flex items-center justify-center relative overflow-hidden px-2 sm:px-0">
       {/* Enhanced SVG Background */}
       <div className="fixed inset-0 w-full h-full -z-10 pointer-events-none opacity-30">
         <svg
@@ -377,14 +377,14 @@ const LoginPage: React.FC = () => {
         </svg>
       </div>
 
-      <div className="w-full max-w-md bg-gradient-to-br from-brand-dark-secondary/90 to-brand-dark-secondary/70 backdrop-blur-xl border border-brand-blue/30 shadow-2xl rounded-3xl p-8 pt-4 animate-fade-in">
+      <div className="w-full max-w-md bg-gradient-to-br from-brand-dark-secondary/90 to-brand-dark-secondary/70 backdrop-blur-xl border border-brand-blue/30 shadow-2xl rounded-3xl p-4 sm:p-8 pt-4 animate-fade-in mx-2 sm:mx-0">
         <div className="flex flex-col items-center">
           <img
             alt="Zeker Logo"
-            className="h-32 w-32 animate-pop-in mb-2"
+            className="h-20 w-20 sm:h-32 sm:w-32 animate-pop-in mb-2"
             src="/assets/logos/logo-192x192.png"
           />
-          <h1 className="flex flex-col items-center justify-center text-4xl text-white mb-2 tracking-tight">
+          <h1 className="flex flex-col items-center justify-center text-3xl sm:text-4xl text-white mb-2 tracking-tight">
             <span className="flex flex-col items-center justify-center bg-gradient-to-r from-brand-light via-brand-blue to-brand-primary bg-clip-text text-transparent">
               Zeker
               <span className="text-brand-blue text-sm tracking-wide">
@@ -480,7 +480,7 @@ const LoginPage: React.FC = () => {
                     <input
                       aria-label="Email address"
                       autoComplete="email"
-                      className="block w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200"
+                      className="block w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200 text-sm sm:text-base"
                       disabled={isSubmitting}
                       id="email"
                       name="email"
@@ -508,7 +508,7 @@ const LoginPage: React.FC = () => {
                     <input
                       aria-label="Password"
                       autoComplete="current-password"
-                      className="block w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm py-3 pl-12 pr-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200"
+                      className="block w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm py-3 pl-12 pr-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200 text-sm sm:text-base"
                       disabled={isSubmitting}
                       id="password"
                       name="password"
@@ -552,7 +552,7 @@ const LoginPage: React.FC = () => {
               )}
 
               <button
-                className="w-full bg-gradient-to-r from-brand-blue to-brand-primary hover:from-brand-blue-hover hover:to-brand-primary-dark text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none focus:outline-none focus:ring-2 focus:ring-brand-blue/50"
+                className="w-full bg-gradient-to-r from-brand-blue to-brand-primary hover:from-brand-blue-hover hover:to-brand-primary-dark text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none focus:outline-none focus:ring-2 focus:ring-brand-blue/50 text-base"
                 disabled={isSubmitting}
                 type="submit"
               >
@@ -612,7 +612,7 @@ const LoginPage: React.FC = () => {
                     <input
                       aria-label="Display Name"
                       autoComplete="name"
-                      className="block w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm py-3 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200"
+                      className="block w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm py-3 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200 text-sm sm:text-base"
                       id="registerName"
                       name="registerName"
                       onChange={(e) => {
@@ -639,7 +639,7 @@ const LoginPage: React.FC = () => {
                     <input
                       aria-label="Email address"
                       autoComplete="email"
-                      className="block w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200"
+                      className="block w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200 text-sm sm:text-base"
                       id="registerEmail"
                       name="registerEmail"
                       onChange={(e) => {
@@ -666,7 +666,7 @@ const LoginPage: React.FC = () => {
                     <input
                       aria-label="Password"
                       autoComplete="new-password"
-                      className="block w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm py-3 pl-12 pr-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200"
+                      className="block w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm py-3 pl-12 pr-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200 text-sm sm:text-base"
                       id="registerPassword"
                       name="registerPassword"
                       onChange={(e) => {
@@ -735,7 +735,7 @@ const LoginPage: React.FC = () => {
               )}
 
               <button
-                className="w-full bg-gradient-to-r from-brand-blue to-brand-primary hover:from-brand-blue-hover hover:to-brand-primary-dark text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none focus:outline-none focus:ring-2 focus:ring-brand-blue/50"
+                className="w-full bg-gradient-to-r from-brand-blue to-brand-primary hover:from-brand-blue-hover hover:to-brand-primary-dark text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none focus:outline-none focus:ring-2 focus:ring-brand-blue/50 text-base"
                 disabled={!registerName.trim() || passwordStrength.score < 4}
                 type="submit"
               >

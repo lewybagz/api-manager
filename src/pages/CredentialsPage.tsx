@@ -642,7 +642,6 @@ const CredentialsPage: React.FC = () => {
                         id={`project-content-${projectId}`}
                         initial={{ height: 0, opacity: 0 }}
                         key={`project-content-${projectId}`}
-                        transition={{ duration: 0.3, ease: "easeInOut" }}
                       >
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 p-6">
                           {projectCredentials.map((cred) => (

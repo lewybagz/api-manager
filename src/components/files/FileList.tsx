@@ -176,7 +176,7 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
 
   if (filesForCurrentProject.length === 0) {
     return (
-      <div className="text-center p-12 bg-gradient-to-br from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm rounded-2xl border border-gray-800/50">
+      <div className="mt-6 text-center p-12 bg-gradient-to-br from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm rounded-2xl border border-gray-800/50">
         <div className="w-20 h-20 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
           <FolderOpen className="h-10 w-10 text-gray-400" />
         </div>

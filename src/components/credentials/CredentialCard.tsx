@@ -14,6 +14,7 @@ import React from "react";
 import { type DecryptedCredential } from "../../stores/credentialStore";
 
 interface CredentialCardProps {
+  className?: string; // Optional, for custom styling
   clipboardTimeoutApiKey: boolean;
   clipboardTimeoutApiSecret: boolean;
   credential: DecryptedCredential;
@@ -34,6 +35,7 @@ interface CredentialCardProps {
 }
 
 const CredentialCard: React.FC<CredentialCardProps> = ({
+  className,
   clipboardTimeoutApiKey,
   clipboardTimeoutApiSecret,
   credential,
@@ -55,11 +57,16 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
   const hasSecret = credential.apiSecret && credential.apiSecret.length > 0;
 
   return (
-    <div className="relative bg-brand-dark-secondary/60 backdrop-blur-xl border border-gray-700/50 rounded-2xl transition-all duration-300 hover:shadow-brand-blue/20 hover:border-brand-blue/40 w-full group overflow-visible">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-2 gap-4">
+    <div
+      className={cn(
+        "relative bg-brand-dark-secondary/60 backdrop-blur-xl transition-all duration-300 hover:shadow-brand-blue/20 hover:border-brand-blue/40 w-full group overflow-visible",
+        className
+      )}
+    >
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-2 px-4 gap-4">
         {/* Service Info */}
         <div className="flex items-center gap-3 min-w-0 pr-4">
-          <div className="w-2 h-10 bg-gradient-to-b from-brand-blue to-brand-primary rounded-full"></div>
+          <div className="w-1 h-10 bg-gradient-to-b from-brand-blue to-slate-500 rounded-full -translate-x-2"></div>
           <div className="min-w-0 max-w-fit">
             <button
               aria-label="Copy service name to clipboard"
@@ -219,28 +226,6 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
           </div>
         </div>
       </div>
-      {/* Footer */}
-      {(credential.createdAt ?? credential.updatedAt) && (
-        <div className="border-t border-gray-700/30 text-[10px] text-gray-500 flex justify-end items-center gap-4 px-4 py-1.5">
-          {credential.createdAt && (
-            <span className="text-white/80">
-              Created:{" "}
-              {new Date(
-                credential.createdAt.seconds * 1000
-              ).toLocaleDateString()}
-            </span>
-          )}
-          {credential.updatedAt &&
-            credential.updatedAt.seconds !== credential.createdAt?.seconds && (
-              <span>
-                Updated:{" "}
-                {new Date(
-                  credential.updatedAt.seconds * 1000
-                ).toLocaleDateString()}
-              </span>
-            )}
-        </div>
-      )}
     </div>
   );
 };
