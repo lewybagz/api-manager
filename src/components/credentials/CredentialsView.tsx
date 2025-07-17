@@ -32,10 +32,11 @@ const CredentialsView: React.FC<CredentialsViewProps> = ({
   revealedStates,
 }) => {
   const sortedCredentials = [...credentials].sort(
-    (a, b) => (b.apiSecret ? 1 : 0) - (a.apiSecret ? 1 : 0)
+    (a, b) =>
+      (b.apiSecret && b.apiSecret.length > 0 ? 1 : 0) -
+      (a.apiSecret && a.apiSecret.length > 0 ? 1 : 0)
   );
 
-  const anyCredentialHasNote = sortedCredentials.some((c) => c.notes);
   const showEmptyState = !isLoading && !error && sortedCredentials.length === 0;
   const showCredentials = sortedCredentials.length > 0;
 
@@ -101,23 +102,20 @@ const CredentialsView: React.FC<CredentialsViewProps> = ({
 
       {showCredentials && (
         <div className="space-y-8 overflow-visible">
-          <div className="flex flex-col gap-2 md:gap-0 bg-transparent border-none rounded-lg overflow-visible rounded-lg md:rounded-none">
-            {sortedCredentials.map((cred, idx) => {
+          <div className="flex flex-col gap-0 bg-transparent border-none rounded-lg overflow-visible">
+            {credentials.map((cred, idx) => {
               const isFirst = idx === 0;
-              const isLast = idx === sortedCredentials.length - 1;
-              let rounded = "rounded-2xl ";
+              const isLast = idx === credentials.length - 1;
+              let rounded = "";
               if (isFirst && isLast) {
-                rounded += "md:rounded-t-2xl md:rounded-b-2xl";
+                rounded = "rounded-t-2xl rounded-b-2xl";
               } else if (isFirst) {
-                rounded += "md:rounded-t-2xl md:rounded-b-none pt-2";
+                rounded = "rounded-t-2xl";
               } else if (isLast) {
-                rounded += "md:rounded-b-2xl md:rounded-t-none pb-2";
-              } else {
-                rounded += "md:rounded-none";
+                rounded = "rounded-b-2xl";
               }
               return (
                 <CredentialCard
-                  anyCredentialHasNote={anyCredentialHasNote}
                   className={rounded}
                   clipboardTimeoutApiKey={
                     !!clipboardTimeout[`${cred.id}-apikey`]
@@ -126,6 +124,10 @@ const CredentialsView: React.FC<CredentialsViewProps> = ({
                     !!clipboardTimeout[`${cred.id}-apisecret`]
                   }
                   credential={cred}
+                  credentialHasNote={!!cred.notes}
+                  credentialHasSecret={
+                    !!cred.apiSecret && cred.apiSecret.length > 0
+                  }
                   isApiKeyCopied={copiedStates[`${cred.id}-apikey`] ?? false}
                   isApiKeyRevealed={
                     revealedStates[`${cred.id}-apikey`] ?? false

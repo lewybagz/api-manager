@@ -1,5 +1,6 @@
 import { cn } from "@/utils/cn";
 import {
+  BookLock,
   CheckCircle,
   Copy,
   Eye,
@@ -14,11 +15,13 @@ import React from "react";
 import { type DecryptedCredential } from "../../stores/credentialStore";
 
 interface CredentialCardProps {
-  anyCredentialHasNote: boolean;
+  anyCredentialHasNote?: boolean;
   className?: string; // Optional, for custom styling
   clipboardTimeoutApiKey: boolean;
   clipboardTimeoutApiSecret: boolean;
   credential: DecryptedCredential;
+  credentialHasNote?: boolean;
+  credentialHasSecret?: boolean;
   isApiKeyCopied: boolean;
   isApiKeyRevealed: boolean;
   isApiSecretCopied: boolean;
@@ -36,7 +39,6 @@ interface CredentialCardProps {
 }
 
 const CredentialCard: React.FC<CredentialCardProps> = ({
-  anyCredentialHasNote,
   className,
   clipboardTimeoutApiKey,
   clipboardTimeoutApiSecret,
@@ -65,52 +67,54 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
         className
       )}
     >
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-2 px-4 gap-4">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-2 px-4 gap-0">
         {/* Service Info */}
         <div className="flex items-center gap-3 min-w-0 pr-4">
-          <div className="w-1 h-10 bg-gradient-to-b from-brand-blue to-slate-500 rounded-full -translate-x-2"></div>
-          <div
-            className={cn(
-              "min-w-0 flex-shrink-0",
-              anyCredentialHasNote && !credential.notes
-                ? "max-w-[188px]"
-                : "max-w-[160px]"
-            )}
-          >
+          <div className="w-1 h-10 bg-gradient-to-b from-transparent from-20% via-brand-blue via-50% to-transparent to-80% rounded-full -translate-x-2"></div>
+          <div className={cn("min-w-0 flex-shrink-0 max-w-[250px]")}>
             <button
               aria-label="Copy service name to clipboard"
               className="group/btn flex items-center w-full text-left bg-transparent border-none p-0 m-0 focus:outline-none"
               onClick={onCopyServiceName}
               title="Copy service name"
             >
-              <h3 className="text-md  text-brand-light truncate transition-colors duration-200 group-hover/btn:text-brand-blue">
-                {credential.serviceName}
+              <h3 className="text-md text-brand-light transition-colors duration-200 group-hover/btn:text-brand-blue max-w-[150px]">
+                {credential.serviceName.length > 12
+                  ? credential.serviceName.slice(0, 9) + "…"
+                  : credential.serviceName}
               </h3>
-              <span className="ml-2">
+              <span className="ml-2 flex items-center gap-2">
                 {isServiceNameCopied ? (
                   <CheckCircle className="h-4 w-4 text-green-400" />
                 ) : (
                   <Copy className="h-4 w-4 text-gray-500 transition-colors duration-200 group-hover/btn:text-brand-blue" />
                 )}
+                {credential.notes && (
+                  <div className="relative flex items-center group/notes">
+                    <Info className="h-4 w-4 text-gray-500 cursor-pointer" />
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-3 bg-gray-900 border border-gray-700 rounded-lg text-xs text-gray-300 whitespace-pre-wrap break-words shadow-2xl opacity-0 group-hover/notes:opacity-100 transition-opacity duration-300 pointer-events-none z-[9999]">
+                      {credential.notes}
+                    </div>
+                  </div>
+                )}
+                {credential.apiSecret && (
+                  <span className="text-brand-blue">
+                    <BookLock className="h-3.5 w-3.5" />
+                  </span>
+                )}
               </span>
             </button>
-            <p className="text-xs text-gray-400">Project Credential</p>
+            <p className="relative text-xs text-gray-400 flex items-center gap-2">
+              Project Credential
+            </p>
           </div>
-          {credential.notes && (
-            <div className="relative flex items-center group/notes -translate-y-2">
-              <Info className="h-4 w-4 text-gray-500 cursor-pointer" />
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-3 bg-gray-900 border border-gray-700 rounded-lg text-xs text-gray-300 whitespace-pre-wrap break-words shadow-2xl opacity-0 group-hover/notes:opacity-100 transition-opacity duration-300 pointer-events-none z-[9999]">
-                {credential.notes}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Credentials */}
-        <div className="flex-1 flex items-center justify-end gap-2">
+        <div className="flex-1 flex items-center justify-center gap-2 max-w-[80%]">
           <div
             className={cn(
-              "flex-1 flex flex-col md:flex-row items-stretch md:items-center gap-2 font-mono text-xs w-full md:w-auto "
+              "flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2 font-mono text-xs w-full"
             )}
           >
             {/* API Key */}
@@ -203,7 +207,7 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
             )}
           </div>
           {/* Actions */}
-          <div className="flex items-center gap-1.5 self-start md:self-center">
+          <div className="flex flex-col md:flex-row items-center gap-1.5 self-start md:self-center">
             {credential.apiKey === "PLACEHOLDER-RESET-VALUE" &&
             onUpdateNeeded ? (
               <button
