@@ -69,18 +69,18 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
     >
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-2 px-4 gap-0">
         {/* Service Info */}
-        <div className="flex items-center gap-3 min-w-0 pr-4">
+        <div className="flex items-center gap-3 min-w-0">
           <div className="w-1 h-10 bg-gradient-to-b from-transparent from-20% via-brand-blue via-50% to-transparent to-80% rounded-full -translate-x-2"></div>
-          <div className={cn("min-w-0 flex-shrink-0 max-w-[250px]")}>
+          <div className={cn("min-w-0 flex-shrink-0 max-w-[350px]")}>
             <button
               aria-label="Copy service name to clipboard"
               className="group/btn flex items-center w-full text-left bg-transparent border-none p-0 m-0 focus:outline-none"
               onClick={onCopyServiceName}
               title="Copy service name"
             >
-              <h3 className="text-md text-brand-light transition-colors duration-200 group-hover/btn:text-brand-blue max-w-[150px]">
+              <h3 className="text-md text-brand-light transition-colors duration-200 group-hover/btn:text-brand-blue max-w-[300px]">
                 {credential.serviceName.length > 12
-                  ? credential.serviceName.slice(0, 9) + "…"
+                  ? credential.serviceName.slice(0, 16) + "…"
                   : credential.serviceName}
               </h3>
               <span className="ml-2 flex items-center gap-2">
