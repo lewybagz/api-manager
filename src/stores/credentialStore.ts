@@ -57,6 +57,35 @@ interface StoredCredentialData {
   userId: string;
 }
 
+// Legacy-aware stored data and helpers
+type StoredCredentialDataWithLegacy = StoredCredentialData & {
+  encryptionMeta?: { algo?: string; encryptionStrategy?: string; iv?: string };
+  encryptionStrategy?: string;
+  public?: boolean;
+  teamId?: string;
+};
+
+const hasLegacyHints = (obj: unknown): obj is StoredCredentialDataWithLegacy => {
+  if (!obj || typeof obj !== 'object') return false;
+  const o = obj as Record<string, unknown>;
+  return (
+    'encryptionStrategy' in o ||
+    'encryptionMeta' in o ||
+    'teamId' in o ||
+    'public' in o
+  );
+};
+
+// Detects old credentials that were encrypted with the removed "team" strategy
+const isLegacyTeamEncryptedCredential = (rawData: unknown): boolean => {
+  if (!hasLegacyHints(rawData)) return false;
+  const strategy = rawData.encryptionStrategy;
+  const metaStrategy = rawData.encryptionMeta?.encryptionStrategy;
+  const hasTeamId = typeof rawData.teamId === 'string' && rawData.teamId.length > 0;
+  const isPublic = rawData.public === true;
+  return strategy === 'team' || metaStrategy === 'team' || hasTeamId || isPublic;
+};
+
 // Updated Helper function for encryption
 const encryptData = (text: string, key: string, ivString?: string): null | { encryptedText: string; iv: string } => {
   if (!text || !key) {
@@ -280,11 +309,27 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
         
         credentialsSnapshot.docs.forEach(docSnap => {
           try {
-            const data = docSnap.data() as StoredCredentialData;
+            const raw = docSnap.data() as StoredCredentialDataWithLegacy;
+            const data: StoredCredentialDataWithLegacy = raw;
             const apiKey = decryptData(data.encryptedApiKey, encryptionKey, data.iv);
             
-            // Skip this credential if we couldn't decrypt the API key
+            // Fallback for legacy team-encrypted credentials: present as placeholder requiring update
             if (apiKey === null) {
+              if (isLegacyTeamEncryptedCredential(raw)) {
+                console.warn(`Legacy team-encrypted credential detected (ID: ${docSnap.id}). Presenting placeholder that requires update.`);
+                fetchedCredentials.push({
+                  apiKey: 'PLACEHOLDER-RESET-VALUE',
+                  apiSecret: undefined,
+                  createdAt: data.createdAt as Timestamp,
+                  id: docSnap.id,
+                  notes: undefined,
+                  projectId: data.projectId,
+                  serviceName: data.serviceName,
+                  updatedAt: data.updatedAt as Timestamp,
+                  userId: data.userId,
+                });
+                return;
+              }
               decryptionErrors++;
               console.error(`Failed to decrypt API key for credential ID: ${docSnap.id}. Skipping.`);
               return;
@@ -350,12 +395,28 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
       let decryptionErrors = 0;
       
       querySnapshot.docs.forEach(docSnap => {
-        const data = docSnap.data() as StoredCredentialData;
+        const raw = docSnap.data() as StoredCredentialDataWithLegacy;
+        const data: StoredCredentialDataWithLegacy = raw;
         try {
           const apiKey = decryptData(data.encryptedApiKey, encryptionKey, data.iv);
           
           // Skip this credential if we couldn't decrypt the API key
           if (apiKey === null) {
+            if (isLegacyTeamEncryptedCredential(raw)) {
+              console.warn(`Legacy team-encrypted credential detected (ID: ${docSnap.id}). Presenting placeholder that requires update.`);
+              fetchedCredentials.push({
+                apiKey: 'PLACEHOLDER-RESET-VALUE',
+                apiSecret: undefined,
+                createdAt: data.createdAt as Timestamp,
+                id: docSnap.id,
+                notes: undefined,
+                projectId: data.projectId,
+                serviceName: data.serviceName,
+                updatedAt: data.updatedAt as Timestamp,
+                userId: data.userId,
+              });
+              return;
+            }
             decryptionErrors++;
             console.error(`Failed to decrypt API key for credential ID: ${docSnap.id}. Skipping.`);
             return;

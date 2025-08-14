@@ -385,7 +385,7 @@ const LoginPage: React.FC = () => {
             src="/assets/logos/logo-192x192.png"
           />
           <h1 className="flex flex-col items-center justify-center text-3xl sm:text-4xl text-white mb-2 tracking-tight">
-            <span className="flex flex-col items-center justify-center bg-gradient-to-r from-brand-light via-brand-blue to-brand-primary bg-clip-text text-transparent">
+            <span className="flex flex-col items-center justify-center text-brand-light">
               Zeker
               <span className="text-brand-blue text-sm tracking-wide">
                 Powered by Tovuti
@@ -406,8 +406,7 @@ const LoginPage: React.FC = () => {
                   Account Temporarily Locked
                 </p>
                 <p className="text-red-300 text-xs">
-                  Try again in{" "}
-                  {String(Math.ceil(Number(remainingTime) / 60000))} minutes
+                  Try again in {Math.ceil(remainingTime / 60000)} minutes
                 </p>
               </div>
             </div>
@@ -419,7 +418,7 @@ const LoginPage: React.FC = () => {
               aria-current={!isRegister}
               className={`flex-1 py-3 rounded-lg text-base font-semibold transition-all duration-200 ${
                 !isRegister
-                  ? "bg-gradient-to-r from-brand-blue to-brand-primary text-white shadow-lg"
+                  ? "bg-brand-blue text-white shadow-lg"
                   : "text-brand-light-secondary hover:text-white hover:bg-gray-700/50"
               }`}
               onClick={() => {
@@ -433,7 +432,7 @@ const LoginPage: React.FC = () => {
               aria-current={isRegister}
               className={`flex-1 py-3 rounded-lg text-base font-semibold transition-all duration-200 ${
                 isRegister
-                  ? "bg-gradient-to-r from-brand-blue to-brand-primary text-white shadow-lg"
+                  ? "bg-brand-blue text-white shadow-lg"
                   : "text-brand-light-secondary hover:text-white hover:bg-gray-700/50"
               }`}
               onClick={() => {
@@ -552,7 +551,7 @@ const LoginPage: React.FC = () => {
               )}
 
               <button
-                className="w-full bg-gradient-to-r from-brand-blue to-brand-primary hover:from-brand-blue-hover hover:to-brand-primary-dark text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none focus:outline-none focus:ring-2 focus:ring-brand-blue/50 text-base"
+                className="w-full bg-brand-blue hover:from-brand-blue-hover hover:to-brand-primary-dark text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none focus:outline-none focus:ring-2 focus:ring-brand-blue/50 text-base"
                 disabled={isSubmitting}
                 type="submit"
               >

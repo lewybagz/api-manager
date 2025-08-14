@@ -78,11 +78,16 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
               onClick={onCopyServiceName}
               title="Copy service name"
             >
-              <h3 className="text-md text-brand-light transition-colors duration-200 group-hover/btn:text-brand-blue max-w-[300px]">
-                {credential.serviceName.length > 12
-                  ? credential.serviceName.slice(0, 16) + "…"
-                  : credential.serviceName}
-              </h3>
+              <div className="relative inline-flex group/service max-w-[300px]">
+                <h3 className="text-md text-brand-light transition-colors duration-200 group-hover/btn:text-brand-blue max-w-[300px]">
+                  {credential.serviceName.length > 12
+                    ? credential.serviceName.slice(0, 16) + "…"
+                    : credential.serviceName}
+                </h3>
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-3 bg-gray-900 border border-gray-700 rounded-lg text-xs text-gray-300 whitespace-pre-wrap break-words shadow-2xl opacity-0 group-hover/service:opacity-100 transition-opacity duration-300 pointer-events-none z-[9999]">
+                  copy {credential.serviceName} to clipboard
+                </div>
+              </div>
               <span className="ml-2 flex items-center gap-2">
                 {isServiceNameCopied ? (
                   <CheckCircle className="h-4 w-4 text-green-400" />

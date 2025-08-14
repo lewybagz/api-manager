@@ -154,11 +154,6 @@ const CredentialModal = ({
       );
       return "API Key must be at least 8 characters long";
     }
-    const hasValidFormat = /^[a-zA-Z0-9_\-.:]+$/.test(trimmedValue);
-    if (!hasValidFormat) {
-      console.warn("API Key validation failed: Invalid format");
-      return "API Key contains invalid characters";
-    }
 
     console.log("API Key validation: Passed");
     return true;
@@ -179,11 +174,6 @@ const CredentialModal = ({
         )} chars)`
       );
       return "API Secret must be at least 8 characters long";
-    }
-    const hasValidFormat = /^[a-zA-Z0-9_\-.:]+$/.test(trimmedValue);
-    if (!hasValidFormat) {
-      console.warn("API Secret validation failed: Invalid format");
-      return "API Secret contains invalid characters";
     }
 
     console.log("API Secret validation: Passed");
