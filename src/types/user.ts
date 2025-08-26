@@ -1,10 +1,22 @@
 import { Timestamp } from "firebase/firestore";
 
 export interface UserDocument {
+  billing?: {
+    cancelAtPeriodEnd?: boolean;
+    currentPeriodEnd?: Timestamp;
+    planId?: string;
+    priceId?: string;
+    status?: 'active' | 'canceled' | 'incomplete' | 'none' | 'past_due' | 'paused' | 'trialing' | 'unpaid';
+    stripeCustomerId?: string;
+    stripeSubscriptionId?: string;
+  };
   createdAt: Timestamp;
   displayName: null | string;
   email: string;
+  entitlements?: string[];
   roles: string[];
+  // Optional billing/trial fields managed by backend
+  trialEndsAt?: Timestamp;
   uid: string;
   updatedAt: Timestamp;
 }

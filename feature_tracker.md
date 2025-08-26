@@ -1,6 +1,6 @@
-# Zeker API Manager - UX Feature Enhancement Tracker
+# ZekerKey API Manager - UX Feature Enhancement Tracker
 
-This document tracks the progress of new UX features being implemented in the Zeker API Manager.
+This document tracks the progress of new UX features being implemented in the ZekerKey API Manager.
 
 ## Feature Prioritization Key
 

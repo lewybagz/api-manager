@@ -1,4 +1,3 @@
-import useAuthStore from "@/stores/authStore";
 import {
   AlertTriangle,
   ArrowRight,
@@ -16,8 +15,15 @@ import {
   Shield,
 } from "lucide-react";
 
+import useAuthStore from "@/stores/authStore";
+import useUserStore from "@/stores/userStore";
+import { userHasAccessOrBypass } from "@/utils/access";
+import { Link } from "react-router-dom";
+
 export default function DocumentationHomepage() {
   const user = useAuthStore((state) => state.user);
+  const userDoc = useUserStore((state) => state.userDoc);
+  const hasAccess = userHasAccessOrBypass(userDoc);
   const quickNavItems = [
     { icon: BookOpen, id: "overview", label: "Overview" },
     { icon: Shield, id: "security", label: "Security Features" },
@@ -99,7 +105,7 @@ export default function DocumentationHomepage() {
 
   return (
     <div className="min-h-screen bg-transparent text-slate-50">
-      <header className="border-b bg-slate-50 sticky top-0 z-10">
+      <header className="border-b bg-transparent sticky top-0 z-10">
         <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -111,27 +117,27 @@ export default function DocumentationHomepage() {
                 />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900">Zeker</h1>
+                <h1 className="text-2xl font-bold text-slate-300">Zeker</h1>
                 <p className="text-sm text-slate-600">Powered by Tovuti</p>
               </div>
             </div>
             {!user && (
-              <a
+              <Link
                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                href="/login"
+                to="/pro"
               >
                 <LogIn className="h-4 w-4 mr-2" />
                 Get Started
-              </a>
+              </Link>
             )}
             {user && (
-              <a
+              <Link
                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                href="/dashboard"
+                to={hasAccess ? "/dashboard" : "/pro"}
               >
                 <LogIn className="h-4 w-4 mr-2" />
                 Dashboard
-              </a>
+              </Link>
             )}
           </div>
         </div>
@@ -192,6 +198,13 @@ export default function DocumentationHomepage() {
                       <KeyRound className="h-4 w-4 mr-2" />
                       Add Credential
                     </a>
+                    <a
+                      className="w-full flex items-center justify-start px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors bg-transparent"
+                      href="/docs"
+                    >
+                      <BookOpen className="h-4 w-4 mr-2" />
+                      Docs
+                    </a>
                   </div>
                 </div>
               )}
@@ -207,8 +220,8 @@ export default function DocumentationHomepage() {
                   Enterprise-Grade Credential Management
                 </h1>
                 <p className="text-xl bg-transparent text-slate-50 mb-8 px-2 py-1 rounded">
-                  Zeker provides enterprise-grade security for your API keys and
-                  credentials. Your secrets are encrypted on your device and
+                  ZekerKey provides enterprise-grade security for your API keys
+                  and credentials. Your secrets are encrypted on your device and
                   never leave unencrypted.
                 </p>
               </div>
@@ -333,7 +346,7 @@ export default function DocumentationHomepage() {
                           Create Your Account
                         </h3>
                         <p className="text-slate-200 mb-4">
-                          Sign up for a Zeker account and set up your master
+                          Sign up for a ZekerKey account and set up your master
                           password. This password will be used to encrypt all
                           your data.
                         </p>

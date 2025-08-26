@@ -7,6 +7,20 @@ service cloud.firestore {
       return value is string && value.size() >= minLength && value.size() <= maxLength;
     }
 
+    // Access helper based on subscription or active trial
+    function hasSubscriptionAccess(userId) {
+      let userDoc = get(/databases/$(database)/documents/users/$(userId));
+      // Server-side bypass for specific admin emails (optional). To add more, update this list and deploy rules.
+      let adminBypass = userDoc.data.email in [
+        'lleep1997@gmail.com'
+      ];
+      let inTrial = userDoc.data.trialEndsAt != null && userDoc.data.trialEndsAt > request.time;
+      let billing = userDoc.data.billing;
+      let activeStatus = billing != null && (billing.status == 'active' || billing.status == 'trialing');
+      let periodOk = billing == null || billing.cancelAtPeriodEnd != true || (billing.currentPeriodEnd != null && billing.currentPeriodEnd > request.time);
+      return adminBypass || inTrial || (activeStatus && periodOk);
+    }
+
     // Global Helper function to validate fileName (allows most common characters, incl. spaces, dots, dashes, underscores)
     function isValidFileName(name) {
       // Allows \\w, \\s, and specific punctuation. Max 255 chars.
@@ -47,13 +61,16 @@ service cloud.firestore {
                      request.auth.uid == userId;
 
       // UPDATE: User can update their own document
+      // Prevent client from changing server-managed fields: billing, roles, trialEndsAt
       allow update: if request.auth != null &&
                        request.auth.uid == userId &&
                        request.resource.data.uid == resource.data.uid && // uid cannot change
                        request.resource.data.createdAt == resource.data.createdAt && // createdAt cannot change
                        isString(request.resource.data.email, 1, 255) &&
                        (request.resource.data.displayName == null || isString(request.resource.data.displayName, 1, 100)) &&
-                       request.resource.data.roles is list &&
+                       request.resource.data.roles == resource.data.roles &&
+                       request.resource.data.trialEndsAt == resource.data.trialEndsAt &&
+                       request.resource.data.billing == resource.data.billing &&
                        request.resource.data.updatedAt == request.time;
 
       // DELETE: User can delete their own document
@@ -65,38 +82,45 @@ service cloud.firestore {
         // CREATE: User can create a project in their user document
         allow create: if request.auth != null &&
                          request.auth.uid == userId &&
+                         hasSubscriptionAccess(userId) &&
                          isString(request.resource.data.projectName, 1, 100) &&
                          request.resource.data.createdAt == request.time &&
                          request.resource.data.updatedAt == request.time;
 
         // READ: User can read their projects
         allow read: if request.auth != null &&
-                       request.auth.uid == userId;
+                       request.auth.uid == userId &&
+                       hasSubscriptionAccess(userId);
 
         // UPDATE: User can update their projects
         allow update: if request.auth != null &&
                          request.auth.uid == userId &&
+                         hasSubscriptionAccess(userId) &&
                          request.resource.data.createdAt == resource.data.createdAt &&
                          (request.resource.data.projectName != resource.data.projectName ? isString(request.resource.data.projectName, 1, 100) : true) &&
                          request.resource.data.updatedAt == request.time;
 
         // DELETE: User can delete their projects
         allow delete: if request.auth != null &&
-                         request.auth.uid == userId;
+                         request.auth.uid == userId &&
+                         hasSubscriptionAccess(userId);
 
         // Nested Credentials Collection
         match /credentials/{credentialId} {
           // CREATE: User can create credentials in their projects
           allow create: if request.auth != null &&
-                           request.auth.uid == userId;
+                           request.auth.uid == userId &&
+                           hasSubscriptionAccess(userId);
 
           // READ: User can read their credentials
           allow read: if request.auth != null &&
-                         request.auth.uid == userId;
+                         request.auth.uid == userId &&
+                         hasSubscriptionAccess(userId);
 
           // UPDATE: User can update their credentials
           allow update: if request.auth != null &&
                            request.auth.uid == userId &&
+                           hasSubscriptionAccess(userId) &&
                            request.resource.data.createdAt == resource.data.createdAt &&
                            (request.resource.data.serviceName != resource.data.serviceName ? isString(request.resource.data.serviceName, 1, 100) : true) &&
                            (request.resource.data.encryptedApiKey != resource.data.encryptedApiKey ? isString(request.resource.data.encryptedApiKey, 1, 2048) : true) &&
@@ -107,12 +131,13 @@ service cloud.firestore {
 
           // DELETE: User can delete their credentials
           allow delete: if request.auth != null &&
-                           request.auth.uid == userId;
+                           request.auth.uid == userId &&
+                           hasSubscriptionAccess(userId);
         }
 
         // Rule for listing files in the 'files' collection
         match /files {
-          allow list: if request.auth != null && request.auth.uid == userId;
+          allow list: if request.auth != null && request.auth.uid == userId && hasSubscriptionAccess(userId);
         }
 
         // Nested Files Collection
@@ -121,6 +146,7 @@ service cloud.firestore {
           // CREATE: User can create file metadata in their projects
           allow create: if request.auth != null &&
                            request.auth.uid == userId &&
+                           hasSubscriptionAccess(userId) &&
                            isValidContentTypeAndNotVideo(request.resource.data.contentType) &&
                            request.resource.data.size is number && 
                            request.resource.data.size >= 0 && 
@@ -130,7 +156,8 @@ service cloud.firestore {
 
           // READ: User can read their file metadata
           allow read: if request.auth != null &&
-                         request.auth.uid == userId;
+                         request.auth.uid == userId &&
+                         hasSubscriptionAccess(userId);
 
           // UPDATE: Disallow direct updates to file metadata.
           // If a file's content or fundamental metadata (like name for storage path purposes) changes,
@@ -140,7 +167,8 @@ service cloud.firestore {
 
           // DELETE: User can delete their file metadata (should accompany Storage file deletion)
           allow delete: if request.auth != null &&
-                           request.auth.uid == userId;
+                           request.auth.uid == userId &&
+                           hasSubscriptionAccess(userId);
         }
       }
     }

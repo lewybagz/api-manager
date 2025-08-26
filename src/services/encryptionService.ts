@@ -38,11 +38,11 @@ export async function decryptWithKey(
  */
 export async function encryptWithKey(
   keyHex: string,
-  file: File
+  dataBlob: Blob
 ): Promise<{ encryptedBlob: Blob; iv: string }> {
   const key = await importKey(keyHex);
   const iv = crypto.getRandomValues(new Uint8Array(12)); // 12 bytes for AES-GCM is recommended.
-  const fileBuffer = await file.arrayBuffer();
+  const dataBuffer = await dataBlob.arrayBuffer();
 
   const encryptedBuffer = await crypto.subtle.encrypt(
     {
@@ -50,7 +50,7 @@ export async function encryptWithKey(
       name: "AES-GCM",
     },
     key,
-    fileBuffer
+    dataBuffer
   );
 
   const encryptedBlob = new Blob([encryptedBuffer]);

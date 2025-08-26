@@ -82,7 +82,7 @@ const Sidebar: React.FC = () => {
       >
         <div className="relative">
           <img
-            alt="Zeker Logo"
+            alt="ZekerKey Logo"
             className="h-12 w-12 animate-pop-in translate-y-1 group-hover:scale-110 transition-transform duration-300"
             src="/assets/logos/logo-sidebar-40x40.png"
           />
@@ -366,15 +366,15 @@ const Sidebar: React.FC = () => {
             <div className="grid grid-cols-3 gap-1 mt-3 pt-3 border-t border-gray-700/50">
               <Link
                 className="text-center text-xs py-2 px-2 rounded-lg bg-gray-700/60 text-gray-300 hover:from-brand-blue/20 hover:to-brand-primary/20 hover:text-brand-blue transition-all duration-300 backdrop-blur-sm font-medium"
-                to="/profile"
+                to={`/profile/${user.uid}`}
               >
                 Profile
               </Link>
               <Link
                 className="text-center text-xs py-2 px-2 rounded-lg bg-gray-700/60 text-gray-300 hover:from-brand-blue/20 hover:to-brand-primary/20 hover:text-brand-blue transition-all duration-300 backdrop-blur-sm font-medium"
-                to="/settings"
+                to={`/pro/billing/${user.uid}`}
               >
-                Settings
+                My Plan
               </Link>
               <button
                 className="text-center text-xs py-2 px-2 rounded-lg bg-gray-700/60 text-gray-300 hover:from-red-900/50 hover:to-red-800/40 hover:text-red-300 transition-all duration-300 backdrop-blur-sm font-medium"

@@ -36,10 +36,13 @@ const useUserStore = create<UserStore>((set) => ({
       } else {
         // Create user document if it doesn't exist
         const newUserDoc: UserDocument = {
+          billing: { status: 'trialing' },
           createdAt: Timestamp.now(),
           displayName: currentUser.displayName,
           email: currentUser.email ?? "",
           roles: ["user"],
+          // App-managed 7-day trial
+          trialEndsAt: Timestamp.fromMillis(Timestamp.now().toMillis() + 7 * 24 * 60 * 60 * 1000),
           uid,
           updatedAt: Timestamp.now(),
         };

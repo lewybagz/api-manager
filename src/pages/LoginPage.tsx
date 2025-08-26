@@ -380,7 +380,7 @@ const LoginPage: React.FC = () => {
       <div className="w-full max-w-md bg-gradient-to-br from-brand-dark-secondary/90 to-brand-dark-secondary/70 backdrop-blur-xl border border-brand-blue/30 shadow-2xl rounded-3xl p-4 sm:p-8 pt-4 animate-fade-in mx-2 sm:mx-0">
         <div className="flex flex-col items-center">
           <img
-            alt="Zeker Logo"
+            alt="ZekerKey Logo"
             className="h-20 w-20 sm:h-32 sm:w-32 animate-pop-in mb-2"
             src="/assets/logos/logo-192x192.png"
           />

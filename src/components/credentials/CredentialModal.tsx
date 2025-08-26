@@ -10,10 +10,10 @@ import useCredentialStore, {
 } from "../../stores/credentialStore";
 
 interface CredentialFormData {
-  apiKey: string;
-  apiSecret: string;
-  notes: string;
-  serviceName: string;
+  cred_key: string;
+  cred_notes: string;
+  cred_secret: string;
+  cred_service: string;
 }
 
 interface CredentialModalProps {
@@ -41,10 +41,10 @@ const CredentialModal = ({
     setValue,
   } = useForm<CredentialFormData>({
     defaultValues: {
-      apiKey: "",
-      apiSecret: "",
-      notes: "",
-      serviceName: "",
+      cred_key: "",
+      cred_notes: "",
+      cred_secret: "",
+      cred_service: "",
     },
     mode: "onChange",
   });
@@ -101,16 +101,16 @@ const CredentialModal = ({
 
   useEffect(() => {
     if (editingCredential) {
-      setValue("serviceName", editingCredential.serviceName);
-      setValue("apiKey", editingCredential.apiKey);
-      setValue("apiSecret", editingCredential.apiSecret ?? "");
-      setValue("notes", editingCredential.notes ?? "");
+      setValue("cred_service", editingCredential.serviceName);
+      setValue("cred_key", editingCredential.apiKey);
+      setValue("cred_secret", editingCredential.apiSecret ?? "");
+      setValue("cred_notes", editingCredential.notes ?? "");
     } else {
       reset({
-        apiKey: "",
-        apiSecret: "",
-        notes: "",
-        serviceName: "",
+        cred_key: "",
+        cred_notes: "",
+        cred_secret: "",
+        cred_service: "",
       });
     }
   }, [editingCredential, setValue, reset]);
@@ -184,22 +184,23 @@ const CredentialModal = ({
     console.log("=== FORM SUBMISSION STARTED ===");
     console.log(`Submitting credential for project: ${projectId}`);
     console.log(
-      `Form data: Service name: ${data.serviceName}, API Key length: ${String(
-        data.apiKey.length
+      `Form data: Service name: ${data.cred_service}, API Key length: ${String(
+        data.cred_key.length
       )}, API Secret provided: ${String(
-        Boolean(data.apiSecret.trim())
-      )}, Notes provided: ${String(Boolean(data.notes.trim()))}`
+        Boolean(data.cred_secret.trim())
+      )}, Notes provided: ${String(Boolean(data.cred_notes.trim()))}`
     );
 
     setIsSubmitting(true);
     try {
       console.log("Preparing payload");
       const basePayload = {
-        apiKey: data.apiKey.trim(),
+        apiKey: data.cred_key.trim(),
         apiSecret:
-          data.apiSecret.trim() === "" ? undefined : data.apiSecret.trim(),
-        notes: data.notes.trim() === "" ? undefined : data.notes.trim(),
-        serviceName: data.serviceName.trim(),
+          data.cred_secret.trim() === "" ? undefined : data.cred_secret.trim(),
+        notes:
+          data.cred_notes.trim() === "" ? undefined : data.cred_notes.trim(),
+        serviceName: data.cred_service.trim(),
       };
 
       console.log(
@@ -286,24 +287,62 @@ const CredentialModal = ({
               console.log("Form submission initiated");
               return void handleSubmit(onSubmit)(e);
             }}
+            role="presentation"
           >
+            {/* Offscreen honeypot fields to pacify password managers */}
+            <div
+              aria-hidden="true"
+              style={{
+                height: 0,
+                left: -99999,
+                overflow: "hidden",
+                position: "absolute",
+                width: 0,
+              }}
+            >
+              <input
+                autoComplete="username"
+                name="username"
+                readOnly
+                tabIndex={-1}
+                type="text"
+                value=""
+              />
+              <input
+                autoComplete="new-password"
+                name="password"
+                readOnly
+                tabIndex={-1}
+                type="password"
+                value=""
+              />
+            </div>
+
             {/* Enhanced Service Name Field */}
             <div className="mb-6">
               <label
                 className="flex items-center space-x-2 mb-3 text-sm font-semibold text-brand-light"
-                htmlFor="serviceName"
+                htmlFor="cred_service"
               >
                 <div className="w-4 h-4 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full"></div>
                 <span>Service Name</span>
               </label>
               <input
+                aria-autocomplete="none"
                 aria-label="Service Name"
+                autoCapitalize="off"
                 autoComplete="off"
+                autoCorrect="off"
                 className="w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200"
-                id="serviceName"
+                data-1p-ignore
+                data-form-type="other"
+                data-lpignore="true"
+                id="cred_service"
+                inputMode="text"
                 placeholder="e.g., AWS, Stripe, OpenAI"
+                spellCheck={false}
                 type="text"
-                {...register("serviceName", {
+                {...register("cred_service", {
                   maxLength: {
                     message: "Service name must be less than 50 characters",
                     value: 50,
@@ -319,10 +358,10 @@ const CredentialModal = ({
                   required: "Service name is required",
                 })}
               />
-              {errors.serviceName && (
+              {errors.cred_service?.message && (
                 <p className="mt-2 text-sm text-red-400 flex items-center space-x-2">
                   <div className="w-1 h-1 bg-red-400 rounded-full"></div>
-                  <span>{errors.serviceName.message}</span>
+                  <span>{errors.cred_service.message}</span>
                 </p>
               )}
             </div>
@@ -331,20 +370,28 @@ const CredentialModal = ({
             <div className="mb-6">
               <label
                 className="flex items-center space-x-2 mb-3 text-sm font-semibold text-brand-light"
-                htmlFor="apiKey"
+                htmlFor="cred_key"
               >
                 <Key className="w-4 h-4 text-brand-blue" />
                 <span>API Key</span>
               </label>
               <div className="relative">
                 <input
+                  aria-autocomplete="none"
                   aria-label="API Key"
-                  autoComplete="off"
+                  autoCapitalize="off"
+                  autoComplete="new-password"
+                  autoCorrect="off"
                   className="w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm p-3 pr-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200"
-                  id="apiKey"
+                  data-1p-ignore
+                  data-form-type="other"
+                  data-lpignore="true"
+                  id="cred_key"
+                  inputMode="text"
                   placeholder="Enter API Key"
+                  spellCheck={false}
                   type={showPassword ? "text" : "password"}
-                  {...register("apiKey", {
+                  {...register("cred_key", {
                     onBlur: clearSensitiveData,
                     onChange: (e) => {
                       console.log(
@@ -374,10 +421,10 @@ const CredentialModal = ({
                   )}
                 </button>
               </div>
-              {errors.apiKey && (
+              {errors.cred_key?.message && (
                 <p className="mt-2 text-sm text-red-400 flex items-center space-x-2">
                   <div className="w-1 h-1 bg-red-400 rounded-full"></div>
-                  <span>{errors.apiKey.message}</span>
+                  <span>{errors.cred_key.message}</span>
                 </p>
               )}
             </div>
@@ -386,7 +433,7 @@ const CredentialModal = ({
             <div className="mb-6">
               <label
                 className="flex items-center space-x-2 mb-3 text-sm font-semibold text-brand-light"
-                htmlFor="apiSecret"
+                htmlFor="cred_secret"
               >
                 <Lock className="w-4 h-4 text-purple-400" />
                 <span>API Secret</span>
@@ -396,13 +443,21 @@ const CredentialModal = ({
               </label>
               <div className="relative">
                 <input
+                  aria-autocomplete="none"
                   aria-label="API Secret"
+                  autoCapitalize="off"
                   autoComplete="new-password"
+                  autoCorrect="off"
                   className="w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm p-3 pr-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200"
-                  id="apiSecret"
+                  data-1p-ignore
+                  data-form-type="other"
+                  data-lpignore="true"
+                  id="cred_secret"
+                  inputMode="text"
                   placeholder="Enter API Secret"
+                  spellCheck={false}
                   type={showSecret ? "text" : "password"}
-                  {...register("apiSecret", {
+                  {...register("cred_secret", {
                     onBlur: clearSensitiveData,
                     onChange: (e) => {
                       console.log(
@@ -431,10 +486,10 @@ const CredentialModal = ({
                   )}
                 </button>
               </div>
-              {errors.apiSecret && (
+              {errors.cred_secret?.message && (
                 <p className="mt-2 text-sm text-red-400 flex items-center space-x-2">
                   <div className="w-1 h-1 bg-red-400 rounded-full"></div>
-                  <span>{errors.apiSecret.message}</span>
+                  <span>{errors.cred_secret.message}</span>
                 </p>
               )}
             </div>
@@ -443,7 +498,7 @@ const CredentialModal = ({
             <div className="mb-8">
               <label
                 className="flex items-center space-x-2 mb-3 text-sm font-semibold text-brand-light"
-                htmlFor="notes"
+                htmlFor="cred_notes"
               >
                 <FileText className="w-4 h-4 text-green-400" />
                 <span>Notes</span>
@@ -452,13 +507,21 @@ const CredentialModal = ({
                 </span>
               </label>
               <textarea
+                aria-autocomplete="none"
                 aria-label="Notes"
+                autoCapitalize="off"
                 autoComplete="off"
+                autoCorrect="off"
                 className="w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200 resize-none"
-                id="notes"
+                data-1p-ignore
+                data-form-type="other"
+                data-lpignore="true"
+                id="cred_notes"
+                inputMode="text"
                 placeholder="Any additional notes, e.g., usage instructions, scopes"
                 rows={4}
-                {...register("notes", {
+                spellCheck={false}
+                {...register("cred_notes", {
                   maxLength: {
                     message: "Notes must be less than 500 characters",
                     value: 500,
@@ -474,10 +537,10 @@ const CredentialModal = ({
                   validate: validateNotesPotentialApiKey,
                 })}
               />
-              {errors.notes && (
+              {errors.cred_notes?.message && (
                 <p className="mt-2 text-sm text-red-400 flex items-center space-x-2">
                   <div className="w-1 h-1 bg-red-400 rounded-full"></div>
-                  <span>{errors.notes.message}</span>
+                  <span>{errors.cred_notes.message}</span>
                 </p>
               )}
             </div>

@@ -1,10 +1,12 @@
 /** @type {import('tailwindcss').Config} */
+import typography from "@tailwindcss/typography";
+
 export default {
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}", // Include all JS, TS, JSX, TSX files in src
   ],
-  plugins: [],
+  plugins: [typography],
   theme: {
     extend: {
       colors: {
@@ -15,6 +17,27 @@ export default {
         "brand-light": "#f7fafc", // Off-white (e.g., for text on dark backgrounds)
         "brand-light-secondary": "#e2e8f0", // Slightly darker off-white (e.g., secondary text)
       },
+      typography: ({ theme }) => ({
+        invert: {
+          css: {
+            "--tw-prose-body": theme("colors.brand-light"),
+            "--tw-prose-bold": theme("colors.brand-light"),
+            "--tw-prose-bullets": theme("colors.brand-light-secondary"),
+            "--tw-prose-captions": theme("colors.brand-light-secondary"),
+            "--tw-prose-code": theme("colors.brand-light"),
+            "--tw-prose-counters": theme("colors.brand-light-secondary"),
+            "--tw-prose-headings": theme("colors.brand-light"),
+            "--tw-prose-hr": theme("colors.brand-light-secondary"),
+            "--tw-prose-links": theme("colors.brand-blue"),
+            "--tw-prose-pre-bg": theme("colors.brand-dark-secondary"),
+            "--tw-prose-pre-code": theme("colors.brand-light"),
+            "--tw-prose-quote-borders": theme("colors.brand-light-secondary"),
+            "--tw-prose-quotes": theme("colors.brand-light"),
+            "--tw-prose-td-borders": theme("colors.brand-light-secondary"),
+            "--tw-prose-th-borders": theme("colors.brand-light-secondary"),
+          },
+        },
+      }),
     },
   },
 };

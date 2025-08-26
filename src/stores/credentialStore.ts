@@ -14,6 +14,7 @@ import {
 import { create } from 'zustand';
 
 import { auth, db } from '../firebase';
+import { decryptWithKey, encryptWithKey } from '../services/encryptionService';
 import useAuthStore from './authStore'; // To get encryptionKey
 import useProjectStore from './projectStore';
 
@@ -46,15 +47,18 @@ interface CredentialState {
 
 // Interface for the data stored in Firestore (encrypted parts)
 interface StoredCredentialData {
-  createdAt: ReturnType<typeof serverTimestamp> | Timestamp; // Allow serverTimestamp on create
-  encryptedApiKey: string;
-  encryptedApiSecret?: string;
-  encryptedNotes?: string;
-  iv: string; // Initialization Vector used for encryption
-  projectId: string;
-  serviceName: string;
-  updatedAt: ReturnType<typeof serverTimestamp> | Timestamp; // Allow serverTimestamp on create/update
-  userId: string;
+	createdAt: ReturnType<typeof serverTimestamp> | Timestamp; // Allow serverTimestamp on create
+	encryptedApiKey: string; // base64 ciphertext (GCM) or CryptoJS base64 (legacy CBC)
+	encryptedApiSecret?: string; // base64 ciphertext
+	encryptedNotes?: string; // base64 ciphertext
+	iv?: string; // Legacy single IV (hex for CBC, or base64 for early GCM refactor)
+	ivApiKey?: string; // GCM per-field IV (base64)
+	ivApiSecret?: string; // GCM per-field IV (base64)
+	ivNotes?: string; // GCM per-field IV (base64)
+	projectId: string;
+	serviceName: string;
+	updatedAt: ReturnType<typeof serverTimestamp> | Timestamp; // Allow serverTimestamp on create/update
+	userId: string;
 }
 
 // Legacy-aware stored data and helpers
@@ -86,76 +90,55 @@ const isLegacyTeamEncryptedCredential = (rawData: unknown): boolean => {
   return strategy === 'team' || metaStrategy === 'team' || hasTeamId || isPublic;
 };
 
-// Updated Helper function for encryption
-const encryptData = (text: string, key: string, ivString?: string): null | { encryptedText: string; iv: string } => {
-  if (!text || !key) {
-    console.error("Encryption error: Missing text or key");
-    return null;
-  }
-  try {
-    const iv = ivString ? CryptoJS.enc.Hex.parse(ivString) : CryptoJS.lib.WordArray.random(128 / 8);
-    const encrypted = CryptoJS.AES.encrypt(text, CryptoJS.enc.Hex.parse(key), {
-      iv: iv,
-      mode: CryptoJS.mode.CBC,
-      padding: CryptoJS.pad.Pkcs7
-    });
-    const ivHex = CryptoJS.enc.Hex.stringify(iv);
-    return {
-      encryptedText: encrypted.toString(),
-      iv: ivHex // Return the IV used (either provided or generated)
-    };
-  } catch (e) {
-    console.error("Encryption error:", e);
-    return null;
-  }
+// Helper function to convert string to Blob for encryption
+const stringToBlob = (text: string): Blob => {
+  return new Blob([new TextEncoder().encode(text)], { type: 'text/plain' });
 };
 
-// Helper function for decryption
-const decryptData = (encryptedText: string, key: string, ivString: string): null | string => {
-  if (!encryptedText || !key || !ivString) {
-    console.error("Decryption error: Missing encrypted text, key, or IV");
-    return null;
-  }
-  
-  try {
-    // First validate that we have proper hex-encoded IV
-    if (!/^[0-9a-fA-F]+$/.test(ivString)) {
-      console.warn("Invalid IV format, not a valid hex string");
-      return null;
-    }
-    
-    const iv = CryptoJS.enc.Hex.parse(ivString);
-    const decrypted = CryptoJS.AES.decrypt(encryptedText, CryptoJS.enc.Hex.parse(key), {
-      iv: iv,
-      mode: CryptoJS.mode.CBC,
-      padding: CryptoJS.pad.Pkcs7
-    });
-    
-    // Check if the result is not empty before trying to convert to string
-    if (decrypted.sigBytes <= 0) {
-      console.warn("Decryption resulted in empty data");
-      return null;
-    }
-    
-    // Safely try to convert to UTF-8 string
-    try {
-      const decryptedText = decrypted.toString(CryptoJS.enc.Utf8);
-      
-      // If we got an empty string but had input data, something went wrong
-      if (!decryptedText && encryptedText) {
-        console.warn("Decryption resulted in empty string. Key or IV might be incorrect or data corrupted.");
-        return null;
-      }
-    
-      return decryptedText;
-    } catch (utf8Error) {
-      console.error("Failed to decode decrypted data as UTF-8:", utf8Error);
-      return null;
-    }
-  } catch (e) {
-    console.error("Decryption error:", e);
-    return null; 
-  }
+// Helper function to convert Blob to string after decryption
+const blobToString = async (blob: Blob): Promise<string> => {
+  const arrayBuffer = await blob.arrayBuffer();
+  return new TextDecoder().decode(arrayBuffer);
+};
+
+// Helper function to convert Blob to base64 for storage
+const blobToBase64 = async (blob: Blob): Promise<string> => {
+	const buffer = await blob.arrayBuffer();
+	const bytes = new Uint8Array(buffer);
+	let binary = '';
+	for (const byte of bytes) binary += String.fromCharCode(byte);
+	return btoa(binary);
+};
+
+// Helper function to convert base64 to Blob for decryption
+const base64ToBlob = (base64: string): Blob => {
+	const binary = atob(base64);
+	const len = binary.length;
+	const bytes = new Uint8Array(len);
+	for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+	return new Blob([bytes], { type: 'application/octet-stream' });
+};
+
+// Legacy CBC decrypt using CryptoJS (hex IV, hex key, base64 ciphertext)
+const decryptCBC = (cipherBase64: string, keyHex: string, ivHex: string): null | string => {
+	try {
+		const iv = CryptoJS.enc.Hex.parse(ivHex);
+		const key = CryptoJS.enc.Hex.parse(keyHex);
+		const decrypted = CryptoJS.AES.decrypt(cipherBase64, key, {
+			iv,
+			mode: CryptoJS.mode.CBC,
+			padding: CryptoJS.pad.Pkcs7,
+		});
+		const text = decrypted.toString(CryptoJS.enc.Utf8);
+		return text || null;
+	} catch {
+		return null;
+	}
+};
+
+// Detect legacy IV (32-char hex) used for CBC
+const isLegacyHexIV = (iv: unknown): iv is string => {
+	return typeof iv === 'string' && /^[0-9a-fA-F]{32}$/.test(iv);
 };
 
 const useCredentialStore = create<CredentialState>((set, get) => ({
@@ -176,18 +159,12 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
     set({ error: null, isLoading: true });
     
     try {
-      const singleIV = CryptoJS.lib.WordArray.random(128 / 8).toString(CryptoJS.enc.Hex);
-      
-      const encryptedApiKeyResult = encryptData(data.apiKey, encryptionKey, singleIV);
-      if (!encryptedApiKeyResult?.encryptedText) {
-        console.error("Failed to encrypt API key");
-        throw new Error('Failed to encrypt API key.');
-      }
-
+      const apiKeyBlob = stringToBlob(data.apiKey);
+      const encryptedApiKeyResult = await encryptWithKey(encryptionKey, apiKeyBlob);
       const finalStoredData: StoredCredentialData = {
         createdAt: serverTimestamp(),
-        encryptedApiKey: encryptedApiKeyResult.encryptedText,
-        iv: singleIV,
+        encryptedApiKey: await blobToBase64(encryptedApiKeyResult.encryptedBlob),
+        ivApiKey: encryptedApiKeyResult.iv,
         projectId: projectId,
         serviceName: data.serviceName,
         updatedAt: serverTimestamp(),
@@ -195,21 +172,17 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
       };
 
       if (data.apiSecret) {
-        const encryptedSecretResult = encryptData(data.apiSecret, encryptionKey, singleIV);
-        if (!encryptedSecretResult) {
-          console.error("Failed to encrypt API secret");
-          throw new Error('Failed to encrypt API secret.');
-        }
-        finalStoredData.encryptedApiSecret = encryptedSecretResult.encryptedText;
+        const apiSecretBlob = stringToBlob(data.apiSecret);
+        const encryptedSecretResult = await encryptWithKey(encryptionKey, apiSecretBlob);
+        finalStoredData.encryptedApiSecret = await blobToBase64(encryptedSecretResult.encryptedBlob);
+        finalStoredData.ivApiSecret = encryptedSecretResult.iv;
       }
       
       if (data.notes) {
-        const encryptedNotesResult = encryptData(data.notes, encryptionKey, singleIV);
-        if (!encryptedNotesResult) {
-          console.error("Failed to encrypt notes");
-          throw new Error('Failed to encrypt notes.');
-        }
-        finalStoredData.encryptedNotes = encryptedNotesResult.encryptedText;
+        const notesBlob = stringToBlob(data.notes);
+        const encryptedNotesResult = await encryptWithKey(encryptionKey, notesBlob);
+        finalStoredData.encryptedNotes = await blobToBase64(encryptedNotesResult.encryptedBlob);
+        finalStoredData.ivNotes = encryptedNotesResult.iv;
       }
 
       // Updated path to use nested collections
@@ -307,14 +280,121 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
         const credentialsRef = collection(db, 'users', currentUser.uid, 'projects', projectDoc.id, 'credentials');
         const credentialsSnapshot = await getDocs(credentialsRef);
         
-        credentialsSnapshot.docs.forEach(docSnap => {
+        for (const docSnap of credentialsSnapshot.docs) {
           try {
+
             const raw = docSnap.data() as StoredCredentialDataWithLegacy;
             const data: StoredCredentialDataWithLegacy = raw;
-            const apiKey = decryptData(data.encryptedApiKey, encryptionKey, data.iv);
-            
+
+            const hasPerFieldGcm = typeof data.ivApiKey === 'string' && data.ivApiKey.length > 0;
+			const hasSingleIV = typeof data.iv === 'string' && data.iv.length > 0;
+			const legacyCBC = !hasPerFieldGcm && hasSingleIV && isLegacyHexIV(data.iv);
+
+			let apiKey: null | string = null;
+			let apiSecret: string | undefined;
+			let notes: string | undefined;
+
+			if (hasPerFieldGcm && data.ivApiKey) {
+				// GCM with per-field IVs, base64 ciphertexts
+				const decApiKeyBlob = await decryptWithKey(
+					encryptionKey,
+					base64ToBlob(data.encryptedApiKey),
+					data.ivApiKey
+				);
+				apiKey = await blobToString(decApiKeyBlob);
+				if (data.encryptedApiSecret && data.ivApiSecret) {
+					const decApiSecretBlob = await decryptWithKey(
+						encryptionKey,
+						base64ToBlob(data.encryptedApiSecret),
+						data.ivApiSecret
+					);
+					apiSecret = await blobToString(decApiSecretBlob);
+				}
+				if (data.encryptedNotes && data.ivNotes) {
+					const decNotesBlob = await decryptWithKey(
+						encryptionKey,
+						base64ToBlob(data.encryptedNotes),
+						data.ivNotes
+					);
+					notes = await blobToString(decNotesBlob);
+				}
+			} else if (legacyCBC && data.iv) {
+				apiKey = decryptCBC(data.encryptedApiKey, encryptionKey, data.iv);
+				if (data.encryptedApiSecret) {
+					const dec = decryptCBC(data.encryptedApiSecret, encryptionKey, data.iv);
+					apiSecret = dec ?? undefined;
+				}
+				if (data.encryptedNotes) {
+					const dec = decryptCBC(data.encryptedNotes, encryptionKey, data.iv);
+					notes = dec ?? undefined;
+				}
+				// Migrate to GCM with per-field IVs
+				if (apiKey) {
+					const encApiKey = await encryptWithKey(encryptionKey, stringToBlob(apiKey));
+					const updates: Partial<StoredCredentialData> = {
+						encryptedApiKey: await blobToBase64(encApiKey.encryptedBlob),
+						ivApiKey: encApiKey.iv,
+						updatedAt: serverTimestamp(),
+					};
+					if (typeof apiSecret === 'string') {
+						const encApiSecret = await encryptWithKey(encryptionKey, stringToBlob(apiSecret));
+						updates.encryptedApiSecret = await blobToBase64(encApiSecret.encryptedBlob);
+						updates.ivApiSecret = encApiSecret.iv;
+					}
+					if (typeof notes === 'string') {
+						const encNotes = await encryptWithKey(encryptionKey, stringToBlob(notes));
+						updates.encryptedNotes = await blobToBase64(encNotes.encryptedBlob);
+						updates.ivNotes = encNotes.iv;
+					}
+					await updateDoc(docSnap.ref, updates);
+				}
+			} else if (hasSingleIV && data.iv) {
+				// Early GCM refactor: single base64 IV for all fields (migrate to per-field)
+				const decApiKeyBlob = await decryptWithKey(
+					encryptionKey,
+					base64ToBlob(data.encryptedApiKey),
+					data.iv
+				);
+				apiKey = await blobToString(decApiKeyBlob);
+				if (data.encryptedApiSecret) {
+					const decApiSecretBlob = await decryptWithKey(
+						encryptionKey,
+						base64ToBlob(data.encryptedApiSecret),
+						data.iv
+					);
+					apiSecret = await blobToString(decApiSecretBlob);
+				}
+				if (data.encryptedNotes) {
+					const decNotesBlob = await decryptWithKey(
+						encryptionKey,
+						base64ToBlob(data.encryptedNotes),
+						data.iv
+					);
+					notes = await blobToString(decNotesBlob);
+				}
+				// Migrate to per-field IVs
+				if (apiKey) {
+					const encApiKey = await encryptWithKey(encryptionKey, stringToBlob(apiKey));
+					const updates: Partial<StoredCredentialData> = {
+						encryptedApiKey: await blobToBase64(encApiKey.encryptedBlob),
+						ivApiKey: encApiKey.iv,
+						updatedAt: serverTimestamp(),
+					};
+					if (typeof apiSecret === 'string') {
+						const encApiSecret = await encryptWithKey(encryptionKey, stringToBlob(apiSecret));
+						updates.encryptedApiSecret = await blobToBase64(encApiSecret.encryptedBlob);
+						updates.ivApiSecret = encApiSecret.iv;
+					}
+					if (typeof notes === 'string') {
+						const encNotes = await encryptWithKey(encryptionKey, stringToBlob(notes));
+						updates.encryptedNotes = await blobToBase64(encNotes.encryptedBlob);
+						updates.ivNotes = encNotes.iv;
+					}
+					await updateDoc(docSnap.ref, updates);
+				}
+			}
             // Fallback for legacy team-encrypted credentials: present as placeholder requiring update
-            if (apiKey === null) {
+            if (!apiKey) {
               if (isLegacyTeamEncryptedCredential(raw)) {
                 console.warn(`Legacy team-encrypted credential detected (ID: ${docSnap.id}). Presenting placeholder that requires update.`);
                 fetchedCredentials.push({
@@ -328,23 +408,19 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
                   updatedAt: data.updatedAt as Timestamp,
                   userId: data.userId,
                 });
-                return;
+                continue;
               }
               decryptionErrors++;
               console.error(`Failed to decrypt API key for credential ID: ${docSnap.id}. Skipping.`);
-              return;
+              continue;
             }
-            
-            // Try to decrypt optional fields, but don't fail if they can't be decrypted
-            const apiSecret = data.encryptedApiSecret ? decryptData(data.encryptedApiSecret, encryptionKey, data.iv) : undefined;
-            const notes = data.encryptedNotes ? decryptData(data.encryptedNotes, encryptionKey, data.iv) : undefined;
             
             fetchedCredentials.push({
               apiKey: apiKey,
-              apiSecret: apiSecret !== null ? apiSecret : undefined,
+              apiSecret: apiSecret,
               createdAt: data.createdAt as Timestamp,
               id: docSnap.id,
-              notes: notes !== null ? notes : undefined,
+              notes: notes,
               projectId: data.projectId,
               serviceName: data.serviceName,
               updatedAt: data.updatedAt as Timestamp,
@@ -354,7 +430,7 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
             decryptionErrors++;
             console.error(`Error processing credential ${docSnap.id}:`, decryptError);
           }
-        });
+        }
       }
       
       // Set the credentials we were able to decrypt
@@ -394,14 +470,92 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
       // Track any decryption errors to report later
       let decryptionErrors = 0;
       
-      querySnapshot.docs.forEach(docSnap => {
+      for (const docSnap of querySnapshot.docs) {
         const raw = docSnap.data() as StoredCredentialDataWithLegacy;
         const data: StoredCredentialDataWithLegacy = raw;
         try {
-          const apiKey = decryptData(data.encryptedApiKey, encryptionKey, data.iv);
+          const hasPerFieldGcm = typeof data.ivApiKey === 'string' && data.ivApiKey.length > 0;
+          const hasSingleIV = typeof data.iv === 'string' && data.iv.length > 0;
+          const legacyCBC = !hasPerFieldGcm && hasSingleIV && isLegacyHexIV(data.iv);
+
+          let apiKey: null | string = null;
+          let apiSecret: string | undefined;
+          let notes: string | undefined;
+
+          if (hasPerFieldGcm && data.ivApiKey) {
+            const decApiKeyBlob = await decryptWithKey(encryptionKey, base64ToBlob(data.encryptedApiKey), data.ivApiKey);
+            apiKey = await blobToString(decApiKeyBlob);
+            if (data.encryptedApiSecret && data.ivApiSecret) {
+              const decApiSecretBlob = await decryptWithKey(encryptionKey, base64ToBlob(data.encryptedApiSecret), data.ivApiSecret);
+              apiSecret = await blobToString(decApiSecretBlob);
+            }
+            if (data.encryptedNotes && data.ivNotes) {
+              const decNotesBlob = await decryptWithKey(encryptionKey, base64ToBlob(data.encryptedNotes), data.ivNotes);
+              notes = await blobToString(decNotesBlob);
+            }
+          } else if (legacyCBC && data.iv) {
+            apiKey = decryptCBC(data.encryptedApiKey, encryptionKey, data.iv);
+            if (data.encryptedApiSecret) {
+              const dec = decryptCBC(data.encryptedApiSecret, encryptionKey, data.iv);
+              apiSecret = dec ?? undefined;
+            }
+            if (data.encryptedNotes) {
+              const dec = decryptCBC(data.encryptedNotes, encryptionKey, data.iv);
+              notes = dec ?? undefined;
+            }
+            if (apiKey) {
+              const encApiKey = await encryptWithKey(encryptionKey, stringToBlob(apiKey));
+              const updates: Partial<StoredCredentialData> = {
+                encryptedApiKey: await blobToBase64(encApiKey.encryptedBlob),
+                ivApiKey: encApiKey.iv,
+                updatedAt: serverTimestamp(),
+              };
+              if (typeof apiSecret === 'string') {
+                const encApiSecret = await encryptWithKey(encryptionKey, stringToBlob(apiSecret));
+                updates.encryptedApiSecret = await blobToBase64(encApiSecret.encryptedBlob);
+                updates.ivApiSecret = encApiSecret.iv;
+              }
+              if (typeof notes === 'string') {
+                const encNotes = await encryptWithKey(encryptionKey, stringToBlob(notes));
+                updates.encryptedNotes = await blobToBase64(encNotes.encryptedBlob);
+                updates.ivNotes = encNotes.iv;
+              }
+              await updateDoc(docSnap.ref, updates);
+            }
+          } else if (hasSingleIV && data.iv) {
+            const decApiKeyBlob = await decryptWithKey(encryptionKey, base64ToBlob(data.encryptedApiKey), data.iv);
+            apiKey = await blobToString(decApiKeyBlob);
+            if (data.encryptedApiSecret) {
+              const decApiSecretBlob = await decryptWithKey(encryptionKey, base64ToBlob(data.encryptedApiSecret), data.iv);
+              apiSecret = await blobToString(decApiSecretBlob);
+            }
+            if (data.encryptedNotes) {
+              const decNotesBlob = await decryptWithKey(encryptionKey, base64ToBlob(data.encryptedNotes), data.iv);
+              notes = await blobToString(decNotesBlob);
+            }
+            if (apiKey) {
+              const encApiKey = await encryptWithKey(encryptionKey, stringToBlob(apiKey));
+              const updates: Partial<StoredCredentialData> = {
+                encryptedApiKey: await blobToBase64(encApiKey.encryptedBlob),
+                ivApiKey: encApiKey.iv,
+                updatedAt: serverTimestamp(),
+              };
+              if (typeof apiSecret === 'string') {
+                const encApiSecret = await encryptWithKey(encryptionKey, stringToBlob(apiSecret));
+                updates.encryptedApiSecret = await blobToBase64(encApiSecret.encryptedBlob);
+                updates.ivApiSecret = encApiSecret.iv;
+              }
+              if (typeof notes === 'string') {
+                const encNotes = await encryptWithKey(encryptionKey, stringToBlob(notes));
+                updates.encryptedNotes = await blobToBase64(encNotes.encryptedBlob);
+                updates.ivNotes = encNotes.iv;
+              }
+              await updateDoc(docSnap.ref, updates);
+            }
+          }
           
           // Skip this credential if we couldn't decrypt the API key
-          if (apiKey === null) {
+          if (!apiKey) { // Changed from apiKey === null || apiKey === ""
             if (isLegacyTeamEncryptedCredential(raw)) {
               console.warn(`Legacy team-encrypted credential detected (ID: ${docSnap.id}). Presenting placeholder that requires update.`);
               fetchedCredentials.push({
@@ -415,23 +569,19 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
                 updatedAt: data.updatedAt as Timestamp,
                 userId: data.userId,
               });
-              return;
+              continue;
             }
             decryptionErrors++;
             console.error(`Failed to decrypt API key for credential ID: ${docSnap.id}. Skipping.`);
-            return;
+            continue;
           }
-          
-          // Try to decrypt optional fields, but don't fail if they can't be decrypted
-          const apiSecret = data.encryptedApiSecret ? decryptData(data.encryptedApiSecret, encryptionKey, data.iv) : undefined;
-          const notes = data.encryptedNotes ? decryptData(data.encryptedNotes, encryptionKey, data.iv) : undefined;
           
           fetchedCredentials.push({
             apiKey: apiKey,
-            apiSecret: apiSecret !== null ? apiSecret : undefined,
+            apiSecret: apiSecret,
             createdAt: data.createdAt as Timestamp,
             id: docSnap.id,
-            notes: notes !== null ? notes : undefined,
+            notes: notes,
             projectId: data.projectId,
             serviceName: data.serviceName,
             updatedAt: data.updatedAt as Timestamp,
@@ -441,7 +591,7 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
           decryptionErrors++;
           console.error(`Error processing credential ${docSnap.id}:`, decryptError);
         }
-      });
+      }
       
       // Set the credentials we were able to decrypt
       set({ credentials: fetchedCredentials, isLoading: false });
@@ -492,25 +642,21 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
         apiKey: 'PLACEHOLDER-RESET-VALUE',
         apiSecret: undefined,
         notes: `This credential was reset due to corruption issues on ${new Date().toLocaleString()}. Please update with the correct values.`,
-        serviceName: data.serviceName || 'Recovered Credential',
+        serviceName: data.serviceName,
       };
       
-      // Generate a fresh IV
-      const newIV = CryptoJS.lib.WordArray.random(128 / 8).toString(CryptoJS.enc.Hex);
-      
       // Re-encrypt with the current encryption key
-      const encryptedApiKey = encryptData(tempData.apiKey, encryptionKey, newIV);
-      if (!encryptedApiKey) throw new Error('Failed to encrypt temporary API key');
-      
-      const encryptedNotes = encryptData(tempData.notes, encryptionKey, newIV);
-      if (!encryptedNotes) throw new Error('Failed to encrypt notes');
+      const apiKeyBlob = stringToBlob(tempData.apiKey);
+      const encryptedApiKeyResult = await encryptWithKey(encryptionKey, apiKeyBlob);
+      const notesBlob = stringToBlob(tempData.notes);
+      const encryptedNotesResult = await encryptWithKey(encryptionKey, notesBlob);
       
       // Update the credential with the placeholder data
       await updateDoc(credRef, {
-        encryptedApiKey: encryptedApiKey.encryptedText,
+        encryptedApiKey: await blobToBase64(encryptedApiKeyResult.encryptedBlob),
         encryptedApiSecret: '',  // Clear the secret
-        encryptedNotes: encryptedNotes.encryptedText,
-        iv: newIV,
+        encryptedNotes: await blobToBase64(encryptedNotesResult.encryptedBlob),
+        iv: encryptedApiKeyResult.iv,
         serviceName: tempData.serviceName,
         updatedAt: serverTimestamp(),
       });
@@ -549,25 +695,26 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
 
         const tempDecryptedData = { ...currentDecryptedCredential, ...data };
         
-        const newIV = CryptoJS.lib.WordArray.random(128/8).toString(CryptoJS.enc.Hex);
-        dataToUpdateFirestore.iv = newIV;
+        // Encrypt with new IV
+        const encryptedTempApiKeyResult = await encryptWithKey(encryptionKey, stringToBlob(tempDecryptedData.apiKey));
+        dataToUpdateFirestore.iv = encryptedTempApiKeyResult.iv;
 
-        const encryptedApiKey = encryptData(tempDecryptedData.apiKey, encryptionKey, newIV);
-        if (!encryptedApiKey) throw new Error('Failed to encrypt API key for update.');
-        dataToUpdateFirestore.encryptedApiKey = encryptedApiKey.encryptedText;
+        const apiKeyBlob = stringToBlob(tempDecryptedData.apiKey);
+        const encryptedApiKeyResult = await encryptWithKey(encryptionKey, apiKeyBlob);
+        dataToUpdateFirestore.encryptedApiKey = await blobToBase64(encryptedApiKeyResult.encryptedBlob);
 
         if (tempDecryptedData.apiSecret) {
-          const encryptedApiSecret = encryptData(tempDecryptedData.apiSecret, encryptionKey, newIV);
-          if (!encryptedApiSecret) throw new Error('Failed to encrypt API secret for update.');
-          dataToUpdateFirestore.encryptedApiSecret = encryptedApiSecret.encryptedText;
+          const apiSecretBlob = stringToBlob(tempDecryptedData.apiSecret);
+          const encryptedApiSecretResult = await encryptWithKey(encryptionKey, apiSecretBlob);
+          dataToUpdateFirestore.encryptedApiSecret = await blobToBase64(encryptedApiSecretResult.encryptedBlob);
         } else {
           dataToUpdateFirestore.encryptedApiSecret = '';
         }
 
         if (tempDecryptedData.notes) {
-          const encryptedNotes = encryptData(tempDecryptedData.notes, encryptionKey, newIV);
-          if (!encryptedNotes) throw new Error('Failed to encrypt notes for update.');
-          dataToUpdateFirestore.encryptedNotes = encryptedNotes.encryptedText;
+          const notesBlob = stringToBlob(tempDecryptedData.notes);
+          const encryptedNotesResult = await encryptWithKey(encryptionKey, notesBlob);
+          dataToUpdateFirestore.encryptedNotes = await blobToBase64(encryptedNotesResult.encryptedBlob);
         } else {
           dataToUpdateFirestore.encryptedNotes = '';
         }
