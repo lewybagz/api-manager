@@ -3,6 +3,8 @@ import ReactMarkdown from "react-markdown";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 
 import { getDocBySlug } from "../docs/registry";
@@ -98,11 +100,18 @@ export default function DocDetailPage() {
                 );
               },
             }}
+            rehypePlugins={[
+              rehypeSlug,
+              [rehypeAutolinkHeadings, { behavior: "wrap" }],
+            ]}
             remarkPlugins={[remarkGfm]}
           >
             {content}
           </ReactMarkdown>
         </article>
+        <footer className="mt-10 text-xs text-brand-muted">
+          Last updated: {new Date().toLocaleDateString()}
+        </footer>
       </main>
     </div>
   );

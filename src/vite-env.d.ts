@@ -6,4 +6,6 @@ declare module "*.md?raw" {
 }
 
 declare module "remark-gfm";
+declare module "rehype-slug";
+declare module "rehype-autolink-headings";
 

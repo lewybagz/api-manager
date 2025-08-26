@@ -59,6 +59,24 @@ const ProjectDetailPage: React.FC = () => {
     "credentials"
   );
 
+  type LocalProjectStatus =
+    | "active"
+    | "archived"
+    | "completed"
+    | "paused"
+    | "planned";
+  const isProjectStatus = (value: unknown): value is LocalProjectStatus => {
+    return (
+      value === "active" ||
+      value === "archived" ||
+      value === "completed" ||
+      value === "paused" ||
+      value === "planned"
+    );
+  };
+  const ensureProjectStatus = (value: unknown): LocalProjectStatus =>
+    isProjectStatus(value) ? value : "active";
+
   useEffect(() => {
     if (!projectId) {
       console.error("Project ID is missing from URL params.");
@@ -375,7 +393,9 @@ const ProjectDetailPage: React.FC = () => {
             <ProjectHeader
               onAddCredential={handleAddCredential}
               projectCreatedAt={project.createdAt}
+              projectId={project.id}
               projectName={project.projectName}
+              status={ensureProjectStatus(project.status ?? "active")}
             />
           </div>
         </div>

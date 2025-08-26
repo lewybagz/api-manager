@@ -4,27 +4,22 @@ import React from "react";
 import useAuthStore from "../../stores/authStore";
 
 const EncryptionStatusIndicator: React.FC = () => {
-  const {
-    clearEncryptionKey,
-    encryptionKey,
-    masterPasswordSet,
-    openMasterPasswordModal,
-    user,
-  } = useAuthStore();
+  const { clearEncryptionKey, encryptionKey, openMasterPasswordModal, user } =
+    useAuthStore();
 
   const isLocked = !encryptionKey;
 
-  // Don't render if user is not logged in or master password hasn't been set up yet
-  if (!user || !masterPasswordSet) {
+  // Don't render if user is not logged in
+  if (!user) {
     return null;
   }
 
-  const handleLock = () => {
-    clearEncryptionKey();
-    // Optionally, you might want to redirect to a locked screen or show a toast
-  };
-
-  const handleUnlock = () => {
+  const handleClick = () => {
+    // If currently unlocked, lock first, then open modal
+    if (!isLocked) {
+      clearEncryptionKey();
+    }
+    // Always open the master password modal on click
     openMasterPasswordModal();
   };
 
@@ -32,7 +27,7 @@ const EncryptionStatusIndicator: React.FC = () => {
     <button
       aria-label={isLocked ? "Unlock Session" : "Lock Session"}
       className="p-2 rounded-md hover:bg-brand-dark-tertiary focus:outline-none focus:ring-2 focus:ring-brand-blue"
-      onClick={isLocked ? handleUnlock : handleLock}
+      onClick={handleClick}
       title={
         isLocked
           ? "Session Locked: Click to Unlock"

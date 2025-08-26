@@ -6,10 +6,13 @@ import {
   Shield,
   Trash2,
 } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 
 import { type FileMetadata } from "../../stores/fileStore";
-import { getFileIconPlaceholder } from "../../utils/fileIcons";
+import {
+  getFileIconPlaceholder,
+  getFileTypeColor,
+} from "../../utils/fileIcons";
 
 interface ProjectFileCardProps {
   file: FileMetadata;
@@ -56,8 +59,47 @@ const ProjectFileCard: React.FC<ProjectFileCardProps> = ({
     (file.uploadedAt.seconds || 0) * 1000
   ).toLocaleDateString();
 
+  const borderColor = getFileTypeColor(file.fileName, file.contentType);
+
+  // Tooltip state (non-invasive, anchored above the card)
+  const [showTip, setShowTip] = useState(false);
+  const [hoveredCategory, setHoveredCategory] = useState<null | string>(null);
+
+  const resolveCategoryLabel = (
+    fileName: string,
+    contentType: string
+  ): string => {
+    const ext = fileName.slice(fileName.lastIndexOf(".") + 1).toLowerCase();
+    if (contentType.startsWith("image/")) return "Images";
+    if (contentType.startsWith("video/")) return "Videos";
+    if (contentType.startsWith("audio/")) return "Audio";
+    if (contentType === "application/pdf" || ext === "pdf") return "PDF";
+    if (
+      contentType === "application/zip" ||
+      ["7z", "gz", "rar", "tar", "zip"].includes(ext)
+    )
+      return "Archives";
+    if (contentType === "text/markdown" || ext === "md") return "Markdown";
+    if (contentType === "application/json" || ext === "json") return "JSON";
+    if (contentType === "text/plain") return "Plain Text";
+    if (contentType === "application/octet-stream") return "Binary/Unknown";
+    return "Code/Text";
+  };
   return (
-    <div className="relative bg-gradient-to-br from-brand-dark-secondary/90 to-brand-dark-secondary/70 backdrop-blur-xl border border-brand-blue/30 border-l-4 border-l-brand-blue border-r-4 border-r-brand-primary rounded-2xl shadow-2xl p-6 flex flex-col gap-4 min-w-0 w-[85vw] md:w-[25vw] mx-auto transition-all duration-300 hover:shadow-2xl hover:shadow-brand-blue/20 hover:border-brand-blue/50 transform hover:scale-105 min-h-[180px] h-full group">
+    <div
+      className="relative bg-gradient-to-br from-brand-dark-secondary/90 to-brand-dark-secondary/70 backdrop-blur-xl border border-brand-blue/30 rounded-2xl shadow-2xl p-6 flex flex-col gap-4 min-w-0 w-[85vw] md:w-[25vw] mx-auto transition-all duration-300 hover:shadow-2xl hover:shadow-brand-blue/20 min-h-[180px] h-full group"
+      onMouseEnter={() => {
+        setShowTip(true);
+        setHoveredCategory(
+          resolveCategoryLabel(file.fileName, file.contentType)
+        );
+      }}
+      onMouseLeave={() => {
+        setShowTip(false);
+        setHoveredCategory(null);
+      }}
+      style={{ borderTop: `4px solid ${borderColor}` }}
+    >
       {/* Enhanced Preview icon button (if supported) */}
       {isPreviewSupported(file.contentType) && (
         <button
@@ -117,6 +159,178 @@ const ProjectFileCard: React.FC<ProjectFileCardProps> = ({
         )}
       </div>
 
+      {showTip && (
+        <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 -top-2 -translate-y-full z-50 rounded-md border border-gray-700/60 bg-brand-dark-secondary px-3 py-2 text-[11px] text-brand-light shadow-lg">
+          <div className="mb-1 font-semibold">Legend</div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+            <div
+              className={`flex items-center gap-1 ${
+                hoveredCategory === "Images"
+                  ? "font-semibold opacity-100 text-brand-light bg-brand-blue/15 border border-brand-blue/40 rounded px-1.5 py-0.5 shadow-sm"
+                  : "opacity-70"
+              }`}
+            >
+              <span
+                className="inline-block h-2 w-4 rounded"
+                style={{
+                  backgroundColor: getFileTypeColor("img.png", "image/png"),
+                }}
+              />{" "}
+              Images
+            </div>
+            <div
+              className={`flex items-center gap-1 ${
+                hoveredCategory === "Videos"
+                  ? "font-semibold opacity-100 text-brand-light bg-brand-blue/15 border border-brand-blue/40 rounded px-1.5 py-0.5 shadow-sm"
+                  : "opacity-70"
+              }`}
+            >
+              <span
+                className="inline-block h-2 w-4 rounded"
+                style={{
+                  backgroundColor: getFileTypeColor("vid.mp4", "video/mp4"),
+                }}
+              />{" "}
+              Videos
+            </div>
+            <div
+              className={`flex items-center gap-1 ${
+                hoveredCategory === "Audio"
+                  ? "font-semibold opacity-100 text-brand-light bg-brand-blue/15 border border-brand-blue/40 rounded px-1.5 py-0.5 shadow-sm"
+                  : "opacity-70"
+              }`}
+            >
+              <span
+                className="inline-block h-2 w-4 rounded"
+                style={{
+                  backgroundColor: getFileTypeColor("snd.mp3", "audio/mpeg"),
+                }}
+              />{" "}
+              Audio
+            </div>
+            <div
+              className={`flex items-center gap-1 ${
+                hoveredCategory === "PDF"
+                  ? "font-semibold opacity-100 text-brand-light bg-brand-blue/15 border border-brand-blue/40 rounded px-1.5 py-0.5 shadow-sm"
+                  : "opacity-70"
+              }`}
+            >
+              <span
+                className="inline-block h-2 w-4 rounded"
+                style={{
+                  backgroundColor: getFileTypeColor(
+                    "doc.pdf",
+                    "application/pdf"
+                  ),
+                }}
+              />{" "}
+              PDF
+            </div>
+            <div
+              className={`flex items-center gap-1 ${
+                hoveredCategory === "Archives"
+                  ? "font-semibold opacity-100 text-brand-light bg-brand-blue/15 border border-brand-blue/40 rounded px-1.5 py-0.5 shadow-sm"
+                  : "opacity-70"
+              }`}
+            >
+              <span
+                className="inline-block h-2 w-4 rounded"
+                style={{
+                  backgroundColor: getFileTypeColor(
+                    "arc.zip",
+                    "application/zip"
+                  ),
+                }}
+              />{" "}
+              Archives
+            </div>
+            <div
+              className={`flex items-center gap-1 ${
+                hoveredCategory === "Markdown"
+                  ? "font-semibold opacity-100 text-brand-light bg-brand-blue/15 border border-brand-blue/40 rounded px-1.5 py-0.5 shadow-sm"
+                  : "opacity-70"
+              }`}
+            >
+              <span
+                className="inline-block h-2 w-4 rounded"
+                style={{
+                  backgroundColor: getFileTypeColor(
+                    "readme.md",
+                    "text/markdown"
+                  ),
+                }}
+              />{" "}
+              Markdown
+            </div>
+            <div
+              className={`flex items-center gap-1 ${
+                hoveredCategory === "JSON"
+                  ? "font-semibold opacity-100 text-brand-light bg-brand-blue/15 border border-brand-blue/40 rounded px-1.5 py-0.5 shadow-sm"
+                  : "opacity-70"
+              }`}
+            >
+              <span
+                className="inline-block h-2 w-4 rounded"
+                style={{
+                  backgroundColor: getFileTypeColor(
+                    "data.json",
+                    "application/json"
+                  ),
+                }}
+              />{" "}
+              JSON
+            </div>
+            <div
+              className={`flex items-center gap-1 ${
+                hoveredCategory === "Plain Text"
+                  ? "font-semibold opacity-100 text-brand-light bg-brand-blue/15 border border-brand-blue/40 rounded px-1.5 py-0.5 shadow-sm"
+                  : "opacity-70"
+              }`}
+            >
+              <span
+                className="inline-block h-2 w-4 rounded"
+                style={{
+                  backgroundColor: getFileTypeColor("note.txt", "text/plain"),
+                }}
+              />{" "}
+              Plain Text
+            </div>
+            <div
+              className={`flex items-center gap-1 col-span-2 ${
+                hoveredCategory === "Code/Text"
+                  ? "font-semibold opacity-100 text-brand-light bg-brand-blue/15 border border-brand-blue/40 rounded px-1.5 py-0.5 shadow-sm"
+                  : "opacity-70"
+              }`}
+            >
+              <span
+                className="inline-block h-2 w-4 rounded"
+                style={{
+                  backgroundColor: getFileTypeColor("main.ts", "text/plain"),
+                }}
+              />{" "}
+              Code/Text
+            </div>
+            <div
+              className={`flex items-center gap-1 col-span-2 ${
+                hoveredCategory === "Binary/Unknown"
+                  ? "font-semibold opacity-100 text-brand-light bg-brand-blue/15 border border-brand-blue/40 rounded px-1.5 py-0.5 shadow-sm"
+                  : "opacity-70"
+              }`}
+            >
+              <span
+                className="inline-block h-2 w-4 rounded"
+                style={{
+                  backgroundColor:
+                    getFileTypeColor("file.bin", "application/octet-stream") ||
+                    "#6b7280",
+                }}
+              />{" "}
+              Binary/Unknown
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Enhanced Header: Icon and filename */}
       <div className="flex items-center gap-4 min-w-0 mt-2">
         <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-xl text-xs text-gray-300 border border-gray-700/50 shadow-lg">
@@ -128,7 +342,7 @@ const ProjectFileCard: React.FC<ProjectFileCardProps> = ({
           />
         </div>
         <div className="min-w-0 flex-1">
-          <span className="text-base text-brand-blue truncate block group-hover:bg-gradient-to-r group-hover:from-brand-blue group-hover:to-brand-primary group-hover:bg-clip-text group-hover:text-transparent transition-all duration-200">
+          <span className="text-base truncate block bg-gradient-to-r from-brand-blue/80 to-brand-blue/40 bg-clip-text text-transparent transition-all duration-300 group-hover:from-brand-blue group-hover:to-brand-primary">
             {file.fileName}
           </span>
           <div className="flex items-center space-x-2 mt-1">

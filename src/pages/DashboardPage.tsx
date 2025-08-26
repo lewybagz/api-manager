@@ -24,6 +24,24 @@ interface LastCredentialSummary {
 }
 
 const DashboardPage: React.FC = () => {
+  type LocalProjectStatus =
+    | "active"
+    | "archived"
+    | "completed"
+    | "paused"
+    | "planned";
+  const isProjectStatus = (value: unknown): value is LocalProjectStatus => {
+    return (
+      value === "active" ||
+      value === "archived" ||
+      value === "completed" ||
+      value === "paused" ||
+      value === "planned"
+    );
+  };
+  const ensureProjectStatus = (value: unknown): LocalProjectStatus =>
+    isProjectStatus(value) ? value : "active";
+
   const {
     addProject,
     deleteProject,
@@ -54,6 +72,8 @@ const DashboardPage: React.FC = () => {
     id: string;
     name: string;
   }>(null);
+  const [projectStatus, setProjectStatus] =
+    useState<LocalProjectStatus>("active");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
@@ -61,6 +81,23 @@ const DashboardPage: React.FC = () => {
     id: string;
     name: string;
   }>(null);
+
+  const getStatusBadgeClasses = (status: string): string => {
+    switch (status) {
+      case "active":
+        return "bg-green-500/20 text-green-400 border-green-500/30";
+      case "archived":
+        return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+      case "completed":
+        return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+      case "paused":
+        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+      case "planned":
+        return "bg-sky-500/20 text-sky-400 border-sky-500/30";
+      default:
+        return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+    }
+  };
 
   const loadProjects = useCallback(() => {
     if (user && masterPasswordSet) {
@@ -89,6 +126,7 @@ const DashboardPage: React.FC = () => {
     try {
       const projectId = await addProject({
         projectName: projectName.trim(),
+        status: ensureProjectStatus(projectStatus),
         userId: user.uid,
       });
       setProjectName("");
@@ -99,7 +137,7 @@ const DashboardPage: React.FC = () => {
       if (projectId) {
         void navigate(`/project/${projectId}`);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Failed to add project:", error);
       toast.error("Failed to create project", {
         description: "Please try again later",
@@ -111,6 +149,7 @@ const DashboardPage: React.FC = () => {
 
   const handleEditProject = (project: Project) => {
     openEditModal({ id: project.id, name: project.projectName });
+    setProjectStatus(ensureProjectStatus(project.status ?? "active"));
   };
 
   const handleDeleteProject = async (projectId: string) => {
@@ -127,7 +166,7 @@ const DashboardPage: React.FC = () => {
           ? `"${projectToDeleteDetails.name}" has been deleted`
           : "Project has been deleted",
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Failed to delete project:", error);
       toast.error("Failed to delete project", {
         description: "Please try again later",
@@ -161,6 +200,7 @@ const DashboardPage: React.FC = () => {
     try {
       await updateProject(editingProject.id, {
         projectName: projectName.trim(),
+        status: ensureProjectStatus(projectStatus),
       });
       setEditingProject(null);
       setProjectName("");
@@ -168,7 +208,7 @@ const DashboardPage: React.FC = () => {
       toast.success("Project updated", {
         description: `Project name has been updated to "${projectName.trim()}"`,
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Failed to update project:", error);
       toast.error("Failed to update project", {
         description: "Please try again later",
@@ -181,6 +221,7 @@ const DashboardPage: React.FC = () => {
   const openEditModal = (project: { id: string; name: string }) => {
     setEditingProject(project);
     setProjectName(project.name);
+    setProjectStatus("active");
     setShowEditModal(true);
     setShowAddModal(false);
   };
@@ -188,6 +229,7 @@ const DashboardPage: React.FC = () => {
   const openAddModal = () => {
     setProjectName("");
     setEditingProject(null);
+    setProjectStatus("active");
     setShowAddModal(true);
     setShowEditModal(false);
   };
@@ -198,6 +240,7 @@ const DashboardPage: React.FC = () => {
     setProjectName("");
     setEditingProject(null);
     setIsSubmitting(false);
+    setProjectStatus("active");
   };
 
   if (projectsLoading || credentialsLoading || filesLoading) {
@@ -426,7 +469,14 @@ const DashboardPage: React.FC = () => {
                           {project.projectName}
                         </h3>
                       </div>
-                      <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <span
+                          className={`text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full border ${getStatusBadgeClasses(
+                            String(project.status ?? "active")
+                          )}`}
+                        >
+                          {String(project.status ?? "active")}
+                        </span>
                         <button
                           className="p-1.5 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded-lg transition-all duration-200"
                           onClick={(e) => {
@@ -580,6 +630,30 @@ const DashboardPage: React.FC = () => {
                       type="text"
                       value={projectName}
                     />
+                  </div>
+                  <div className="mb-6">
+                    <label
+                      className="block text-sm font-medium text-brand-light-secondary mb-2"
+                      htmlFor="projectStatus"
+                    >
+                      Status
+                    </label>
+                    <select
+                      className="w-full px-4 py-3 bg-gray-800/80 backdrop-blur-sm border border-gray-700/50 focus:border-brand-blue/50 rounded-xl text-brand-light focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all duration-200"
+                      id="projectStatus"
+                      name="projectStatus"
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setProjectStatus(ensureProjectStatus(v));
+                      }}
+                      value={projectStatus}
+                    >
+                      <option value="active">Active</option>
+                      <option value="planned">Planned</option>
+                      <option value="paused">Paused</option>
+                      <option value="completed">Completed</option>
+                      <option value="archived">Archived</option>
+                    </select>
                   </div>
                   <div className="flex space-x-3">
                     <button

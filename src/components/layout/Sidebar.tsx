@@ -23,6 +23,7 @@ import useAuthStore from "../../stores/authStore";
 import useProjectStore from "../../stores/projectStore";
 import useRecentItemsStore from "../../stores/recentItemsStore";
 import useUserStore from "../../stores/userStore";
+import { trialDaysRemaining } from "../../utils/access";
 import EncryptionStatusIndicator from "../auth/EncryptionStatusIndicator";
 
 const Sidebar: React.FC = () => {
@@ -343,15 +344,44 @@ const Sidebar: React.FC = () => {
         {user && userDoc && (
           <div className="bg-gradient-to-br from-gray-800/80 to-gray-900/60 backdrop-blur-sm m-3 mb-3 p-4 rounded-xl border border-gray-700/50 shadow-lg">
             <div className="flex items-center mb-3">
-              <div className="h-10 w-10 rounded-xl bg-brand-blue flex items-center justify-center flex-shrink-0 shadow-lg">
-                <User className="h-5 w-5 text-white" />
-              </div>
+              <User className="h-5 w-5 text-brand-blue" />
               <div className="ml-3 overflow-hidden flex-1">
-                <p className="font-semibold text-sm text-white truncate">
-                  {userDoc.displayName ?? user.email}
-                </p>
+                {(() => {
+                  const name = userDoc.displayName ?? user.email;
+                  const daysLeft = trialDaysRemaining(userDoc);
+                  const status = userDoc.billing?.status;
+                  const isPro = status === "active";
+                  const isTrial = status === "trialing" || daysLeft > 0;
+                  return (
+                    <>
+                      <p className="font-semibold text-sm text-white truncate">
+                        {name}
+                      </p>
+                      <div className="mt-1 flex items-center gap-2">
+                        {isPro && (
+                          <Link
+                            className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-brand-blue text-white shadow-sm whitespace-nowrap"
+                            to={`/pro/billing/${user.uid}`}
+                          >
+                            Pro
+                          </Link>
+                        )}
+                        {!isPro && isTrial && (
+                          <Link
+                            className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold border border-yellow-500/40 bg-yellow-900/30 text-yellow-300 shadow-sm whitespace-nowrap"
+                            to={`/pro/billing/${user.uid}`}
+                          >
+                            {daysLeft > 0
+                              ? `Trial (${String(daysLeft)}d left)`
+                              : "Trial"}
+                          </Link>
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
-              <div className="ml-2">
+              <div className="ml-2 flex-shrink-0">
                 <EncryptionStatusIndicator />
               </div>
             </div>

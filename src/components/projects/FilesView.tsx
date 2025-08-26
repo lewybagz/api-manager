@@ -1,4 +1,5 @@
 import React from "react";
+// Legend removed; colors are shown via tooltip on each file card
 
 import FileList from "../files/FileList";
 import FileUploadArea from "../files/FileUploadArea";
@@ -11,6 +12,7 @@ const FilesView: React.FC<FilesViewProps> = ({ projectId }) => {
   return (
     <div className="mt-0 bg-transparent border-none">
       <FileUploadArea projectId={projectId} />
+
       <FileList projectId={projectId} />
     </div>
   );

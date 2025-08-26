@@ -14,11 +14,11 @@ import {
   RefreshCw,
   Shield,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import useAuthStore from "@/stores/authStore";
 import useUserStore from "@/stores/userStore";
 import { userHasAccessOrBypass } from "@/utils/access";
-import { Link } from "react-router-dom";
 
 export default function DocumentationHomepage() {
   const user = useAuthStore((state) => state.user);

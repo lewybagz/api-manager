@@ -39,3 +39,21 @@ export const getFileIconPlaceholder = (fileName: string): string => {
       return "https://img.icons8.com/?size=100&id=67360&format=png&color=000000";
   }
 }; 
+
+export const getFileTypeColor = (fileName: string, contentType?: string): string => {
+  const ext = fileName.slice(fileName.lastIndexOf(".") + 1).toLowerCase();
+  const type = contentType ?? '';
+  if (type.startsWith('image/')) return '#22c55e'; // green
+  if (type.startsWith('video/')) return '#eab308'; // yellow
+  if (type.startsWith('audio/')) return '#a855f7'; // purple
+  if (type === 'application/pdf' || ext === 'pdf') return '#ef4444'; // red
+  if (type === 'text/plain') return '#06b6d4'; // cyan for plain text
+  if (type === 'application/octet-stream') return '#818cf8'; // indigo for binary/unknown
+  if (type === 'application/zip' || ext === 'zip' || ext === 'rar' || ext === '7z' || ext === 'gz' || ext === 'tar') return '#f97316'; // orange
+  if (ext === 'md' || type === 'text/markdown') return '#60a5fa'; // light blue
+  if (ext === 'json' || type === 'application/json') return '#10b981'; // emerald
+  if (['c','cpp','cs','go','java','js','jsx','php','ps1','py','rb','rs','sh','ts','tsx'].includes(ext)) return '#3b82f6'; // blue
+  if (ext === 'env' || ext === 'key' || ext === 'pem') return '#14b8a6'; // teal
+  if (type.startsWith('text/') || ['conf','ini','log','txt','yaml','yml'].includes(ext)) return '#94a3b8'; // slate
+  return '#64748b'; // default slate
+};

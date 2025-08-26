@@ -24,6 +24,8 @@ import {
 } from '../firebase';
 import useCredentialStore from './credentialStore';
 
+export type ProjectStatus = 'active' | 'planned' | 'paused' | 'completed' | 'archived';
+
 export interface Project {
   createdAt: null | Timestamp;
   id: string;
@@ -33,12 +35,13 @@ export interface Project {
   };
   lastUpdated?: null | Timestamp;
   projectName: string;
+  status: ProjectStatus;
   updatedAt: null | Timestamp;
   userId: string;
 }
 
 interface ProjectState {
-  addProject: (projectData: { projectName: string; userId: string }) => Promise<null | string>;
+  addProject: (projectData: { projectName: string; userId: string; status?: ProjectStatus }) => Promise<null | string>;
   clearProjects: () => void;
   deleteProject: (projectId: string) => Promise<void>;
   error: Error | null;
@@ -54,10 +57,11 @@ interface ProjectUpdateData {
     serviceName: string;
   };
   projectName?: string;
+  status?: ProjectStatus;
 }
 
 const useProjectStore = create<ProjectState>((set, get) => ({
-  addProject: async (projectData: { projectName: string; userId: string }) => {
+  addProject: async (projectData: { projectName: string; userId: string; status?: ProjectStatus }) => {
     const currentUser = auth.currentUser;
     if (!currentUser || currentUser.uid !== projectData.userId) {
       set({ error: new Error('User not authenticated or mismatched ID'), isLoading: false });
@@ -74,6 +78,7 @@ const useProjectStore = create<ProjectState>((set, get) => ({
         lastCredentialSummary: null,
         lastUpdated: serverTimestamp(),
         projectName: projectData.projectName.trim(),
+        status: projectData.status ?? 'active',
         updatedAt: serverTimestamp(),
         userId: projectData.userId,
       });
@@ -142,7 +147,11 @@ const useProjectStore = create<ProjectState>((set, get) => ({
       const querySnapshot = await getDocs(projectsRef);
       const projectsData: Project[] = querySnapshot.docs.map(doc => ({
         id: doc.id,
-        ...(doc.data() as Omit<Project, 'id'>)
+        ...(doc.data() as Omit<Project, 'id'>),
+      }))
+      .map(p => ({
+        ...p,
+        status: (p as Partial<Project>).status ?? 'active',
       }));
       set({ isLoading: false, projects: projectsData });
     } catch (e: unknown) {
@@ -175,6 +184,9 @@ const useProjectStore = create<ProjectState>((set, get) => ({
       if (projectData.lastCredentialSummary) {
         updateFields.lastCredentialSummary = projectData.lastCredentialSummary;
       }
+      if (projectData.status) {
+        updateFields.status = projectData.status;
+      }
       await updateDoc(projectRef, updateFields);
       set(state => ({
         isLoading: false,
@@ -183,6 +195,7 @@ const useProjectStore = create<ProjectState>((set, get) => ({
             ? {
                 ...p,
                 ...(projectData.projectName?.trim() && { projectName: projectData.projectName.trim() }),
+                ...(projectData.status && { status: projectData.status }),
                 lastUpdated: Timestamp.now(),
                 ...(projectData.lastCredentialSummary && { lastCredentialSummary: projectData.lastCredentialSummary }),
                 updatedAt: Timestamp.now(),

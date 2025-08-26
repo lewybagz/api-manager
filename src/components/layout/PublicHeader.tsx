@@ -6,6 +6,7 @@ export default function PublicHeader() {
   const pricingActive = pathname.startsWith("/pro/pricing");
   const proActive =
     pathname === "/pro" || (pathname.startsWith("/pro/") && !pricingActive);
+  const docsActive = pathname === "/docs" || pathname.startsWith("/docs/");
   const baseItem = "relative px-3 py-1.5 rounded-md transition-colors";
   const inactive =
     "text-brand-muted hover:text-brand-light hover:bg-brand-elevated/30";
@@ -44,9 +45,15 @@ export default function PublicHeader() {
               <span className="pointer-events-none absolute inset-x-2 -bottom-[6px] h-0.5 rounded-full bg-blue-500/80" />
             )}
           </Link>
-          <a className={`${baseItem} ${inactive}`} href="/docs">
+          <Link
+            className={`${baseItem} ${docsActive ? active : inactive}`}
+            to="/docs"
+          >
             Docs
-          </a>
+            {docsActive && (
+              <span className="pointer-events-none absolute inset-x-2 -bottom-[6px] h-0.5 rounded-full bg-blue-500/80" />
+            )}
+          </Link>
         </nav>
         <div className="flex items-center gap-2">
           <Link

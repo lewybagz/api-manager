@@ -1,18 +1,24 @@
 import { ArrowLeft } from "lucide-react";
 import React from "react";
 import { Link } from "react-router-dom";
+import useProjectStore, { type ProjectStatus } from "../../stores/projectStore";
 
 interface ProjectHeaderProps {
   onAddCredential: () => void;
   projectCreatedAt: null | undefined | { nanoseconds: number; seconds: number };
   projectName: string;
+  projectId?: string;
+  status?: ProjectStatus;
 }
 
 const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   onAddCredential,
   projectCreatedAt,
   projectName,
+  projectId,
+  status = "active",
 }) => {
+  const { updateProject } = useProjectStore();
   return (
     <div className="py-2 px-4 flex justify-between items-center">
       <div className="flex flex-col items-start gap-1">
@@ -31,12 +37,31 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
           </p>
         )}
       </div>
-      <button
-        className="bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold py-2 px-4 rounded-md transition-colors shadow-md whitespace-nowrap"
-        onClick={onAddCredential}
-      >
-        Add Credential
-      </button>
+      <div className="flex items-center gap-3">
+        {projectId && (
+          <select
+            aria-label="Project Status"
+            className="px-3 py-2 bg-brand-dark-secondary border border-gray-700/50 rounded-md text-sm"
+            onChange={(e) => {
+              const newStatus = e.target.value as ProjectStatus;
+              void updateProject(projectId, { status: newStatus });
+            }}
+            value={status}
+          >
+            <option value="active">Active</option>
+            <option value="planned">Planned</option>
+            <option value="paused">Paused</option>
+            <option value="completed">Completed</option>
+            <option value="archived">Archived</option>
+          </select>
+        )}
+        <button
+          className="bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold py-2 px-4 rounded-md transition-colors shadow-md whitespace-nowrap"
+          onClick={onAddCredential}
+        >
+          Add Credential
+        </button>
+      </div>
     </div>
   );
 };
