@@ -1,4 +1,4 @@
-import { cn } from "@/utils/cn";
+import { type Timestamp } from "firebase/firestore";
 import {
   BookLock,
   CheckCircle,
@@ -11,6 +11,8 @@ import {
   Trash2,
 } from "lucide-react";
 import React from "react";
+
+import { cn } from "@/utils/cn";
 
 import { type DecryptedCredential } from "../../stores/credentialStore";
 
@@ -37,6 +39,15 @@ interface CredentialCardProps {
   onToggleApiSecretReveal: () => void;
   onUpdateNeeded?: () => void; // Optional, only if credential needs update
 }
+
+const formatTimestamp = (ts: null | Timestamp): string => {
+  if (!ts) return "—";
+  try {
+    return ts.toDate().toLocaleDateString();
+  } catch {
+    return String(ts);
+  }
+};
 
 const CredentialCard: React.FC<CredentialCardProps> = ({
   className,
@@ -109,8 +120,11 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
                 )}
               </span>
             </button>
-            <p className="relative text-xs text-gray-400 flex items-center gap-2">
+            <p className="relative text-xs text-gray-400 flex items-center gap-1">
               Project Credential
+              <span className="text-gray-400">
+                Created: {formatTimestamp(credential.createdAt)}
+              </span>
             </p>
           </div>
         </div>
