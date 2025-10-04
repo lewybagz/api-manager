@@ -105,7 +105,7 @@ export default function DocumentationHomepage() {
 
   return (
     <div className="min-h-screen bg-transparent text-slate-50">
-      <header className="border-b bg-transparent sticky top-0 z-10">
+      <header className="border-b bg-[#111827] sticky top-0 z-10">
         <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

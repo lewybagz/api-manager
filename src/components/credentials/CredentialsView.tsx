@@ -15,6 +15,10 @@ interface CredentialsViewProps {
   onDeleteCredential: (credential: DecryptedCredential) => void;
   onEditCredential: (credential: DecryptedCredential) => void;
   onToggleReveal: (fieldId: string) => void;
+  onUpdateCategory?: (
+    credential: DecryptedCredential,
+    newCategory: string
+  ) => void;
   revealedStates: Record<string, boolean>;
 }
 
@@ -29,6 +33,7 @@ const CredentialsView: React.FC<CredentialsViewProps> = ({
   onDeleteCredential,
   onEditCredential,
   onToggleReveal,
+  onUpdateCategory,
   revealedStates,
 }) => {
   const sortedCredentials = [...credentials].sort(
@@ -141,6 +146,9 @@ const CredentialsView: React.FC<CredentialsViewProps> = ({
                   isServiceNameCopied={copiedStates[cred.id] ?? false}
                   key={cred.id}
                   maskCredential={maskCredential}
+                  onChangeCategory={(newCategory) => {
+                    onUpdateCategory?.(cred, newCategory);
+                  }}
                   onCopyApiKey={() => {
                     onCopy(cred.apiKey, `${cred.id}-apikey`);
                   }}

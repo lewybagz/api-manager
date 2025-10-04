@@ -22,6 +22,7 @@ import useProjectStore from './projectStore';
 export interface DecryptedCredential {
   apiKey: string;
   apiSecret?: string;
+  category?: string; // e.g., 'none' | 'frontend' | 'backend' | ...
   createdAt: null | Timestamp;
   id: string; // Firestore document ID
   notes?: string;
@@ -47,6 +48,7 @@ interface CredentialState {
 
 // Interface for the data stored in Firestore (encrypted parts)
 interface StoredCredentialData {
+	category?: string; // plaintext categorization, defaults to 'none'
 	createdAt: ReturnType<typeof serverTimestamp> | Timestamp; // Allow serverTimestamp on create
 	encryptedApiKey: string; // base64 ciphertext (GCM) or CryptoJS base64 (legacy CBC)
 	encryptedApiSecret?: string; // base64 ciphertext
@@ -63,6 +65,7 @@ interface StoredCredentialData {
 
 // Legacy-aware stored data and helpers
 type StoredCredentialDataWithLegacy = StoredCredentialData & {
+  category?: string;
   encryptionMeta?: { algo?: string; encryptionStrategy?: string; iv?: string };
   encryptionStrategy?: string;
   public?: boolean;
@@ -162,6 +165,7 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
       const apiKeyBlob = stringToBlob(data.apiKey);
       const encryptedApiKeyResult = await encryptWithKey(encryptionKey, apiKeyBlob);
       const finalStoredData: StoredCredentialData = {
+        category: typeof data.category === 'string' && data.category.length > 0 ? data.category : 'none',
         createdAt: serverTimestamp(),
         encryptedApiKey: await blobToBase64(encryptedApiKeyResult.encryptedBlob),
         ivApiKey: encryptedApiKeyResult.iv,
@@ -400,6 +404,7 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
                 fetchedCredentials.push({
                   apiKey: 'PLACEHOLDER-RESET-VALUE',
                   apiSecret: undefined,
+              category: data.category ?? 'none',
                   createdAt: data.createdAt as Timestamp,
                   id: docSnap.id,
                   notes: undefined,
@@ -418,6 +423,7 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
             fetchedCredentials.push({
               apiKey: apiKey,
               apiSecret: apiSecret,
+              category: data.category ?? 'none',
               createdAt: data.createdAt as Timestamp,
               id: docSnap.id,
               notes: notes,
@@ -561,6 +567,7 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
               fetchedCredentials.push({
                 apiKey: 'PLACEHOLDER-RESET-VALUE',
                 apiSecret: undefined,
+                category: data.category ?? 'none',
                 createdAt: data.createdAt as Timestamp,
                 id: docSnap.id,
                 notes: undefined,
@@ -579,6 +586,7 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
           fetchedCredentials.push({
             apiKey: apiKey,
             apiSecret: apiSecret,
+            category: data.category ?? 'none',
             createdAt: data.createdAt as Timestamp,
             id: docSnap.id,
             notes: notes,
@@ -722,6 +730,10 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
 
       if (data.serviceName) {
         dataToUpdateFirestore.serviceName = data.serviceName;
+      }
+
+      if ('category' in data) {
+        dataToUpdateFirestore.category = (data.category ?? 'none');
       }
 
       const fieldCountToUpdate = Object.keys(dataToUpdateFirestore).length;

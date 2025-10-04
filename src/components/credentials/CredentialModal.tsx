@@ -10,6 +10,7 @@ import useCredentialStore, {
 } from "../../stores/credentialStore";
 
 interface CredentialFormData {
+  cred_category: string;
   cred_key: string;
   cred_notes: string;
   cred_secret: string;
@@ -41,6 +42,7 @@ const CredentialModal = ({
     setValue,
   } = useForm<CredentialFormData>({
     defaultValues: {
+      cred_category: "none",
       cred_key: "",
       cred_notes: "",
       cred_secret: "",
@@ -101,12 +103,14 @@ const CredentialModal = ({
 
   useEffect(() => {
     if (editingCredential) {
-      setValue("cred_service", editingCredential.serviceName);
+      setValue("cred_category", editingCredential.category ?? "none");
       setValue("cred_key", editingCredential.apiKey);
-      setValue("cred_secret", editingCredential.apiSecret ?? "");
       setValue("cred_notes", editingCredential.notes ?? "");
+      setValue("cred_secret", editingCredential.apiSecret ?? "");
+      setValue("cred_service", editingCredential.serviceName);
     } else {
       reset({
+        cred_category: "none",
         cred_key: "",
         cred_notes: "",
         cred_secret: "",
@@ -198,6 +202,7 @@ const CredentialModal = ({
         apiKey: data.cred_key.trim(),
         apiSecret:
           data.cred_secret.trim() === "" ? undefined : data.cred_secret.trim(),
+        category: data.cred_category.trim() || "none",
         notes:
           data.cred_notes.trim() === "" ? undefined : data.cred_notes.trim(),
         serviceName: data.cred_service.trim(),
@@ -364,6 +369,36 @@ const CredentialModal = ({
                   <span>{errors.cred_service.message}</span>
                 </p>
               )}
+            </div>
+
+            {/* Category Field */}
+            <div className="mb-6">
+              <label
+                className="flex items-center space-x-2 mb-3 text-sm font-semibold text-brand-light"
+                htmlFor="cred_category"
+              >
+                <div className="w-4 h-4 bg-gradient-to-r from-purple-400 to-purple-500 rounded-full"></div>
+                <span>Category</span>
+                <span className="text-xs text-gray-500 bg-gray-800/50 px-2 py-1 rounded-full">
+                  Optional
+                </span>
+              </label>
+              <select
+                aria-label="Category"
+                className="w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200"
+                id="cred_category"
+                {...register("cred_category")}
+              >
+                <option value="none">None</option>
+                <option value="frontend">Frontend</option>
+                <option value="backend">Backend</option>
+                <option value="database">Database</option>
+                <option value="infrastructure">Infrastructure</option>
+                <option value="devops">DevOps</option>
+                <option value="mobile">Mobile</option>
+                <option value="analytics">Analytics</option>
+                <option value="other">Other</option>
+              </select>
             </div>
 
             {/* Enhanced API Key Field */}

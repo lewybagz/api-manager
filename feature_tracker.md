@@ -213,7 +213,7 @@ This document tracks the progress of new UX features being implemented in the Ze
 
 ## 9. Direct Preview for Safe File Types (🔵 Lower Impact / Future Considerations)
 
-- **Status**: [ ] To Do / [ ] In Progress / [ ] Done
+- **Status**: [ ] To Do / [x] In Progress / [ ] Done
 - **Description**: Implement in-app previews (modal or side panel) for common "safe" file types like plain text, markdown, JSON, images, and syntax-highlighted code.
 - **Details**:
   - **UI Element**:
@@ -227,13 +227,18 @@ This document tracks the progress of new UX features being implemented in the Ze
     - **Images (`.png`, `.jpg`, `.gif`, `.svg`, `.webp`)**: Display directly using an `<img>` tag.
     - **PDF (`.pdf`)**: Embed using `<embed>`, `<iframe>`, or a library like `react-pdf`.
   - **Security**:
-    - For HTML/SVG previews from user-uploaded content (even their own), sanitize vigorously or use sandboxed iframes to mitigate XSS risks.
+    - For HTML/SVG previews from user-uploaded content (even their own), we now render via a sandboxed `<iframe>` with no permissions to mitigate XSS risks. If we ever move away from sandbox-only rendering, integrate an HTML sanitizer at render-time.
     - For client-side encrypted files, decryption (as per Feature #6) must happen before preview.
   - **Considerations**:
-    - Implement a maximum file size for previews to prevent browser performance issues.
-    - Show loading states while files are fetched/decrypted/rendered.
-    - Include "Download" or "Open in New Tab" options from the preview.
+    - Maximum preview size enforced: 10 MB for text-like, 25 MB for binary (shows helper UI and "Open in new tab"). Values are configurable via localStorage keys `preview.textMaxBytes` and `preview.binaryMaxBytes`.
+    - Always-visible "Open in new tab" button in preview header opens the object URL.
+    - Loading states shown while content is fetched/decrypted/rendered.
+    - "Open in New Tab" button provided when previews are disabled due to size.
 - **Benefits**: Saves users time by avoiding the need to download files to view their contents. Improves workflow when dealing with configuration files, notes, or code snippets.
 - **Notes/Issues**:
+  - Implemented `FilePreviewModal.tsx` enhancements: added `TEXT_LIKE_TYPES`; JSON pretty-printing; images rendered via `<img>`; HTML/SVG rendered in sandboxed `<iframe>`; size limits with "Open in new tab" fallback; broader language selection for syntax highlighting.
+  - Implemented `ProjectFileCard.tsx` `SUPPORTED_PREVIEW_TYPES` broadened to include `text/` and common text-like `application/*` types.
+  - Ensured correct MIME handling for object URLs in `fileStore.ts` (critical for SVG). Upload now sets Storage metadata `contentType`.
+  - Follow-up: Consider sandboxed iframe for potentially dangerous SVG/HTML if allowing inline content beyond `<img>` rendering.
 
 ---

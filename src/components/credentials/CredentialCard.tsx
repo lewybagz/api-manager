@@ -30,6 +30,7 @@ interface CredentialCardProps {
   isApiSecretRevealed: boolean;
   isServiceNameCopied: boolean;
   maskCredential: (value: string, revealed: boolean) => string;
+  onChangeCategory?: (newCategory: string) => void;
   onCopyApiKey: () => void;
   onCopyApiSecret: () => void;
   onCopyServiceName: () => void;
@@ -60,6 +61,7 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
   isApiSecretRevealed,
   isServiceNameCopied,
   maskCredential,
+  onChangeCategory,
   onCopyApiKey,
   onCopyApiSecret,
   onCopyServiceName,
@@ -70,6 +72,7 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
   onUpdateNeeded,
 }) => {
   const hasSecret = credential.apiSecret && credential.apiSecret.length > 0;
+  const category = (credential.category ?? "none").toLowerCase();
 
   return (
     <div
@@ -136,6 +139,34 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
               "flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2 font-mono text-xs w-full"
             )}
           >
+            {/* Category */}
+            <div className="flex items-center bg-gray-800/50 rounded-lg p-2 min-w-0">
+              <span className="text-gray-400 mr-2 flex-shrink-0">
+                Category:
+              </span>
+              {onChangeCategory ? (
+                <select
+                  aria-label="Credential Category"
+                  className="text-sm bg-transparent border border-gray-700/50 rounded-md text-brand-light px-2 py-1"
+                  onChange={(e) => {
+                    onChangeCategory(e.target.value);
+                  }}
+                  value={category}
+                >
+                  <option value="none">None</option>
+                  <option value="frontend">Frontend</option>
+                  <option value="backend">Backend</option>
+                  <option value="database">Database</option>
+                  <option value="infrastructure">Infrastructure</option>
+                  <option value="devops">DevOps</option>
+                  <option value="mobile">Mobile</option>
+                  <option value="analytics">Analytics</option>
+                  <option value="other">Other</option>
+                </select>
+              ) : (
+                <span className="text-brand-light capitalize">{category}</span>
+              )}
+            </div>
             {/* API Key */}
             <div className="flex-1 flex items-center bg-gray-800/50 rounded-lg p-2 min-w-0">
               <span className="text-gray-400 mr-2 flex-shrink-0">API Key:</span>

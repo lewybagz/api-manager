@@ -14,6 +14,7 @@ import useUserStore from "../stores/userStore";
 import { trialDaysRemaining } from "../utils/access";
 
 const PAYMENT_LINK = "https://buy.stripe.com/eVq7sKcqb6HXaQYdLObbG04";
+const TEST_PAYMENT_LINK = "https://buy.stripe.com/3cI28q0Ht3vL1go8rubbG05";
 
 export default function PaywallPage() {
   const { userDoc } = useUserStore();
@@ -129,7 +130,7 @@ export default function PaywallPage() {
             </ul>
             <a
               className="mt-6 inline-flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-2.5 font-medium text-white hover:bg-blue-500"
-              href={PAYMENT_LINK}
+              href={TEST_PAYMENT_LINK}
             >
               Subscribe
             </a>

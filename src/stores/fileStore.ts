@@ -292,7 +292,10 @@ const useFileStore = create<FileStoreState>((set, get) => ({
         fileBlob = await decryptWithKey(encryptionKey, blob, fileMetadata.iv);
       }
       
-      const objectUrl = URL.createObjectURL(fileBlob);
+      // Ensure the Blob used for preview has the correct MIME type (important for SVG rendering)
+      const desiredType = fileMetadata.contentType || fileBlob.type;
+      const typedBlob = fileBlob.type === desiredType ? fileBlob : new Blob([fileBlob], { type: desiredType });
+      const objectUrl = URL.createObjectURL(typedBlob);
       setDecryptedFileUrl(fileMetadata.id, objectUrl);
       return objectUrl;
 
@@ -331,10 +334,12 @@ const useFileStore = create<FileStoreState>((set, get) => ({
 
       const storagePath = `users/${user.uid}/projects/${projectId}/files/${Date.now().toString()}_${file.name}`;
       const fileRef = ref(storage, storagePath);
-      await uploadBytes(fileRef, fileToUpload);
+      const resolvedContentType = getContentTypeFromFilename(file.name);
+      // Persist accurate content-type in storage metadata to improve browser handling
+      await uploadBytes(fileRef, fileToUpload, { contentType: resolvedContentType });
 
       const metadata: Omit<FileMetadata, "id" | "iv" | "uploadedAt"> = {
-        contentType: getContentTypeFromFilename(file.name),
+        contentType: resolvedContentType,
         fileName: file.name,
         isEncrypted: encrypt,
         projectId,

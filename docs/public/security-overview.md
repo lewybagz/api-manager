@@ -19,8 +19,11 @@ We designed ZekerKey to keep your secrets safe while staying fast and easy to us
 ### Algorithms & parameters
 
 - Cipher: AES‑GCM (authenticated encryption)
-- Key derivation: PBKDF2 (salted, high iteration count)
-- Per‑item IV: unique per secret
+- Per‑item IV: unique per secret (96‑bit IV)
+- Key derivation: PBKDF2‑HMAC‑SHA256
+  - Salt: unique per user (derived from the user ID; not secret, not sent to the server)
+  - Iterations: 310,000
+  - Derived key length: 256‑bit
 
 ## Access control
 
@@ -38,9 +41,14 @@ We designed ZekerKey to keep your secrets safe while staying fast and easy to us
 ## Data handling & storage
 
 - Your master password never leaves your device.
-- Ciphertexts and metadata are stored in Firestore.
+- Credentials ciphertext and metadata are stored in Firestore.
+- Encrypted files are stored in Firebase Storage; file metadata (incl. IV and status) is stored in Firestore.
 - Firestore security rules restrict access to your data.
 - Stripe billing metadata is stored to determine subscription status.
+
+## Abuse prevention
+
+- Authentication and sensitive operations are rate‑limited.
 
 ## Known limitations
 

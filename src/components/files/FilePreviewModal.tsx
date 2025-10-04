@@ -1,13 +1,80 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import { FileText, X } from "lucide-react";
+import { ExternalLink, FileText, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { atomDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 import useFileStore, { type FileMetadata } from "../../stores/fileStore";
+
+// Treat these application/* MIME types as text for preview rendering
+const TEXT_LIKE_TYPES = new Set<string>([
+  "application/json",
+  "application/xml",
+  "application/javascript",
+  "application/typescript",
+  "application/sql",
+  "application/x-httpd-php",
+  "application/x-sh",
+  "application/x-bat",
+]);
+
+// Preview size limits (bytes)
+const TEXT_PREVIEW_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+const BINARY_PREVIEW_MAX_BYTES = 25 * 1024 * 1024; // 25 MB
+
+function inferPrismLanguage(
+  fileName: string,
+  contentType: string
+): string | null {
+  const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
+  const mapByExt: Record<string, string> = {
+    bat: "powershell",
+    c: "c",
+    conf: "bash",
+    cpp: "cpp",
+    cs: "csharp",
+    css: "css",
+    csv: "markup",
+    dart: "dart",
+    go: "go",
+    h: "c",
+    hpp: "cpp",
+    htm: "markup",
+    html: "markup",
+    ini: "ini",
+    java: "java",
+    js: "javascript",
+    jsx: "jsx",
+    kt: "kotlin",
+    less: "less",
+    md: "markdown",
+    php: "php",
+    pl: "perl",
+    ps1: "powershell",
+    py: "python",
+    r: "r",
+    rb: "ruby",
+    rs: "rust",
+    sass: "sass",
+    scala: "scala",
+    scss: "scss",
+    sh: "bash",
+    sql: "sql",
+    swift: "swift",
+    ts: "typescript",
+    tsx: "tsx",
+    vue: "markup",
+    xml: "markup",
+    yaml: "yaml",
+    yml: "yaml",
+  };
+  if (mapByExt[ext]) return mapByExt[ext];
+  if (contentType.startsWith("text/")) return "markup";
+  return null;
+}
 
 interface FilePreviewModalProps {
   file: FileMetadata;
@@ -22,6 +89,7 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
 }) => {
   const { prepareDownloadableFile } = useFileStore();
   const [content, setContent] = useState<null | string>(null);
+  const [objectUrl, setObjectUrl] = useState<null | string>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<null | string>(null);
 
@@ -41,7 +109,7 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
         // For text-based content, we need to fetch the actual text.
         if (
           file.contentType.startsWith("text/") ||
-          file.contentType === "application/json"
+          TEXT_LIKE_TYPES.has(file.contentType)
         ) {
           const response = await fetch(url);
           const textContent = await response.text();
@@ -49,6 +117,7 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
         } else {
           setContent(url); // For images, PDF, etc.
         }
+        setObjectUrl(url);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "An unknown error occurred."
@@ -60,6 +129,26 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
 
     void fetchContent();
   }, [file, isOpen, prepareDownloadableFile]);
+
+  const isSvg =
+    file.contentType === "image/svg+xml" ||
+    file.fileName.toLowerCase().endsWith(".svg");
+  const isHtml =
+    file.contentType === "text/html" ||
+    file.fileName.toLowerCase().endsWith(".html") ||
+    file.fileName.toLowerCase().endsWith(".htm");
+  const isTextLike =
+    file.contentType.startsWith("text/") ||
+    TEXT_LIKE_TYPES.has(file.contentType);
+  const exceedsSizeLimit =
+    file.size >
+    (isTextLike ? TEXT_PREVIEW_MAX_BYTES : BINARY_PREVIEW_MAX_BYTES);
+
+  const openInNewTab = () => {
+    if (objectUrl) {
+      window.open(objectUrl, "_blank", "noopener,noreferrer");
+    }
+  };
 
   const renderContent = () => {
     if (isLoading) {
@@ -107,6 +196,37 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
       );
     }
 
+    if (exceedsSizeLimit) {
+      return (
+        <div className="flex flex-col justify-center items-center h-full gap-4 p-6 text-center">
+          <p className="text-gray-300">
+            This file is too large to preview in the app.
+          </p>
+          <button
+            className="px-4 py-2 rounded-lg bg-brand-blue/20 border border-brand-blue/40 text-brand-light hover:bg-brand-blue/30"
+            onClick={openInNewTab}
+            disabled={!objectUrl}
+          >
+            Open in new tab
+          </button>
+        </div>
+      );
+    }
+
+    if (isHtml || isSvg) {
+      return (
+        <div className="flex justify-center items-center h-full p-4">
+          <iframe
+            className="w-full h-full rounded-lg bg-white"
+            referrerPolicy="no-referrer"
+            sandbox=""
+            src={objectUrl ?? undefined}
+            title={file.fileName}
+          />
+        </div>
+      );
+    }
+
     if (file.contentType.startsWith("image/")) {
       return (
         <div className="flex justify-center items-center h-full p-4">
@@ -142,7 +262,28 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
         </div>
       );
     }
-    if (file.contentType.startsWith("text/")) {
+    if (
+      file.contentType.startsWith("text/") ||
+      TEXT_LIKE_TYPES.has(file.contentType)
+    ) {
+      const lang = inferPrismLanguage(file.fileName, file.contentType);
+      if (lang) {
+        return (
+          <div className="p-4">
+            <SyntaxHighlighter
+              customStyle={{
+                background: "rgba(17, 24, 39, 0.8)",
+                border: "1px solid rgba(75, 85, 99, 0.3)",
+                borderRadius: "0.75rem",
+              }}
+              language={lang}
+              style={atomDark}
+            >
+              {content}
+            </SyntaxHighlighter>
+          </div>
+        );
+      }
       return (
         <div className="p-4">
           <pre className="whitespace-pre-wrap bg-gray-900/80 backdrop-blur-sm p-4 rounded-lg border border-gray-700/50 text-brand-light font-mono text-sm leading-relaxed overflow-auto">
@@ -215,13 +356,24 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
               </p>
             </div>
           </div>
-          <button
-            aria-label="Close preview"
-            className="p-2 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-all duration-200 flex-shrink-0"
-            onClick={onClose}
-          >
-            <X className="h-6 w-6" />
-          </button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              aria-label="Open in new tab"
+              className="p-2 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-all duration-200"
+              onClick={openInNewTab}
+              disabled={!objectUrl}
+              title="Open in new tab"
+            >
+              <ExternalLink className="h-5 w-5" />
+            </button>
+            <button
+              aria-label="Close preview"
+              className="p-2 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-all duration-200"
+              onClick={onClose}
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
         </header>
 
         {/* Enhanced Content Area */}

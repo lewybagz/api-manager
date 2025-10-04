@@ -26,14 +26,43 @@ interface ProjectFileCardProps {
 
 const SUPPORTED_PREVIEW_TYPES = [
   "image/",
-  "text/plain",
-  "text/markdown",
+  "text/",
   "application/json",
+  "application/xml",
+  "application/javascript",
+  "application/typescript",
+  "application/sql",
+  "application/x-httpd-php",
+  "application/x-sh",
+  "application/x-bat",
   "application/pdf",
 ];
 
-const isPreviewSupported = (contentType: string) => {
-  return SUPPORTED_PREVIEW_TYPES.some((type) => contentType.startsWith(type));
+const MAX_INLINE_PREVIEW_BYTES = 25 * 1024 * 1024; // 25 MB cap
+
+function getLocalStorageLimit(key: string, defaultValue: number): number {
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return defaultValue;
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n <= 0) return defaultValue;
+    return Math.min(n, 500 * 1024 * 1024);
+  } catch {
+    return defaultValue;
+  }
+}
+
+const isPreviewSupported = (contentType: string, size?: number) => {
+  const okType = SUPPORTED_PREVIEW_TYPES.some((type) =>
+    contentType.startsWith(type)
+  );
+  if (!okType) return false;
+  const limit = getLocalStorageLimit(
+    "preview.binaryMaxBytes",
+    MAX_INLINE_PREVIEW_BYTES
+  );
+  if (typeof size === "number" && size > limit) return false;
+  return true;
 };
 
 const ProjectFileCard: React.FC<ProjectFileCardProps> = ({
@@ -101,7 +130,7 @@ const ProjectFileCard: React.FC<ProjectFileCardProps> = ({
       style={{ borderTop: `4px solid ${borderColor}` }}
     >
       {/* Enhanced Preview icon button (if supported) */}
-      {isPreviewSupported(file.contentType) && (
+      {isPreviewSupported(file.contentType, file.size) && (
         <button
           aria-label="Preview file"
           className="absolute top-3 left-3 z-10 p-2.5 rounded-xl bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm text-gray-400 hover:text-brand-blue hover:bg-brand-blue/10 transition-all duration-200 shadow-lg border border-gray-700/50 hover:border-brand-blue/30"
@@ -142,7 +171,7 @@ const ProjectFileCard: React.FC<ProjectFileCardProps> = ({
             </button>
             <button
               className="w-full text-left px-4 py-3 text-sm text-brand-light-secondary hover:bg-brand-blue/10 hover:text-brand-light flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 border-b border-gray-700/30"
-              disabled={!isPreviewSupported(file.contentType)}
+              disabled={!isPreviewSupported(file.contentType, file.size)}
               onClick={onPreview}
             >
               <Eye className="h-4 w-4 text-green-400" />

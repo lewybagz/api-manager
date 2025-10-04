@@ -9,6 +9,8 @@ interface ProjectHeaderProps {
   projectName: string;
   projectId?: string;
   status?: ProjectStatus;
+  categoryFilter?: string; // 'all' | specific category
+  onCategoryFilterChange?: (value: string) => void;
 }
 
 const ProjectHeader: React.FC<ProjectHeaderProps> = ({
@@ -17,6 +19,8 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   projectName,
   projectId,
   status = "active",
+  categoryFilter = "all",
+  onCategoryFilterChange,
 }) => {
   const { updateProject } = useProjectStore();
   return (
@@ -55,6 +59,25 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
             <option value="archived">Archived</option>
           </select>
         )}
+        <select
+          aria-label="Category Filter"
+          className="px-3 py-2 bg-brand-dark-secondary border border-gray-700/50 rounded-md text-sm"
+          onChange={(e) => {
+            onCategoryFilterChange?.(e.target.value);
+          }}
+          value={categoryFilter}
+        >
+          <option value="all">All categories</option>
+          <option value="frontend">Frontend</option>
+          <option value="backend">Backend</option>
+          <option value="database">Database</option>
+          <option value="infrastructure">Infrastructure</option>
+          <option value="devops">DevOps</option>
+          <option value="mobile">Mobile</option>
+          <option value="analytics">Analytics</option>
+          <option value="other">Other</option>
+          <option value="none">None</option>
+        </select>
         <button
           className="bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold py-2 px-4 rounded-md transition-colors shadow-md whitespace-nowrap"
           onClick={onAddCredential}

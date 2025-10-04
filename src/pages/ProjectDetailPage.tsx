@@ -58,6 +58,18 @@ const ProjectDetailPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"credentials" | "files">(
     "credentials"
   );
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  // Persist per session and per project: initialize from sessionStorage or URL
+  useEffect(() => {
+    if (!projectId) return;
+    const paramFilter = searchParams.get("category");
+    const stored = sessionStorage.getItem(
+      `project_${projectId}_categoryFilter`
+    );
+    const initial = paramFilter ?? stored ?? "all";
+    setCategoryFilter(initial);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
 
   type LocalProjectStatus =
     | "active"
@@ -382,6 +394,13 @@ const ProjectDetailPage: React.FC = () => {
     );
   }
 
+  // Derive filtered credentials based on categoryFilter
+  const filteredCredentials = credentials.filter((c) => {
+    if (categoryFilter === "all") return true;
+    const cat = (c.category ?? "none").toLowerCase();
+    return cat === categoryFilter.toLowerCase();
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary">
       <div className="p-4 sm:p-6 lg:p-8 text-brand-light">
@@ -391,11 +410,31 @@ const ProjectDetailPage: React.FC = () => {
         <div className="mb-8">
           <div className="rounded-2xl p-2 bg-brand-dark-secondary/60 backdrop-blur-xl border border-gray-700/50 overflow-hidden">
             <ProjectHeader
+              categoryFilter={categoryFilter}
               onAddCredential={handleAddCredential}
+              onCategoryFilterChange={(value: string) => {
+                setCategoryFilter(value);
+                if (projectId) {
+                  sessionStorage.setItem(
+                    `project_${projectId}_categoryFilter`,
+                    value
+                  );
+                }
+                const current = new URLSearchParams(searchParams);
+                if (value === "all") {
+                  current.delete("category");
+                } else {
+                  current.set("category", value);
+                }
+                void navigate(
+                  { search: current.toString() },
+                  { replace: true }
+                );
+              }}
               projectCreatedAt={project.createdAt}
               projectId={project.id}
               projectName={project.projectName}
-              status={ensureProjectStatus(project.status ?? "active")}
+              status={ensureProjectStatus(project.status)}
             />
           </div>
         </div>
@@ -413,7 +452,7 @@ const ProjectDetailPage: React.FC = () => {
             <CredentialsView
               clipboardTimeout={clipboardTimeout}
               copiedStates={copiedStates}
-              credentials={credentials}
+              credentials={filteredCredentials}
               error={credentialsError}
               isLoading={credentialsLoading}
               maskCredential={maskCredential}
@@ -421,6 +460,15 @@ const ProjectDetailPage: React.FC = () => {
               onDeleteCredential={openCredentialDeleteConfirmModal}
               onEditCredential={handleEditCredentialClick}
               onToggleReveal={toggleReveal}
+              onUpdateCategory={(credential, newCategory) => {
+                if (!projectId) return;
+                // Update category quickly
+                void useCredentialStore
+                  .getState()
+                  .updateCredential(credential.id, projectId, {
+                    category: newCategory,
+                  });
+              }}
               revealedStates={revealedStates}
             />
           )}
