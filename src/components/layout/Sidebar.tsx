@@ -141,6 +141,27 @@ const Sidebar: React.FC = () => {
               </Link>
             </li>
             <li>
+              <Link
+                className={`flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 group ${
+                  isActiveRoute("/import")
+                    ? "bg-gradient-to-r from-brand-blue to-brand-primary text-white shadow-lg shadow-brand-blue/20"
+                    : "text-gray-300 hover:bg-gradient-to-r hover:from-gray-700/50 hover:to-gray-800/30 hover:text-brand-blue backdrop-blur-sm"
+                }`}
+                to="/import"
+              >
+                <div
+                  className={`w-5 h-5 rounded-lg flex items-center justify-center mr-3 ${
+                    isActiveRoute("/import")
+                      ? "bg-white/20"
+                      : "bg-gray-700/50 group-hover:bg-brand-blue/20"
+                  } transition-all duration-300`}
+                >
+                  <Sparkles className="h-3 w-3" />
+                </div>
+                Import Credentials
+              </Link>
+            </li>
+            <li>
               <button
                 className="flex items-center w-full px-4 py-3 rounded-xl text-sm font-medium text-gray-300 hover:bg-gradient-to-r hover:from-gray-700/50 hover:to-gray-800/30 hover:text-brand-blue transition-all duration-300 group backdrop-blur-sm"
                 onClick={() => {
@@ -393,7 +414,7 @@ const Sidebar: React.FC = () => {
               <p className="truncate">{userDoc.email}</p>
             </div>
 
-            <div className="grid grid-cols-3 gap-1 mt-3 pt-3 border-t border-gray-700/50">
+            <div className="grid grid-cols-2 gap-1 mt-3 pt-3 border-t border-gray-700/50">
               <Link
                 className="text-center text-xs py-2 px-2 rounded-lg bg-gray-700/60 text-gray-300 hover:from-brand-blue/20 hover:to-brand-primary/20 hover:text-brand-blue transition-all duration-300 backdrop-blur-sm font-medium"
                 to={`/profile/${user.uid}`}
@@ -406,6 +427,8 @@ const Sidebar: React.FC = () => {
               >
                 My Plan
               </Link>
+            </div>
+            <div className="grid grid-cols-1 gap-1 mt-2">
               <button
                 className="text-center text-xs py-2 px-2 rounded-lg bg-gray-700/60 text-gray-300 hover:from-red-900/50 hover:to-red-800/40 hover:text-red-300 transition-all duration-300 backdrop-blur-sm font-medium"
                 onClick={() => void handleLogout()}

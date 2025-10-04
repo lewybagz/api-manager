@@ -2,7 +2,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
-import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { doc, serverTimestamp, setDoc, Timestamp } from "firebase/firestore";
 import {
   AlertCircle,
   Clock,
@@ -261,11 +261,15 @@ const LoginPage: React.FC = () => {
       );
 
       // Create Firestore user doc
+      const trialEndsAt = Timestamp.fromDate(
+        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      );
       const userDoc = {
         createdAt: serverTimestamp(),
         displayName: registerName,
         email: registerEmail,
         roles: ["user"],
+        trialEndsAt,
         uid: userCredential.user.uid,
         updatedAt: serverTimestamp(),
       };

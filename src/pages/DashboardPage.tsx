@@ -10,13 +10,15 @@ import {
   Trash2,
 } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast, Toaster } from "sonner";
 
 import useAuthStore from "../stores/authStore";
 import useCredentialStore from "../stores/credentialStore";
 import useFileStore, { type FileMetadata } from "../stores/fileStore";
 import useProjectStore, { type Project } from "../stores/projectStore";
+import useUserStore from "../stores/userStore";
+import { trialDaysRemaining } from "../utils/access";
 
 interface LastCredentialSummary {
   addedAt: FieldValue | null | Timestamp;
@@ -58,6 +60,7 @@ const DashboardPage: React.FC = () => {
     isLoading: credentialsLoading,
   } = useCredentialStore();
   const navigate = useNavigate();
+  const { fetchUserDoc, userDoc } = useUserStore();
 
   const {
     fetchAllFilesForUser,
@@ -110,6 +113,9 @@ const DashboardPage: React.FC = () => {
     if (user && masterPasswordSet) {
       void fetchAllCredentials();
       void fetchAllFilesForUser();
+      if (user.uid) {
+        void fetchUserDoc(user.uid);
+      }
     }
   }, [
     loadProjects,
@@ -117,6 +123,7 @@ const DashboardPage: React.FC = () => {
     masterPasswordSet,
     fetchAllCredentials,
     fetchAllFilesForUser,
+    fetchUserDoc,
   ]);
 
   const handleAddProject = async (e: React.FormEvent) => {
@@ -331,6 +338,43 @@ const DashboardPage: React.FC = () => {
           </button>
         </div>
 
+        {/* Trial Banner */}
+        {(() => {
+          const status = userDoc?.billing?.status;
+          const isPro = status === "active";
+          const daysLeft = trialDaysRemaining(userDoc ?? null);
+          const isTrialActive = daysLeft > 0 || status === "trialing";
+          if (!isPro && isTrialActive) {
+            return (
+              <div className="mb-6 bg-gradient-to-r from-yellow-900/30 to-yellow-800/20 border border-yellow-500/40 rounded-xl p-4 flex items-start gap-3">
+                <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Clock className="h-4 w-4 text-yellow-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-yellow-300 font-semibold">
+                    Trial started
+                    {daysLeft > 0
+                      ? ` — ${String(daysLeft)} day${
+                          daysLeft === 1 ? "" : "s"
+                        } left`
+                      : ""}
+                  </p>
+                  <p className="text-sm text-yellow-200/80 mt-1">
+                    Subscribe anytime to keep access when your trial ends.
+                  </p>
+                </div>
+                <Link
+                  className="px-4 py-2 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-200 border border-yellow-500/40 rounded-md text-sm whitespace-nowrap"
+                  to="/pro"
+                >
+                  Subscribe now
+                </Link>
+              </div>
+            );
+          }
+          return null;
+        })()}
+
         {/* Enhanced Search */}
         <div className="relative mb-8 max-w-md">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -397,8 +441,11 @@ const DashboardPage: React.FC = () => {
 
                 if (projectCredentials.length > 0) {
                   const sortedCredentials = [...projectCredentials].sort(
-                    (a, b) =>
-                      (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0)
+                    (a, b) => {
+                      const ba = b.createdAt ? b.createdAt.seconds : 0;
+                      const aa = a.createdAt ? a.createdAt.seconds : 0;
+                      return ba - aa;
+                    }
                   );
                   if (sortedCredentials[0]?.createdAt) {
                     lastCred = {
@@ -472,10 +519,10 @@ const DashboardPage: React.FC = () => {
                       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                         <span
                           className={`text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full border ${getStatusBadgeClasses(
-                            String(project.status ?? "active")
+                            project.status ? project.status : "active"
                           )}`}
                         >
-                          {String(project.status ?? "active")}
+                          {project.status ? project.status : "active"}
                         </span>
                         <button
                           className="p-1.5 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded-lg transition-all duration-200"

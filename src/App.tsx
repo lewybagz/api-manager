@@ -17,6 +17,7 @@ import DocDetailPage from "./pages/DocDetailPage";
 import DocsPage from "./pages/DocsPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import HomePage from "./pages/HomePage";
+import ImportProjectPage from "./pages/ImportProjectPage";
 import LoginPage from "./pages/LoginPage";
 import PaywallPage from "./pages/PaywallPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -104,6 +105,15 @@ function MainApp() {
                 </>
               }
               path="dashboard"
+            />
+            <Route
+              element={
+                <>
+                  <SubscriptionGuard />
+                  <ImportProjectPage />
+                </>
+              }
+              path="import"
             />
             <Route
               element={
