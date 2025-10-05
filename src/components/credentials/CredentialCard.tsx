@@ -16,7 +16,7 @@ import { cn } from "@/utils/cn";
 
 import { type DecryptedCredential } from "../../stores/credentialStore";
 
-interface CredentialCardProps {
+export interface CredentialCardProps {
   anyCredentialHasNote?: boolean;
   className?: string; // Optional, for custom styling
   clipboardTimeoutApiKey: boolean;
@@ -30,6 +30,7 @@ interface CredentialCardProps {
   isApiSecretRevealed: boolean;
   isServiceNameCopied: boolean;
   maskCredential: (value: string, revealed: boolean) => string;
+  onChangeCategory?: (newCategory: string) => void;
   onCopyApiKey: () => void;
   onCopyApiSecret: () => void;
   onCopyServiceName: () => void;

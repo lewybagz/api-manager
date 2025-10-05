@@ -33,7 +33,7 @@ export interface DecryptedCredential {
 }
 
 interface CredentialState {
-  addCredential: (projectId: string, data: Omit<DecryptedCredential, 'createdAt' | 'id' | 'updatedAt' | 'userId'>) => Promise<null | string>;
+  addCredential: (projectId: string, data: Omit<DecryptedCredential, 'createdAt' | 'id' | 'updatedAt' | 'userId' | 'projectId'>) => Promise<null | string>;
   clearCredentials: () => void;
   credentials: DecryptedCredential[];
   deleteCredential: (credentialId: string, currentProjectId: string) => Promise<void>;
@@ -145,7 +145,7 @@ const isLegacyHexIV = (iv: unknown): iv is string => {
 };
 
 const useCredentialStore = create<CredentialState>((set, get) => ({
-  addCredential: async (projectId: string, data: Omit<DecryptedCredential, 'createdAt' | 'id' | 'updatedAt' | 'userId'>) => {
+  addCredential: async (projectId: string, data: Omit<DecryptedCredential, 'createdAt' | 'id' | 'updatedAt' | 'userId' | 'projectId'>) => {
     
     const currentUser = auth.currentUser;
     const encryptionKey = useAuthStore.getState().encryptionKey;

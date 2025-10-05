@@ -146,7 +146,7 @@ const CredentialsView: React.FC<CredentialsViewProps> = ({
                   isServiceNameCopied={copiedStates[cred.id] ?? false}
                   key={cred.id}
                   maskCredential={maskCredential}
-                  onChangeCategory={(newCategory) => {
+                  onChangeCategory={(newCategory: string) => {
                     onUpdateCategory?.(cred, newCategory);
                   }}
                   onCopyApiKey={() => {

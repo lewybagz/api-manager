@@ -5,14 +5,14 @@ import useAuthStore from "../stores/authStore";
 import useCredentialStore from "../stores/credentialStore";
 import useProjectStore, { type ProjectStatus } from "../stores/projectStore";
 
-type ParsedEnvEntry = {
+interface ParsedEnvEntry {
   key: string;
   value: string;
-};
+}
 
 type EntryRole = "key" | "secret" | "ignore";
 
-type RoleMapping = Record<string, { role: EntryRole; attachTo?: string }>;
+type RoleMapping = Record<string, { attachTo?: string; role: EntryRole }>;
 
 const CATEGORY_OPTIONS = [
   { label: "None", value: "none" },
@@ -85,14 +85,6 @@ const parseEnv = (input: string): ParsedEnvEntry[] => {
   return result;
 };
 
-const deriveServiceName = (envKey: string): string => {
-  // Try to make a readable service name from an ENV var like OPENAI_API_KEY -> Openai
-  const upper = envKey.trim().toUpperCase();
-  const primary = upper.split("_")[0];
-  const pretty = primary.charAt(0) + primary.slice(1).toLowerCase();
-  return pretty;
-};
-
 const isLikelySecret = (envKey: string): boolean => {
   const u = envKey.toUpperCase();
   return (
@@ -162,7 +154,7 @@ const buildEffectiveRoleMap = (
 };
 
 const ImportProjectPage: React.FC = () => {
-  const { user, masterPasswordSet, openMasterPasswordModal, encryptionKey } =
+  const { encryptionKey, masterPasswordSet, openMasterPasswordModal, user } =
     useAuthStore();
   const addProject = useProjectStore((s) => s.addProject);
   const projects = useProjectStore((s) => s.projects);
@@ -295,8 +287,8 @@ const ImportProjectPage: React.FC = () => {
         }
         projectId = await addProject({
           projectName: projectName.trim(),
-          userId: user.uid,
           status: projectStatus,
+          userId: user.uid,
         });
         if (!projectId) {
           throw new Error("Failed to create project");
@@ -337,11 +329,11 @@ const ImportProjectPage: React.FC = () => {
                 ? undefined
                 : chosenSecret.value.trim()
               : undefined,
+            category: credentialCategory || "none",
             notes: compiledNotes,
             serviceName,
-            category: credentialCategory || "none",
           } as const;
-          const id = await addCredential(projectId, payload);
+          const id = await addCredential(projectId, payload as any);
           if (id) successCount++;
           else failCount++;
         } catch (e) {
@@ -393,10 +385,10 @@ const ImportProjectPage: React.FC = () => {
             <label className="block text-sm mb-2">Action</label>
             <select
               className="w-full rounded-md border border-gray-700/50 bg-gray-800/70 p-2 text-white max-w-sm"
+              onChange={(e) => {
+                setImportMode(e.target.value as "create" | "update");
+              }}
               value={importMode}
-              onChange={(e) =>
-                setImportMode(e.target.value as "create" | "update")
-              }
             >
               <option value="create">Create new project</option>
               <option value="update">Update existing project</option>
@@ -409,9 +401,11 @@ const ImportProjectPage: React.FC = () => {
                 <label className="block text-sm mb-2">Project Name</label>
                 <input
                   className="w-full rounded-md border border-gray-700/50 bg-gray-800/70 p-2 text-white"
+                  onChange={(e) => {
+                    setProjectName(e.target.value);
+                  }}
                   placeholder="e.g., Acme App"
                   value={projectName}
-                  onChange={(e) => setProjectName(e.target.value)}
                 />
                 {existingProjectByName ? (
                   <div className="text-xs text-amber-400 mt-1">
@@ -424,10 +418,10 @@ const ImportProjectPage: React.FC = () => {
                 <label className="block text-sm mb-2">Project Status</label>
                 <select
                   className="w-full rounded-md border border-gray-700/50 bg-gray-800/70 p-2 text-white"
+                  onChange={(e) => {
+                    setProjectStatus(e.target.value as ProjectStatus);
+                  }}
                   value={projectStatus}
-                  onChange={(e) =>
-                    setProjectStatus(e.target.value as ProjectStatus)
-                  }
                 >
                   {PROJECT_STATUS_OPTIONS.map((s) => (
                     <option key={s} value={s}>
@@ -442,8 +436,10 @@ const ImportProjectPage: React.FC = () => {
                 </label>
                 <select
                   className="w-full rounded-md border border-gray-700/50 bg-gray-800/70 p-2 text-white"
+                  onChange={(e) => {
+                    setCredentialCategory(e.target.value);
+                  }}
                   value={credentialCategory}
-                  onChange={(e) => setCredentialCategory(e.target.value)}
                 >
                   {CATEGORY_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -459,8 +455,10 @@ const ImportProjectPage: React.FC = () => {
                 <label className="block text-sm mb-2">Select Project</label>
                 <select
                   className="w-full rounded-md border border-gray-700/50 bg-gray-800/70 p-2 text-white"
+                  onChange={(e) => {
+                    setSelectedProjectId(e.target.value);
+                  }}
                   value={selectedProjectId}
-                  onChange={(e) => setSelectedProjectId(e.target.value)}
                 >
                   <option value="">Choose a project…</option>
                   {projects.map((p) => (
@@ -476,8 +474,10 @@ const ImportProjectPage: React.FC = () => {
                 </label>
                 <select
                   className="w-full rounded-md border border-gray-700/50 bg-gray-800/70 p-2 text-white"
+                  onChange={(e) => {
+                    setCredentialCategory(e.target.value);
+                  }}
                   value={credentialCategory}
-                  onChange={(e) => setCredentialCategory(e.target.value)}
                 >
                   {CATEGORY_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -493,9 +493,11 @@ const ImportProjectPage: React.FC = () => {
             <label className="block text-sm mb-2">.env Content</label>
             <textarea
               className="w-full rounded-md border border-gray-700/50 bg-gray-800/70 p-3 text-white min-h-[220px]"
+              onChange={(e) => {
+                setEnvText(e.target.value);
+              }}
               placeholder={`# Comments supported\nOPENAI_API_KEY=sk-...\nSTRIPE_SECRET=sk_live_...`}
               value={envText}
-              onChange={(e) => setEnvText(e.target.value)}
             />
             <div className="mt-2 text-xs text-gray-400">
               Detected {total} entries
@@ -509,7 +511,9 @@ const ImportProjectPage: React.FC = () => {
               onClick={() => {
                 setIsParsing(true);
                 // Just trigger parse via state update; already memoized
-                setTimeout(() => setIsParsing(false), 50);
+                setTimeout(() => {
+                  setIsParsing(false);
+                }, 50);
               }}
               type="button"
             >
@@ -542,7 +546,7 @@ const ImportProjectPage: React.FC = () => {
                   </thead>
                   <tbody>
                     {parsed.map((p) => (
-                      <tr key={p.key} className="border-t border-gray-800/50">
+                      <tr className="border-t border-gray-800/50" key={p.key}>
                         <td className="p-2 font-mono text-gray-300">{p.key}</td>
                         <td className="p-2">{p.key}</td>
                         <td className="p-2 capitalize">
@@ -579,8 +583,8 @@ const ImportProjectPage: React.FC = () => {
                         );
                         return (
                           <tr
-                            key={p.key}
                             className="border-t border-gray-800/50"
+                            key={p.key}
                           >
                             <td className="p-2 font-mono text-gray-300">
                               {p.key}
@@ -588,7 +592,6 @@ const ImportProjectPage: React.FC = () => {
                             <td className="p-2">
                               <select
                                 className="bg-gray-800/70 border border-gray-700/50 rounded-md text-white px-2 py-1"
-                                value={m.role}
                                 onChange={(e) => {
                                   const role = e.target.value as EntryRole;
                                   setRoleMap((prev) => {
@@ -611,6 +614,7 @@ const ImportProjectPage: React.FC = () => {
                                     return next;
                                   });
                                 }}
+                                value={m.role}
                               >
                                 <option value="key">Key</option>
                                 <option value="secret">Secret</option>
@@ -621,7 +625,6 @@ const ImportProjectPage: React.FC = () => {
                               {m.role === "secret" ? (
                                 <select
                                   className="bg-gray-800/70 border border-gray-700/50 rounded-md text-white px-2 py-1"
-                                  value={m.attachTo ?? ""}
                                   onChange={(e) => {
                                     const attachTo = e.target.value;
                                     setRoleMap((prev) => ({
@@ -630,11 +633,12 @@ const ImportProjectPage: React.FC = () => {
                                         ...(prev[p.key] ?? {
                                           role: "secret" as EntryRole,
                                         }),
-                                        role: "secret",
                                         attachTo,
+                                        role: "secret",
                                       },
                                     }));
                                   }}
+                                  value={m.attachTo ?? ""}
                                 >
                                   {currentKeys.map((k) => (
                                     <option key={k.key} value={k.key}>

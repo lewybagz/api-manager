@@ -13,7 +13,6 @@ import { Link } from "react-router-dom";
 import useUserStore from "../stores/userStore";
 import { trialDaysRemaining } from "../utils/access";
 
-const PAYMENT_LINK = "https://buy.stripe.com/eVq7sKcqb6HXaQYdLObbG04";
 const TEST_PAYMENT_LINK = "https://buy.stripe.com/3cI28q0Ht3vL1go8rubbG05";
 
 export default function PaywallPage() {
