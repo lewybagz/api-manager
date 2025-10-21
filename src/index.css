@@ -1,9 +1,17 @@
-@import url("https://fonts.googleapis.com/css2?family=Electrolize&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&display=swap");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Font loading optimization */
+@font-face {
+  font-family: "Electrolize";
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fredoka";
+  font-display: swap;
+}
 
 /* PW theme colors */
 .pw-theme {
@@ -41,19 +49,22 @@
   h4,
   h5,
   h6 {
-    font-family: "Electrolize", serif;
+    font-family: "Electrolize", "Arial", "Helvetica", sans-serif;
+    font-display: swap;
   }
   p,
   h3,
   span {
-    font-family: "Fredoka", sans-serif;
+    font-family: "Fredoka", "Arial", "Helvetica", sans-serif;
     font-weight: 400;
     font-style: normal;
+    font-display: swap;
   }
   label {
-    font-family: "Fredoka", sans-serif;
+    font-family: "Fredoka", "Arial", "Helvetica", sans-serif;
     font-weight: 600;
     font-style: bold;
+    font-display: swap;
   }
 }
 
