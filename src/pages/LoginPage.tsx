@@ -1,5 +1,8 @@
 import {
+  browserLocalPersistence,
+  browserSessionPersistence,
   createUserWithEmailAndPassword,
+  setPersistence,
   signInWithEmailAndPassword,
 } from "firebase/auth";
 import { doc, serverTimestamp, setDoc, Timestamp } from "firebase/firestore";
@@ -21,6 +24,7 @@ import { auth, db } from "../firebase";
 import { ErrorCategory, logger } from "../services/logger";
 import useAuthStore from "../stores/authStore";
 import useRateLimitStore from "../stores/rateLimitStore";
+import useUserStore from "../stores/userStore";
 
 function getPasswordStrength(password: string): {
   color: string;
@@ -58,6 +62,7 @@ const LoginPage: React.FC = () => {
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
   const [registerName, setRegisterName] = useState("");
+  const [appType, setAppType] = useState<"api" | "pw">("api");
   const [registerError, setRegisterError] = useState<null | string>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
@@ -66,6 +71,14 @@ const LoginPage: React.FC = () => {
   const [remainingTime, setRemainingTime] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLimited, setIsLimited] = useState(false);
+  const [rememberMe, setRememberMe] = useState<boolean>(() => {
+    try {
+      const raw = localStorage.getItem("remember_me");
+      return raw ? JSON.parse(raw) === true : false;
+    } catch {
+      return false;
+    }
+  });
 
   const passwordStrength = useMemo(
     () => getPasswordStrength(registerPassword),
@@ -73,6 +86,7 @@ const LoginPage: React.FC = () => {
   );
 
   const navigate = useNavigate();
+  const isPwMode = isRegister && appType === "pw";
   const {
     error: authError,
     isLoading,
@@ -80,6 +94,7 @@ const LoginPage: React.FC = () => {
     setUser,
     user,
   } = useAuthStore();
+  const { userDoc } = useUserStore();
   const {
     addFailedAttempt,
     getRemainingLockoutTime,
@@ -88,10 +103,10 @@ const LoginPage: React.FC = () => {
   } = useRateLimitStore();
 
   useEffect(() => {
-    if (user) {
-      void navigate("/dashboard");
+    if (user && userDoc) {
+      void navigate(userDoc.appType === "pw" ? "/pw" : "/dashboard");
     }
-  }, [user, navigate]);
+  }, [user, userDoc, navigate]);
 
   // Update remaining time every second if rate limited
   useEffect(() => {
@@ -116,6 +131,34 @@ const LoginPage: React.FC = () => {
       clearInterval(interval);
     };
   }, [email, isRateLimited, getRemainingLockoutTime]);
+
+  // Toggle PW theme variables when registering for PW mode
+  useEffect(() => {
+    if (isPwMode) {
+      document.body.classList.add("pw-theme");
+    } else {
+      document.body.classList.remove("pw-theme");
+    }
+    return () => {
+      document.body.classList.remove("pw-theme");
+    };
+  }, [isPwMode]);
+
+  const inputCls = isPwMode
+    ? "pw-input w-full"
+    : "block w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm py-3 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200 text-sm sm:text-base";
+  const emailInputCls = isPwMode
+    ? "pw-input w-full pl-10"
+    : "block w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200 text-sm sm:text-base";
+  const passwordInputCls = isPwMode
+    ? "pw-input w-full pl-10 pr-12"
+    : "block w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm py-3 pl-12 pr-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200 text-sm sm:text-base";
+  const cardCls = isPwMode
+    ? "w-full max-w-md pw-card p-5"
+    : "w-full max-w-md bg-gradient-to-br from-brand-dark-secondary/90 to-brand-dark-secondary/70 backdrop-blur-xl border border-brand-blue/30 shadow-2xl rounded-3xl p-4 sm:p-8 pt-4 animate-fade-in mx-2 sm:mx-0";
+  const submitBtnCls = isPwMode
+    ? "w-full pw-btn-primary py-3 text-white/80 font-bold tracking-wide"
+    : "w-full bg-brand-blue hover:from-brand-blue-hover hover:to-brand-primary-dark text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none focus:outline-none focus:ring-2 focus:ring-brand-blue/50 text-base";
 
   const validateForm = () => {
     if (!email || !password) {
@@ -163,6 +206,10 @@ const LoginPage: React.FC = () => {
         action: "login",
         email,
       });
+      await setPersistence(
+        auth,
+        rememberMe ? browserLocalPersistence : browserSessionPersistence
+      );
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
@@ -180,8 +227,19 @@ const LoginPage: React.FC = () => {
         userId: userCredential.user.uid,
       });
 
-      // Navigate to dashboard
-      void navigate("/dashboard");
+      // Navigate based on appType
+      try {
+        const userDocRef = doc(db, "users", userCredential.user.uid);
+        const snap = await (
+          await import("firebase/firestore")
+        ).getDoc(userDocRef);
+        const type = (
+          snap.exists() ? (snap.data() as any).appType : undefined
+        ) as "api" | "pw" | undefined;
+        void navigate(type === "pw" ? "/pw" : "/dashboard");
+      } catch {
+        void navigate("/dashboard");
+      }
     } catch (error: unknown) {
       logger.error(ErrorCategory.AUTH, "Login failed", {
         action: "login",
@@ -246,6 +304,15 @@ const LoginPage: React.FC = () => {
       return;
     }
 
+    // Temporarily disable API app registration while allowing PW mode
+    if (appType === "api") {
+      setRegisterError(
+        "Registration for the API Credential Manager is currently disabled. Please choose Password Manager to proceed."
+      );
+      setRegisterLoading(false);
+      return;
+    }
+
     try {
       logger.info(ErrorCategory.AUTH, "Attempting registration", {
         action: "register",
@@ -265,6 +332,7 @@ const LoginPage: React.FC = () => {
         new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       );
       const userDoc = {
+        appType,
         createdAt: serverTimestamp(),
         displayName: registerName,
         email: registerEmail,
@@ -282,7 +350,7 @@ const LoginPage: React.FC = () => {
       });
 
       setUser(userCredential.user);
-      void navigate("/dashboard");
+      void navigate(appType === "pw" ? "/pw" : "/dashboard");
     } catch (err: unknown) {
       let message = "An unexpected error occurred. Please try again.";
       const error = err as { code?: string; message?: string };
@@ -350,7 +418,13 @@ const LoginPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary flex items-center justify-center relative overflow-hidden px-2 sm:px-0">
+    <div
+      className={
+        isPwMode
+          ? "min-h-screen bg-gradient-to-br from-pw-bg-3 to-pw-bg-1 flex items-center justify-center px-3"
+          : "min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary flex items-center justify-center relative overflow-hidden px-2 sm:px-0"
+      }
+    >
       {/* Enhanced SVG Background */}
       <div className="fixed inset-0 w-full h-full -z-10 pointer-events-none opacity-30">
         <svg
@@ -381,24 +455,45 @@ const LoginPage: React.FC = () => {
         </svg>
       </div>
 
-      <div className="w-full max-w-md bg-gradient-to-br from-brand-dark-secondary/90 to-brand-dark-secondary/70 backdrop-blur-xl border border-brand-blue/30 shadow-2xl rounded-3xl p-4 sm:p-8 pt-4 animate-fade-in mx-2 sm:mx-0">
+      <div className={cardCls}>
         <div className="flex flex-col items-center">
           <img
             alt="ZekerKey Logo"
             className="h-20 w-20 sm:h-32 sm:w-32 animate-pop-in mb-2"
-            src="/assets/logos/logo-192x192.png"
+            src={
+              isPwMode
+                ? "/assets/logos/logo-512x512-accent.png"
+                : "/assets/logos/logo-192x192.png"
+            }
           />
-          <h1 className="flex flex-col items-center justify-center text-3xl sm:text-4xl text-white mb-2 tracking-tight">
-            <span className="flex flex-col items-center justify-center text-brand-light">
-              Zeker
-              <span className="text-brand-blue text-sm tracking-wide">
-                Powered by Tovuti
+          <h1
+            className={
+              isPwMode
+                ? "text-2xl text-red-200 mb-1"
+                : "flex flex-col items-center justify-center text-3xl sm:text-4xl text-white mb-2 tracking-tight"
+            }
+          >
+            {isPwMode ? (
+              <span className="flex flex-col items-center justify-center text-brand-light">
+                Zeker Passwords
+                <span className="text-pw-accent-2 text-sm tracking-wide">
+                  Powered by Tovuti
+                </span>
               </span>
-            </span>
+            ) : (
+              <span className="flex flex-col items-center justify-center text-brand-light">
+                Zeker
+                <span className="text-brand-blue text-sm tracking-wide">
+                  Powered by Tovuti
+                </span>
+              </span>
+            )}
           </h1>
-          <p className="text-brand-light-secondary mb-8 text-center text-base leading-relaxed">
-            Securely manage your API credentials in one place.
-          </p>
+          {!isPwMode && (
+            <p className="text-brand-light-secondary mb-6 text-center text-base leading-relaxed">
+              Securely manage your API credentials in one place.
+            </p>
+          )}
 
           {isLimited && (
             <div className="w-full mb-6 p-4 bg-gradient-to-r from-red-900/40 to-red-800/30 border border-red-500/50 rounded-xl flex items-center space-x-3 backdrop-blur-sm">
@@ -417,12 +512,22 @@ const LoginPage: React.FC = () => {
           )}
 
           {/* Enhanced Tab Switcher */}
-          <div className="flex w-full mb-8 bg-gray-800/50 rounded-xl p-1 backdrop-blur-sm">
+          <div
+            className={
+              isPwMode
+                ? "flex w-full mb-4 bg-[color:var(--pw-bg-2)] rounded-xl p-1"
+                : "flex w-full mb-8 bg-gray-800/50 rounded-xl p-1 backdrop-blur-sm"
+            }
+          >
             <button
               aria-current={!isRegister}
-              className={`flex-1 py-3 rounded-lg text-base font-semibold transition-all duration-200 ${
+              className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
                 !isRegister
-                  ? "bg-brand-blue text-white shadow-lg"
+                  ? isPwMode
+                    ? "bg-[color:var(--pw-card)] text-red-200"
+                    : "bg-brand-blue text-white shadow-lg"
+                  : isPwMode
+                  ? "text-[color:var(--pw-muted)] hover:bg-[color:var(--pw-bg-1)]"
                   : "text-brand-light-secondary hover:text-white hover:bg-gray-700/50"
               }`}
               onClick={() => {
@@ -434,9 +539,13 @@ const LoginPage: React.FC = () => {
             </button>
             <button
               aria-current={isRegister}
-              className={`flex-1 py-3 rounded-lg text-base font-semibold transition-all duration-200 ${
+              className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
                 isRegister
-                  ? "bg-brand-blue text-white shadow-lg"
+                  ? isPwMode
+                    ? "bg-[color:var(--pw-card)] text-red-200"
+                    : "bg-brand-blue text-white shadow-lg"
+                  : isPwMode
+                  ? "text-[color:var(--pw-muted)] hover:bg-[color:var(--pw-bg-1)]"
                   : "text-brand-light-secondary hover:text-white hover:bg-gray-700/50"
               }`}
               onClick={() => {
@@ -468,22 +577,26 @@ const LoginPage: React.FC = () => {
                 type="text"
                 value={email}
               />
-              <div className="space-y-5">
+              <div className="space-y-4">
                 <div className="relative">
                   <label
-                    className="block text-sm font-medium text-brand-light-secondary mb-2"
+                    className={
+                      isPwMode
+                        ? "block text-xs font-medium text-[color:var(--pw-muted)] mb-1"
+                        : "block text-sm font-medium text-brand-light-secondary mb-2"
+                    }
                     htmlFor="email"
                   >
                     Email address
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Mail className="h-5 w-5 text-gray-400" />
                     </div>
                     <input
                       aria-label="Email address"
                       autoComplete="email"
-                      className="block w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200 text-sm sm:text-base"
+                      className={emailInputCls}
                       disabled={isSubmitting}
                       id="email"
                       name="email"
@@ -499,19 +612,23 @@ const LoginPage: React.FC = () => {
                 </div>
                 <div className="relative">
                   <label
-                    className="block text-sm font-medium text-brand-light-secondary mb-2"
+                    className={
+                      isPwMode
+                        ? "block text-xs font-medium text-[color:var(--pw-muted)] mb-1"
+                        : "block text-sm font-medium text-brand-light-secondary mb-2"
+                    }
                     htmlFor="password"
                   >
                     Password
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Lock className="h-5 w-5 text-gray-400" />
                     </div>
                     <input
                       aria-label="Password"
                       autoComplete="current-password"
-                      className="block w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm py-3 pl-12 pr-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200 text-sm sm:text-base"
+                      className={passwordInputCls}
                       disabled={isSubmitting}
                       id="password"
                       name="password"
@@ -527,7 +644,11 @@ const LoginPage: React.FC = () => {
                       aria-label={
                         showPassword ? "Hide password" : "Show password"
                       }
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-brand-blue focus:outline-none transition-colors duration-200"
+                      className={
+                        isPwMode
+                          ? "absolute right-3 top-1/2 -translate-y-1/2 text-[color:var(--pw-muted)] hover:text-red-400"
+                          : "absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-brand-blue focus:outline-none transition-colors duration-200"
+                      }
                       disabled={isSubmitting}
                       onClick={() => {
                         setShowPassword((v) => !v);
@@ -543,6 +664,44 @@ const LoginPage: React.FC = () => {
                     </button>
                   </div>
                 </div>
+                <div className="flex items-center justify-between">
+                  <label
+                    className={
+                      isPwMode
+                        ? "text-[color:var(--pw-muted)] text-xs"
+                        : "text-brand-light-secondary text-sm"
+                    }
+                  >
+                    <input
+                      type="checkbox"
+                      className="mr-2 align-middle"
+                      checked={rememberMe}
+                      onChange={(e) => {
+                        const next = e.target.checked;
+                        setRememberMe(next);
+                        try {
+                          localStorage.setItem(
+                            "remember_me",
+                            JSON.stringify(next)
+                          );
+                        } catch {
+                          void 0;
+                        }
+                      }}
+                    />
+                    Remember me
+                  </label>
+                  <a
+                    className={
+                      isPwMode
+                        ? "text-xs text-red-400 hover:text-red-300"
+                        : "text-sm text-brand-blue hover:text-brand-blue-hover transition-colors duration-200"
+                    }
+                    href="/forgot-password"
+                  >
+                    Forgot your password?
+                  </a>
+                </div>
               </div>
 
               {authError && (
@@ -555,7 +714,7 @@ const LoginPage: React.FC = () => {
               )}
 
               <button
-                className="w-full bg-brand-blue hover:from-brand-blue-hover hover:to-brand-primary-dark text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none focus:outline-none focus:ring-2 focus:ring-brand-blue/50 text-base"
+                className={submitBtnCls}
                 disabled={isSubmitting}
                 type="submit"
               >
@@ -572,14 +731,7 @@ const LoginPage: React.FC = () => {
                 )}
               </button>
 
-              <div className="text-center pt-2">
-                <a
-                  className="text-sm text-brand-blue hover:text-brand-blue-hover transition-colors duration-200"
-                  href="/forgot-password"
-                >
-                  Forgot your password?
-                </a>
-              </div>
+              {/* end actions */}
             </form>
           )}
 
@@ -603,10 +755,60 @@ const LoginPage: React.FC = () => {
                 type="text"
                 value={registerEmail}
               />
-              <div className="space-y-5">
+              <div className="space-y-4">
+                {/* App Type Selection */}
                 <div className="relative">
                   <label
-                    className="block text-sm font-medium text-brand-light-secondary mb-2"
+                    className={
+                      isPwMode
+                        ? "block text-xs font-medium text-[color:var(--pw-muted)] mb-1"
+                        : "block text-sm font-medium text-brand-light-secondary mb-2"
+                    }
+                  >
+                    Choose your app
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAppType("api")}
+                      className={
+                        isPwMode
+                          ? `rounded-lg py-2 px-3 text-sm font-semibold transition-colors border border-[color:var(--pw-border)] text-[color:var(--pw-muted)] hover:bg-[color:var(--pw-bg-1)]`
+                          : `rounded-xl py-3 px-4 text-sm font-semibold transition-all border ${
+                              appType === "api"
+                                ? "bg-brand-blue text-white border-brand-blue shadow-lg"
+                                : "bg-gray-800/80 text-brand-light-secondary border-gray-700/50 hover:bg-gray-700/50"
+                            }`
+                      }
+                      aria-pressed={appType === "api"}
+                    >
+                      API Credential Manager
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAppType("pw")}
+                      className={
+                        isPwMode
+                          ? `rounded-lg py-2 px-3 text-sm font-semibold transition-colors border border-[color:var(--pw-border)] bg-[color:var(--pw-card)] text-red-200`
+                          : `rounded-xl py-3 px-4 text-sm font-semibold transition-all border ${
+                              appType === "pw"
+                                ? "bg-brand-blue text-white border-brand-blue shadow-lg"
+                                : "bg-gray-800/80 text-brand-light-secondary border-gray-700/50 hover:bg-gray-700/50"
+                            }`
+                      }
+                      aria-pressed={appType === "pw"}
+                    >
+                      Password Manager
+                    </button>
+                  </div>
+                </div>
+                <div className="relative">
+                  <label
+                    className={
+                      isPwMode
+                        ? "block text-xs font-medium text-[color:var(--pw-muted)] mb-1"
+                        : "block text-sm font-medium text-brand-light-secondary mb-2"
+                    }
                     htmlFor="registerName"
                   >
                     Display Name <span className="text-red-400">*</span>
@@ -615,7 +817,7 @@ const LoginPage: React.FC = () => {
                     <input
                       aria-label="Display Name"
                       autoComplete="name"
-                      className="block w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm py-3 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200 text-sm sm:text-base"
+                      className={inputCls}
                       id="registerName"
                       name="registerName"
                       onChange={(e) => {
@@ -630,19 +832,23 @@ const LoginPage: React.FC = () => {
                 </div>
                 <div className="relative">
                   <label
-                    className="block text-sm font-medium text-brand-light-secondary mb-2"
+                    className={
+                      isPwMode
+                        ? "block text-xs font-medium text-[color:var(--pw-muted)] mb-1"
+                        : "block text-sm font-medium text-brand-light-secondary mb-2"
+                    }
                     htmlFor="registerEmail"
                   >
                     Email address
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Mail className="h-5 w-5 text-gray-400" />
                     </div>
                     <input
                       aria-label="Email address"
                       autoComplete="email"
-                      className="block w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200 text-sm sm:text-base"
+                      className={emailInputCls}
                       id="registerEmail"
                       name="registerEmail"
                       onChange={(e) => {
@@ -657,19 +863,29 @@ const LoginPage: React.FC = () => {
                 </div>
                 <div className="relative">
                   <label
-                    className="block text-sm font-medium text-brand-light-secondary mb-2"
+                    className={
+                      isPwMode
+                        ? "block text-xs font-medium text-[color:var(--pw-muted)] mb-1"
+                        : "block text-sm font-medium text-brand-light-secondary mb-2"
+                    }
                     htmlFor="registerPassword"
                   >
                     Password
                   </label>
+                  {isPwMode ? (
+                    <div className="text-xs text-white/20 mb-1">
+                      Does it make sense to store this password in a password
+                      manager? idk...
+                    </div>
+                  ) : null}
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Lock className="h-5 w-5 text-gray-400" />
                     </div>
                     <input
                       aria-label="Password"
                       autoComplete="new-password"
-                      className="block w-full rounded-xl border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm py-3 pl-12 pr-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue/50 transition-all duration-200 text-sm sm:text-base"
+                      className={passwordInputCls}
                       id="registerPassword"
                       name="registerPassword"
                       onChange={(e) => {
@@ -684,7 +900,11 @@ const LoginPage: React.FC = () => {
                       aria-label={
                         showRegisterPassword ? "Hide password" : "Show password"
                       }
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-brand-blue focus:outline-none transition-colors duration-200"
+                      className={
+                        isPwMode
+                          ? "absolute right-3 top-1/2 -translate-y-1/2 text-white hover:text-red-400"
+                          : "absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-brand-blue focus:outline-none transition-colors duration-200"
+                      }
                       onClick={() => {
                         setShowRegisterPassword((v) => !v);
                       }}
@@ -738,7 +958,7 @@ const LoginPage: React.FC = () => {
               )}
 
               <button
-                className="w-full bg-gradient-to-r from-brand-blue to-brand-primary hover:from-brand-blue-hover hover:to-brand-primary-dark text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none focus:outline-none focus:ring-2 focus:ring-brand-blue/50 text-base"
+                className={submitBtnCls}
                 disabled={!registerName.trim() || passwordStrength.score < 4}
                 type="submit"
               >

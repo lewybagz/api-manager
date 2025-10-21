@@ -4,8 +4,10 @@ import { BrowserRouter } from "react-router-dom";
 
 import "./index.css";
 import App from "./App.tsx";
+import { applyBranding } from "./utils/appBranding";
 
 const rootElement = document.getElementById("root");
+applyBranding();
 
 if (!rootElement) {
   throw new Error("Failed to find the root element");

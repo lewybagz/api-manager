@@ -74,7 +74,7 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
 async function importKey(keyHex: string): Promise<CryptoKey> {
   const matches = keyHex.match(/.{1,2}/g) ?? [];
   const keyBytes = new Uint8Array(matches.map((byte) => parseInt(byte, 16)));
-  return crypto.subtle.importKey("raw", keyBytes, "AES-GCM", true, [
+  return crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, [
     "encrypt",
     "decrypt",
   ]);

@@ -36,6 +36,7 @@ const useUserStore = create<UserStore>((set) => ({
       } else {
         // Create user document if it doesn't exist
         const newUserDoc: UserDocument = {
+          appType: 'api',
           billing: { status: 'trialing' },
           createdAt: Timestamp.now(),
           displayName: currentUser.displayName,

@@ -1,5 +1,5 @@
 import { signOut } from "firebase/auth";
-import { Loader2, LogOut, Mail, Shield, User, User2 } from "lucide-react";
+import { Loader2, Lock, LogOut, Mail, Shield, User, User2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -8,7 +8,13 @@ import useAuthStore from "../../stores/authStore";
 import useUserStore from "../../stores/userStore";
 
 const Navbar: React.FC = () => {
-  const { isLoading: authLoading, setError, setUser, user } = useAuthStore();
+  const {
+    isLoading: authLoading,
+    setError,
+    setUser,
+    user,
+    lockNow,
+  } = useAuthStore();
   const {
     clearUserDoc,
     fetchUserDoc,
@@ -117,6 +123,15 @@ const Navbar: React.FC = () => {
                           <p className="text-gray-400">{userDoc?.email}</p>
                         </div>
                       </div>
+                      <button
+                        className="flex w-full items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                        onClick={() => void lockNow()}
+                        role="menuitem"
+                        tabIndex={-1}
+                      >
+                        <Lock className="h-4 w-4 mr-2" />
+                        Lock now
+                      </button>
                       <button
                         className="flex w-full items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
                         onClick={() => void handleLogout()}

@@ -10,6 +10,12 @@ export default defineConfig({
       plugins: [tailwindcss],
     },
   },
+  build: {
+    sourcemap: false,
+  },
+  esbuild: {
+    drop: ['console', 'debugger'],
+  },
   plugins: [react()],
   resolve: {
     alias: {

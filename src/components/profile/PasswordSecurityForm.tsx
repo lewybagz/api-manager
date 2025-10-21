@@ -19,10 +19,12 @@ import useAuthStore from "../../stores/authStore"; // Adjust path as needed
 
 interface PasswordSecurityFormProps {
   firebaseUser: FirebaseUser | null; // For auth operations
+  variant?: "default" | "pw";
 }
 
 const PasswordSecurityForm: React.FC<PasswordSecurityFormProps> = ({
   firebaseUser,
+  variant = "default",
 }) => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -97,8 +99,15 @@ const PasswordSecurityForm: React.FC<PasswordSecurityFormProps> = ({
     }
   };
 
+  const isPw = variant === "pw";
   return (
-    <div className="bg-brand-dark-secondary p-6 rounded-lg border border-gray-800">
+    <div
+      className={
+        isPw
+          ? "p-0"
+          : "bg-brand-dark-secondary p-6 rounded-lg border border-gray-800"
+      }
+    >
       <form
         onSubmit={(e: React.FormEvent) => {
           void handleChangePassword(e);
@@ -106,27 +115,56 @@ const PasswordSecurityForm: React.FC<PasswordSecurityFormProps> = ({
       >
         <div className="space-y-6">
           <div className="mb-4">
-            <p className="text-sm text-gray-400 mb-1">
-              <ShieldAlert className="h-4 w-4 inline-block mr-1 text-yellow-500" />
-              Use a strong password and don't reuse it for other accounts.
+            <p
+              className={
+                isPw
+                  ? "text-xs text-[color:var(--pw-muted)] mb-1"
+                  : "text-sm text-gray-400 mb-1"
+              }
+            >
+              <ShieldAlert
+                className={
+                  isPw
+                    ? "h-4 w-4 inline-block mr-1 text-red-400"
+                    : "h-4 w-4 inline-block mr-1 text-yellow-500"
+                }
+              />
+              Use a strong password and don't reuse it for other accounts. Make
+              sure to use a password manager lol
             </p>
           </div>
 
           <div>
             <label
-              className="block text-sm font-medium text-gray-300 mb-1"
+              className={
+                isPw
+                  ? "block text-xs font-medium text-[color:var(--pw-muted)] mb-1"
+                  : "block text-sm font-medium text-gray-300 mb-1"
+              }
               htmlFor="currentPassword"
             >
               Current Password
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Key className="h-5 w-5 text-gray-500" />
+                <Key
+                  className={
+                    isPw
+                      ? "h-5 w-5 text-[color:var(--pw-muted)]"
+                      : "h-5 w-5 text-gray-500"
+                  }
+                />
               </div>
               <input
-                className={`w-full bg-gray-800 text-white pl-10 pr-10 py-2 rounded-md border ${
-                  errors.currentPassword ? "border-red-500" : "border-gray-700"
-                } focus:outline-none`}
+                className={
+                  isPw
+                    ? `pw-input w-full pl-10 pr-10`
+                    : `w-full bg-gray-800 text-white pl-10 pr-10 py-2 rounded-md border ${
+                        errors.currentPassword
+                          ? "border-red-500"
+                          : "border-gray-700"
+                      } focus:outline-none`
+                }
                 id="currentPassword"
                 onChange={(e) => {
                   setCurrentPassword(e.target.value);
@@ -136,7 +174,11 @@ const PasswordSecurityForm: React.FC<PasswordSecurityFormProps> = ({
                 value={currentPassword}
               />
               <button
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300"
+                className={
+                  isPw
+                    ? "absolute inset-y-0 right-0 pr-3 flex items-center text-[color:var(--pw-muted)] hover:text-red-400"
+                    : "absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300"
+                }
                 onClick={() => {
                   setShowCurrentPassword(!showCurrentPassword);
                 }}
@@ -159,19 +201,35 @@ const PasswordSecurityForm: React.FC<PasswordSecurityFormProps> = ({
 
           <div>
             <label
-              className="block text-sm font-medium text-gray-300 mb-1"
+              className={
+                isPw
+                  ? "block text-xs font-medium text-[color:var(--pw-muted)] mb-1"
+                  : "block text-sm font-medium text-gray-300 mb-1"
+              }
               htmlFor="newPassword"
             >
               New Password
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Key className="h-5 w-5 text-gray-500" />
+                <Key
+                  className={
+                    isPw
+                      ? "h-5 w-5 text-[color:var(--pw-muted)]"
+                      : "h-5 w-5 text-gray-500"
+                  }
+                />
               </div>
               <input
-                className={`w-full bg-gray-800 text-white pl-10 pr-10 py-2 rounded-md border ${
-                  errors.newPassword ? "border-red-500" : "border-gray-700"
-                } focus:outline-none`}
+                className={
+                  isPw
+                    ? `pw-input w-full pl-10 pr-10`
+                    : `w-full bg-gray-800 text-white pl-10 pr-10 py-2 rounded-md border ${
+                        errors.newPassword
+                          ? "border-red-500"
+                          : "border-gray-700"
+                      } focus:outline-none`
+                }
                 id="newPassword"
                 onChange={(e) => {
                   setNewPassword(e.target.value);
@@ -181,7 +239,11 @@ const PasswordSecurityForm: React.FC<PasswordSecurityFormProps> = ({
                 value={newPassword}
               />
               <button
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300"
+                className={
+                  isPw
+                    ? "absolute inset-y-0 right-0 pr-3 flex items-center text-[color:var(--pw-muted)] hover:text-red-400"
+                    : "absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300"
+                }
                 onClick={() => {
                   setShowNewPassword(!showNewPassword);
                 }}
@@ -202,19 +264,35 @@ const PasswordSecurityForm: React.FC<PasswordSecurityFormProps> = ({
 
           <div>
             <label
-              className="block text-sm font-medium text-gray-300 mb-1"
+              className={
+                isPw
+                  ? "block text-xs font-medium text-[color:var(--pw-muted)] mb-1"
+                  : "block text-sm font-medium text-gray-300 mb-1"
+              }
               htmlFor="confirmPassword"
             >
               Confirm New Password
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <CheckCircle className="h-5 w-5 text-gray-500" />
+                <CheckCircle
+                  className={
+                    isPw
+                      ? "h-5 w-5 text-[color:var(--pw-muted)]"
+                      : "h-5 w-5 text-gray-500"
+                  }
+                />
               </div>
               <input
-                className={`w-full bg-gray-800 text-white pl-10 pr-3 py-2 rounded-md border ${
-                  errors.confirmPassword ? "border-red-500" : "border-gray-700"
-                } focus:outline-none`}
+                className={
+                  isPw
+                    ? `pw-input w-full pl-10 pr-3`
+                    : `w-full bg-gray-800 text-white pl-10 pr-3 py-2 rounded-md border ${
+                        errors.confirmPassword
+                          ? "border-red-500"
+                          : "border-gray-700"
+                      } focus:outline-none`
+                }
                 id="confirmPassword"
                 onChange={(e) => {
                   setConfirmPassword(e.target.value);
@@ -233,7 +311,11 @@ const PasswordSecurityForm: React.FC<PasswordSecurityFormProps> = ({
 
           <div className="pt-2">
             <button
-              className="flex items-center justify-center w-full sm:w-auto px-6 py-2 bg-brand-blue hover:bg-brand-blue-hover text-white font-medium rounded-md transition-colors"
+              className={
+                isPw
+                  ? "pw-btn-primary flex items-center justify-center w-full sm:w-auto px-6 py-2"
+                  : "flex items-center justify-center w-full sm:w-auto px-6 py-2 bg-brand-blue hover:bg-brand-blue-hover text-white font-medium rounded-md transition-colors"
+              }
               disabled={isChangingPassword}
               type="submit"
             >

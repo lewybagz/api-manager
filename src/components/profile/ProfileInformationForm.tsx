@@ -14,12 +14,14 @@ interface ProfileInformationFormProps {
   firebaseUser: FirebaseUser | null;
   initialDisplayName: string;
   initialEmail: string;
+  variant?: "default" | "pw";
 }
 
 const ProfileInformationForm: React.FC<ProfileInformationFormProps> = ({
   firebaseUser,
   initialDisplayName,
   initialEmail,
+  variant = "default",
 }) => {
   const [displayName, setDisplayName] = useState(initialDisplayName);
   const [email, setEmail] = useState(initialEmail);
@@ -95,8 +97,16 @@ const ProfileInformationForm: React.FC<ProfileInformationFormProps> = ({
     }
   };
 
+  const isPw = variant === "pw";
+
   return (
-    <div className="bg-brand-dark-secondary p-6 rounded-lg border border-gray-800">
+    <div
+      className={
+        isPw
+          ? "p-0"
+          : "bg-brand-dark-secondary p-6 rounded-lg border border-gray-800"
+      }
+    >
       <form
         onSubmit={(e: React.FormEvent) => {
           void handleUpdateProfile(e);
@@ -105,19 +115,38 @@ const ProfileInformationForm: React.FC<ProfileInformationFormProps> = ({
         <div className="space-y-6">
           <div>
             <label
-              className="block text-sm font-medium text-gray-300 mb-1"
+              className={
+                isPw
+                  ? "block text-xs font-medium text-[color:var(--pw-muted)] mb-1"
+                  : "block text-sm font-medium text-gray-300 mb-1"
+              }
               htmlFor="displayName"
             >
               Display Name
+              <span className=" ml-1 text-(1px) text-gray-400">
+                (Not Sure Why)
+              </span>
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <UserIcon className="h-5 w-5 text-gray-500" />
+                <UserIcon
+                  className={
+                    isPw
+                      ? "h-5 w-5 text-[color:var(--pw-muted)]"
+                      : "h-5 w-5 text-gray-500"
+                  }
+                />
               </div>
               <input
-                className={`w-full bg-gray-800 text-white pl-10 pr-3 py-2 rounded-md border ${
-                  errors.displayName ? "border-red-500" : "border-gray-700"
-                } focus:outline-none`}
+                className={
+                  isPw
+                    ? `pw-input w-full pl-10 pr-3`
+                    : `w-full bg-gray-800 text-white pl-10 pr-3 py-2 rounded-md border ${
+                        errors.displayName
+                          ? "border-red-500"
+                          : "border-gray-700"
+                      } focus:outline-none`
+                }
                 id="displayName"
                 onChange={(e) => {
                   setDisplayName(e.target.value);
@@ -128,25 +157,47 @@ const ProfileInformationForm: React.FC<ProfileInformationFormProps> = ({
               />
             </div>
             {errors.displayName && (
-              <p className="text-sm text-red-500 mt-1">{errors.displayName}</p>
+              <p
+                className={
+                  isPw
+                    ? "text-xs text-red-400 mt-1"
+                    : "text-sm text-red-500 mt-1"
+                }
+              >
+                {errors.displayName}
+              </p>
             )}
           </div>
 
           <div>
             <label
-              className="block text-sm font-medium text-gray-300 mb-1"
+              className={
+                isPw
+                  ? "block text-xs font-medium text-[color:var(--pw-muted)] mb-1"
+                  : "block text-sm font-medium text-gray-300 mb-1"
+              }
               htmlFor="email"
             >
               Email Address
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <AtSign className="h-5 w-5 text-gray-500" />
+                <AtSign
+                  className={
+                    isPw
+                      ? "h-5 w-5 text-[color:var(--pw-muted)]"
+                      : "h-5 w-5 text-gray-500"
+                  }
+                />
               </div>
               <input
-                className={`w-full bg-gray-800 text-white pl-10 pr-3 py-2 rounded-md border ${
-                  errors.email ? "border-red-500" : "border-gray-700"
-                } focus:outline-none`}
+                className={
+                  isPw
+                    ? `pw-input w-full pl-10 pr-3`
+                    : `w-full bg-gray-800 text-white pl-10 pr-3 py-2 rounded-md border ${
+                        errors.email ? "border-red-500" : "border-gray-700"
+                      } focus:outline-none`
+                }
                 id="email"
                 onChange={(e) => {
                   setEmail(e.target.value);
@@ -157,13 +208,25 @@ const ProfileInformationForm: React.FC<ProfileInformationFormProps> = ({
               />
             </div>
             {errors.email && (
-              <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+              <p
+                className={
+                  isPw
+                    ? "text-xs text-red-400 mt-1"
+                    : "text-sm text-red-500 mt-1"
+                }
+              >
+                {errors.email}
+              </p>
             )}
           </div>
 
           <div className="pt-2">
             <button
-              className="flex items-center justify-center w-full sm:w-auto px-6 py-2 bg-brand-blue hover:bg-brand-blue-hover text-white font-medium rounded-md transition-colors"
+              className={
+                isPw
+                  ? "pw-btn-primary flex items-center justify-center w-full sm:w-auto px-6 py-2"
+                  : "flex items-center justify-center w-full sm:w-auto px-6 py-2 bg-brand-blue hover:bg-brand-blue-hover text-white font-medium rounded-md transition-colors"
+              }
               disabled={isUpdating}
               type="submit"
             >

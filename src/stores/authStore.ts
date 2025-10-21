@@ -16,6 +16,7 @@ interface AuthState {
   isLoading: boolean;
   isMasterPasswordModalExplicitlyOpen: boolean;
   masterPasswordSet: boolean;
+  lockNow: () => Promise<void>;
   openMasterPasswordModal: () => void;
   setError: (error: Error | null) => void;
   setLoading: (loading: boolean) => void;
@@ -100,6 +101,15 @@ const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: true,
   isMasterPasswordModalExplicitlyOpen: false,
   masterPasswordSet: false,
+  lockNow: async () => {
+    try {
+      get().clearEncryptionKey();
+      // Best-effort sign-out
+      await auth.signOut();
+    } catch {
+      // ignore
+    }
+  },
   openMasterPasswordModal: () => { set({ isMasterPasswordModalExplicitlyOpen: true }); },
   setError: (error) => { set({ error }); },
   setLoading: (loading) => { set({ isLoading: loading }); },
@@ -168,25 +178,40 @@ const useAuthStore = create<AuthState>((set, get) => ({
       // Check if we have a persisted encryption key for this user
       get().checkPersistedEncryptionKey();
       
-      // Set up session timeout
-      const sessionTimeoutId = window.setTimeout(() => {
-        if (get().user) {
-          get().clearEncryptionKey();
-          // Optionally sign out the user - mark promise as intentionally not awaited
-          void auth.signOut();
+      // Activity-based idle timer (resets on user activity)
+      const IDLE_MS = 30 * 60 * 1000; // 30 minutes
+      let idleTimer = window.setTimeout(() => { void get().lockNow(); }, IDLE_MS);
+      const resetIdle = () => {
+        window.clearTimeout(idleTimer);
+        idleTimer = window.setTimeout(() => { void get().lockNow(); }, IDLE_MS);
+      };
+      const activityEvents = ["mousemove", "keydown", "mousedown", "touchstart", "scroll"] as const;
+      activityEvents.forEach((ev) => window.addEventListener(ev, resetIdle, { passive: true }));
+
+      // Visibility lock: if hidden for more than 5 minutes, lock on show
+      let hiddenAt: number | null = null;
+      const onVis = () => {
+        if (document.hidden) {
+          hiddenAt = Date.now();
+        } else if (hiddenAt && Date.now() - hiddenAt > 5 * 60 * 1000) {
+          hiddenAt = null;
+          void get().lockNow();
         }
-      }, 30 * 60 * 1000); // 30 minutes
+      };
+      document.addEventListener("visibilitychange", onVis);
       
-      // Store timeout ID in sessionStorage - using number for ID to avoid stringification issues
-      sessionStorage.setItem('sessionTimeoutId', sessionTimeoutId.toString());
+      // Persist listeners for cleanup
+      sessionStorage.setItem('idleListeners', 'active');
+      (window as any).__idle_cleanup__ = () => {
+        window.clearTimeout(idleTimer);
+        activityEvents.forEach((ev) => window.removeEventListener(ev, resetIdle));
+        document.removeEventListener("visibilitychange", onVis);
+      };
     } else {
       useUserStore.getState().clearUserDoc();
-      // Clear session timeout
-      const timeoutId = sessionStorage.getItem('sessionTimeoutId');
-      if (timeoutId) {
-        clearTimeout(parseInt(timeoutId));
-        sessionStorage.removeItem('sessionTimeoutId');
-      }
+      // Cleanup idle/visibility listeners
+      try { (window as any).__idle_cleanup__?.(); } catch {}
+      sessionStorage.removeItem('idleListeners');
       // Also close the explicit modal on logout if it was open
       set({ isMasterPasswordModalExplicitlyOpen: false });
     }

@@ -310,14 +310,6 @@ const MasterPasswordModal: React.FC<MasterPasswordModalProps> = ({
           </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
             <button
-              className="px-4 py-2 border border-brand-light-secondary text-brand-light-secondary rounded-md hover:bg-brand-dark focus:outline-none disabled:opacity-50 order-2 sm:order-1"
-              disabled={isLoading}
-              onClick={onClose}
-              type="button"
-            >
-              Cancel
-            </button>
-            <button
               className="px-4 py-2 bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold rounded-md focus:outline-none disabled:opacity-50 order-1 sm:order-2"
               disabled={
                 isLoading ||

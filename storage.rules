@@ -5,9 +5,11 @@ service firebase.storage {
     // Path: users/{userId}/projects/{projectId}/files/{fileId}
     match /users/{userId}/projects/{projectId}/files/{fileId} {
       allow read: if request.auth != null && request.auth.uid == userId;
-      // Allow write if authenticated, UID matches, and file size is less than 10MB.
+      // Allow write if authenticated, UID matches, enforce 10MB limit and non-video content types.
       allow write: if request.auth != null && request.auth.uid == userId &&
-                     request.resource.size < 10 * 1024 * 1024; // 10MB limit
+                     request.resource.size < 10 * 1024 * 1024 &&
+                     request.resource.contentType.matches('^[a-zA-Z0-9\-\+\.]+\/[a-zA-Z0-9\-\+\.]+$') &&
+                     !request.resource.contentType.matches('^video\/.*$');
       allow delete: if request.auth != null && request.auth.uid == userId;
     }
   }

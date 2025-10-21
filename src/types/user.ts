@@ -1,6 +1,9 @@
 import { Timestamp } from "firebase/firestore";
 
+export type AppType = 'api' | 'pw';
+
 export interface UserDocument {
+  appType?: AppType;
   billing?: {
     cancelAtPeriodEnd?: boolean;
     currentPeriodEnd?: Timestamp;

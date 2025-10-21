@@ -849,17 +849,6 @@ const CredentialsPage: React.FC = () => {
                                     </span>
                                   </div>
                                 )}
-                                {cred.updatedAt &&
-                                  cred.updatedAt !== cred.createdAt && (
-                                    <div className="flex justify-between">
-                                      <span>Updated:</span>
-                                      <span>
-                                        {new Date(
-                                          cred.updatedAt.seconds * 1000
-                                        ).toLocaleDateString()}
-                                      </span>
-                                    </div>
-                                  )}
                               </div>
                             </motion.div>
                           ))}

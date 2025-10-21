@@ -171,6 +171,56 @@ service cloud.firestore {
                            hasSubscriptionAccess(userId);
         }
       }
+
+      // Passwords Collection (PW mode)
+      match /passwords/{passwordId} {
+        // User can read/write own passwords regardless of subscription (free PW mode)
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null && request.auth.uid == userId;
+        allow update: if request.auth != null && request.auth.uid == userId &&
+                      (
+                        request.resource.data.tagIds == null ||
+                        (request.resource.data.tagIds is list &&
+                          request.resource.data.tagIds.size() <= 20 &&
+                          request.resource.data.tagIds.hasOnly([x | x is string]) &&
+                          // Ensure each tag exists under users/{uid}/tags/{tagId}
+                          request.resource.data.tagIds.every(tid =>
+                            exists(/databases/$(database)/documents/users/$(userId)/tags/$(tid))
+                          )
+                        )
+                      ) &&
+                      (
+                        request.resource.data.notes == null ||
+                        (request.resource.data.notes is string && request.resource.data.notes.size() <= 100 &&
+                         // Basic sanitation: disallow angle brackets/backticks/braces
+                         !(request.resource.data.notes.matches(".*[<>`{}].*"))
+                        )
+                      );
+        allow delete: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Tags collection for PW mode (private per user)
+      match /tags/{tagId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null && request.auth.uid == userId &&
+                      isString(request.resource.data.name, 1, 40) &&
+                      isString(request.resource.data.normalizedName, 1, 40) &&
+                      isString(request.resource.data.color, 4, 16) &&
+                      request.resource.data.createdAt == request.time &&
+                      request.resource.data.updatedAt == request.time;
+        allow update: if request.auth != null && request.auth.uid == userId &&
+                      (request.resource.data.name == resource.data.name || isString(request.resource.data.name, 1, 40)) &&
+                      (request.resource.data.normalizedName == resource.data.normalizedName || isString(request.resource.data.normalizedName, 1, 40)) &&
+                      (request.resource.data.color == resource.data.color || isString(request.resource.data.color, 4, 16)) &&
+                      request.resource.data.createdAt == resource.data.createdAt &&
+                      request.resource.data.updatedAt == request.time;
+        allow delete: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // PW mode limits documents (any nested structure under limits/)
+      match /limits/{document=**} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
     }
 
     // Legacy Collections (for migration)

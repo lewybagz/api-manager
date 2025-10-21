@@ -16,6 +16,7 @@ interface RateLimitData {
 }
 
 interface RateLimitState {
+  checkAndConsumeDaily: (key: string, limitPerDay: number) => Promise<boolean>;
   addFailedAttempt: (email: string) => Promise<void>;
   failedAttempts: Record<string, RateLimitAttempt>;
   getRemainingLockoutTime: (email: string) => Promise<number>;
@@ -39,6 +40,27 @@ export function sanitizeEmailForDocId(email: string): string {
 }
 
 const useRateLimitStore = create<RateLimitState>((_set, get) => ({
+  checkAndConsumeDaily: async (key: string, limitPerDay: number) => {
+    try {
+      const today = new Date();
+      const y = today.getFullYear();
+      const m = String(today.getMonth() + 1).padStart(2, '0');
+      const d = String(today.getDate()).padStart(2, '0');
+      const dayKey = `${y}-${m}-${d}`;
+      const ref = doc(db, 'dailyLimits', `${key}:${dayKey}`);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) {
+        await setDoc(ref, { count: 1, date: serverTimestamp() });
+        return true;
+      }
+      const count = (snap.data() as { count?: number }).count ?? 0;
+      if (count >= limitPerDay) return false;
+      await updateDoc(ref, { count: count + 1, date: serverTimestamp() });
+      return true;
+    } catch {
+      return false;
+    }
+  },
   addFailedAttempt: async (email: string) => {
     if (!email || email.trim() === '') {
       logger.error(ErrorCategory.VALIDATION, "Error adding failed attempt: Email cannot be empty");

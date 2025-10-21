@@ -5,6 +5,14 @@ import AuthGuard from "./components/auth/AuthGuard";
 import MasterPasswordModal from "./components/auth/MasterPasswordModal";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import SubscriptionGuard from "./components/auth/SubscriptionGuard";
+import PasswordAppGuard from "./components/auth/PasswordAppGuard";
+import PasswordLayout from "./components/layout/PasswordLayout";
+import PasswordHomePage from "./pages/PasswordHomePage";
+import FunHousePage from "./pages/FunHousePage";
+import TrashPage from "./pages/TrashPage";
+import PwSettingsPage from "./pages/PwSettingsPage";
+import TagsPage from "./pages/TagsPage";
+import AddPasswordPage from "./pages/AddPasswordPage";
 import MobileHeader from "./components/layout/MobileHeader";
 import MobileNav from "./components/layout/MobileNav";
 import PublicLayout from "./components/layout/PublicLayout";
@@ -25,6 +33,7 @@ import ProjectDetailPage from "./pages/ProjectDetailPage";
 import ProPricingPage from "./pages/ProPricingPage";
 import SubscriptionManagementPage from "./pages/SubscriptionManagementPage";
 import useAuthStore from "./stores/authStore";
+import useUserStore from "./stores/userStore";
 
 function App() {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
@@ -62,6 +71,7 @@ function MainApp() {
     subscribeToAuthState,
     user,
   } = useAuthStore();
+  const { userDoc } = useUserStore();
   const location = useLocation();
 
   useEffect(() => {
@@ -72,10 +82,19 @@ function MainApp() {
   }, [subscribeToAuthState]);
 
   useEffect(() => {
-    if (user && !masterPasswordSet && !authLoading) {
+    const isPwRoute = location.pathname.startsWith("/pw");
+    const isPwApp = userDoc?.appType === "pw";
+    if (user && !masterPasswordSet && !authLoading && !isPwRoute && !isPwApp) {
       openMasterPasswordModal();
     }
-  }, [user, masterPasswordSet, authLoading, openMasterPasswordModal]);
+  }, [
+    user,
+    masterPasswordSet,
+    authLoading,
+    openMasterPasswordModal,
+    location.pathname,
+    userDoc?.appType,
+  ]);
 
   return (
     <>
@@ -95,12 +114,30 @@ function MainApp() {
           />
         </Route>
         <Route element={<ForgotPasswordPage />} path="/forgot-password" />
+        {/* Password Manager App Mode */}
+        <Route element={<ProtectedRoute />}>
+          <Route
+            element={
+              <PasswordAppGuard>
+                <PasswordLayout />
+              </PasswordAppGuard>
+            }
+            path="/pw"
+          >
+            <Route index element={<PasswordHomePage />} />
+            <Route element={<FunHousePage />} path="uh-oh" />
+            <Route element={<AddPasswordPage />} path="add" />
+            <Route element={<TagsPage />} path="tags" />
+            <Route element={<TrashPage />} path="trash" />
+            <Route element={<PwSettingsPage />} path="settings" />
+          </Route>
+        </Route>
         <Route element={<ProtectedRoute />}>
           <Route element={<App />}>
             <Route
               element={
                 <>
-                  <SubscriptionGuard />
+                  {userDoc?.appType === "pw" ? null : <SubscriptionGuard />}
                   <DashboardPage />
                 </>
               }
@@ -148,7 +185,8 @@ function MainApp() {
       </Routes>
       {location.pathname !== "/" &&
         !location.pathname.startsWith("/pro") &&
-        !location.pathname.startsWith("/docs") && (
+        !location.pathname.startsWith("/docs") &&
+        !location.pathname.startsWith("/pw") && (
           <MasterPasswordModal
             isOpen={
               !!(user && !masterPasswordSet && !authLoading) ||
