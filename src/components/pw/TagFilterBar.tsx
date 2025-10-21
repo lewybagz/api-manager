@@ -32,7 +32,7 @@ export default function TagFilterBar({
   if (!tags.length) return null;
 
   return (
-    <div className="pw-card p-3 flex items-center gap-2 flex-wrap">
+    <div className="pw-card p-3 flex items-center gap-2 flex-wrap w-fit">
       <span className="text-sm text-[color:var(--pw-muted)] mr-2">
         Filter by tag:
       </span>

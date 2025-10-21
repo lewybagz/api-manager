@@ -16,7 +16,17 @@ export default function PwSettingsPage() {
           <div>
             <h1 className="text-xl font-semibold text-red-200">Settings</h1>
             <p className="text-[color:var(--pw-muted)] text-sm">
-              Manage account information and security.
+              Manage account information and security. Since this is a password
+              manager, you can also change your password here. But I would'nt
+              recommend storing your password in this app because it that would
+              create an infinite loop of password storage. On the contrary, if
+              you wanted to store that password here, that would be completely
+              viable given this app is very secure and no one will know your
+              password. Where the redundancy comes in is that you would
+              technically only need the password to this app in order to access
+              this app, but if you can't access this app, you can't access your
+              other passwords either. If you have read this far, you are either
+              a developer or a very curious person. Or an idiot.
             </p>
           </div>
           <div className="bg-[color:var(--pw-card)] text-red-300 px-3 py-1 rounded-lg text-xs">
