@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { X, Eye, EyeOff, Copy, Save } from "lucide-react";
 import usePasswordStore from "../../stores/passwordStore";
 import TagPicker from "./TagPicker";

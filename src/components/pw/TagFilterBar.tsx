@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import useTagStore from "../../stores/tagStore";
 import TagChip from "./TagChip";
 

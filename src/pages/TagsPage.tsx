@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import useTagStore from "../stores/tagStore";
 import { useNavigate } from "react-router-dom";
 import TagChip from "../components/pw/TagChip";
-import { Pencil, Save, Trash, X } from "lucide-react";
+import { Pencil, Save, Trash } from "lucide-react";
 
 interface ColorPopoverProps {
   current: string;

@@ -1,5 +1,3 @@
-import React from "react";
-
 interface PasswordCardProps {
   name: string;
   username?: string;

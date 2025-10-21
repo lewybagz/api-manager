@@ -268,7 +268,7 @@ const usePasswordStore = create<PasswordStoreState>((set, get) => ({
           tx.set(limitRef, { count: count + 1, updatedAt: serverTimestamp() }, { merge: true });
         }
 
-        const updates: Record<string, unknown> = { updatedAt: serverTimestamp() };
+        const updates: Record<string, any> = { updatedAt: serverTimestamp() };
         if (typeof data.name !== 'undefined') updates.name = data.name;
         if (typeof data.username !== 'undefined') updates.username = data.username;
         if (typeof data.url !== 'undefined') updates.url = data.url;
