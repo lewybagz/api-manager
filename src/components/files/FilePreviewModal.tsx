@@ -291,11 +291,10 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
     }
     if (file.contentType === "application/pdf") {
       return (
-        <embed
-          className="w-full h-full rounded-lg"
+        <iframe
+          className="w-full h-full rounded-lg bg-white"
           src={content}
           title={file.fileName}
-          type="application/pdf"
         />
       );
     }

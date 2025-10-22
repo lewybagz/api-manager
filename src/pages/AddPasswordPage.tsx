@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Eye, EyeOff, Copy, Save, Wand2 } from "lucide-react";
+import { Eye, EyeOff, Copy, Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { logger, ErrorCategory } from "../services/logger";
@@ -120,29 +120,29 @@ export default function AddPasswordPage() {
     setPassword(chars.join(""));
   }
 
-  function fillWithMock() {
-    setName("Acme Inc — VPN");
-    setUsername("jane.doe@acme.com");
-    setUrl("https://vpn.acme.com/login");
-    setPlatform("Steam");
-    setGamerTag("JaneDoe#1234");
-    setRegion("NA-East");
-    setTwoFA("auth_app");
-    setBackupCodes(
-      [
-        "ABCD-EFGH-IJKL",
-        "MNOP-QRST-UVWX",
-        "YZ12-3456-7890",
-        "1A2B-3C4D-5E6F",
-        "7G8H-9I0J-KLMN",
-      ].join("\n")
-    );
-    setNotes(
-      "Work account. VPN access only. Rotate every 90 days.\n2FA: Authenticator App"
-    );
-    setShowSuggestions(false);
-    generatePassword();
-  }
+  // function fillWithMock() {
+  //   setName("Acme Inc — VPN");
+  //   setUsername("jane.doe@acme.com");
+  //   setUrl("https://vpn.acme.com/login");
+  //   setPlatform("Steam");
+  //   setGamerTag("JaneDoe#1234");
+  //   setRegion("NA-East");
+  //   setTwoFA("auth_app");
+  //   setBackupCodes(
+  //     [
+  //       "ABCD-EFGH-IJKL",
+  //       "MNOP-QRST-UVWX",
+  //       "YZ12-3456-7890",
+  //       "1A2B-3C4D-5E6F",
+  //       "7G8H-9I0J-KLMN",
+  //     ].join("\n")
+  //   );
+  //   setNotes(
+  //     "Work account. VPN access only. Rotate every 90 days.\n2FA: Authenticator App"
+  //   );
+  //   setShowSuggestions(false);
+  //   generatePassword();
+  // }
 
   return (
     <div className="space-y-4">
@@ -154,7 +154,7 @@ export default function AddPasswordPage() {
               Enter details below.
             </p>
           </div>
-          <div>
+          {/* <div>
             <button
               className="pw-btn-ghost"
               onClick={fillWithMock}
@@ -162,7 +162,7 @@ export default function AddPasswordPage() {
             >
               <Wand2 className="h-4 w-4 mr-2 inline" /> Fill with mock
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
 
