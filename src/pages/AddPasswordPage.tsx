@@ -57,10 +57,11 @@ export default function AddPasswordPage() {
   const [backupCodes, setBackupCodes] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestions = useMemo(() => {
-    const q = name.trim().toLowerCase();
+    const safeName = typeof name === "string" ? name : "";
+    const q = safeName.trim().toLowerCase();
     if (!q) return [] as string[];
     return popularPlatforms
-      .filter((p) => p.toLowerCase().includes(q))
+      .filter((p) => (p ?? "").toLowerCase().includes(q))
       .slice(0, 8);
   }, [name, popularPlatforms]);
 

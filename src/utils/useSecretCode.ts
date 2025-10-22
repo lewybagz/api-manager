@@ -25,7 +25,9 @@ export function useSecretCode(target: string, onMatch: () => void, options: UseS
         return;
       }
 
-      const key = e.key.length === 1 ? e.key.toLowerCase() : "";
+      const rawKey = typeof e.key === "string" ? e.key : "";
+      if (!rawKey) return;
+      const key = rawKey.length === 1 ? rawKey.toLowerCase() : "";
       if (!key) return;
 
       bufferRef.current = (bufferRef.current + key).slice(-target.length);
