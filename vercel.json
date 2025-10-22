@@ -6,7 +6,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebasestorage.googleapis.com; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebasestorage.googleapis.com; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
         },
         { "key": "Referrer-Policy", "value": "no-referrer" },
         {
@@ -15,8 +15,11 @@
         },
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
-        { "key": "Cross-Origin-Embedder-Policy", "value": "require-corp" },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin-allow-popups"
+        },
+        { "key": "Cross-Origin-Embedder-Policy", "value": "unsafe-none" },
         { "key": "Cross-Origin-Resource-Policy", "value": "same-origin" }
       ]
     },
@@ -32,12 +35,24 @@
   ],
   "rewrites": [
     {
+      "source": "/assets/(.*)",
+      "destination": "/dist/assets/$1"
+    },
+    {
+      "source": "/index.html",
+      "destination": "/dist/index.html"
+    },
+    {
+      "source": "/$",
+      "destination": "/dist/index.html"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },
     {
       "source": "/(.*)",
-      "destination": "/index.html"
+      "destination": "/dist/index.html"
     }
   ]
 }

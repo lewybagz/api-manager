@@ -13,7 +13,6 @@ if ("fonts" in document) {
     document.fonts.load("16px Fredoka"),
   ]).catch(() => {
     // Fallback if font loading fails
-    console.warn("Font loading failed, using fallback fonts");
   });
 }
 

@@ -77,9 +77,6 @@ const CredentialModal = ({
       // Check 1: More than 3 consecutive digits within the word
       if (longDigitSequencePattern.test(word)) {
         if (!allowedVarPattern.test(word)) {
-          console.warn(
-            `Notes validation failed (long digit sequence): "${word}"`
-          );
           return "Notes appear to contain a key-like pattern (long number sequence). API keys should be in designated fields only.";
         }
       }
@@ -90,9 +87,6 @@ const CredentialModal = ({
 
       if (hasLetters && hasNumbers) {
         if (!allowedVarPattern.test(word) && !numberedListPattern.test(word)) {
-          console.warn(
-            `Notes validation failed (mixed letter/number): "${word}"`
-          );
           return "Notes appear to contain a key-like pattern (mixed letters/numbers not matching allowed variable styles like MY_VAR_1). API keys should be in designated fields only.";
         }
       }
@@ -144,22 +138,14 @@ const CredentialModal = ({
 
   const validateApiKey = (value: string) => {
     const trimmedValue = value.trim();
-    console.log(`Validating API Key (length: ${String(trimmedValue.length)})`);
 
     if (!trimmedValue) {
-      console.warn("API Key validation failed: Empty value");
       return "API Key is required";
     }
     if (trimmedValue.length < 8) {
-      console.warn(
-        `API Key validation failed: Too short (${String(
-          trimmedValue.length
-        )} chars)`
-      );
       return "API Key must be at least 8 characters long";
     }
 
-    console.log("API Key validation: Passed");
     return true;
   };
 
@@ -167,37 +153,17 @@ const CredentialModal = ({
     if (!value) return true;
 
     const trimmedValue = value.trim();
-    console.log(
-      `Validating API Secret (length: ${String(trimmedValue.length)})`
-    );
 
     if (trimmedValue.length < 8) {
-      console.warn(
-        `API Secret validation failed: Too short (${String(
-          trimmedValue.length
-        )} chars)`
-      );
       return "API Secret must be at least 8 characters long";
     }
 
-    console.log("API Secret validation: Passed");
     return true;
   };
 
   const onSubmit: SubmitHandler<CredentialFormData> = async (data) => {
-    console.log("=== FORM SUBMISSION STARTED ===");
-    console.log(`Submitting credential for project: ${projectId}`);
-    console.log(
-      `Form data: Service name: ${data.cred_service}, API Key length: ${String(
-        data.cred_key.length
-      )}, API Secret provided: ${String(
-        Boolean(data.cred_secret.trim())
-      )}, Notes provided: ${String(Boolean(data.cred_notes.trim()))}`
-    );
-
     setIsSubmitting(true);
     try {
-      console.log("Preparing payload");
       const basePayload = {
         apiKey: data.cred_key.trim(),
         apiSecret:
@@ -208,56 +174,26 @@ const CredentialModal = ({
         serviceName: data.cred_service.trim(),
       };
 
-      console.log(
-        `Payload prepared: Service name: ${
-          basePayload.serviceName
-        }, API Key length: ${String(
-          basePayload.apiKey.length
-        )}, API Secret provided: ${String(
-          Boolean(basePayload.apiSecret)
-        )}, Notes provided: ${String(Boolean(basePayload.notes))}`
-      );
-
       if (editingCredential) {
-        console.log(`Updating existing credential: ${editingCredential.id}`);
         await updateCredential(editingCredential.id, projectId, basePayload);
-        console.log("Credential updated successfully");
         onClose(true, "edit");
       } else {
-        console.log("Creating new credential");
         const addPayload = {
           ...basePayload,
           projectId,
         };
-        const newCredentialId = await addCredential(projectId, addPayload);
-        console.log(
-          `New credential ${
-            newCredentialId
-              ? `created with ID: ${newCredentialId}`
-              : "creation failed"
-          }`
-        );
+        await addCredential(projectId, addPayload);
         onClose(true, "add");
 
         // Check if modal was opened via command palette
         const modalParam = searchParams.get("modal");
         if (modalParam === "credential") {
-          console.log(
-            "Modal opened via command palette, navigating to dashboard"
-          );
           void navigate("/dashboard");
         }
       }
       reset();
-      console.log("=== FORM SUBMISSION COMPLETED SUCCESSFULLY ===");
     } catch (error) {
-      console.error("Failed to save credential:", error);
-      if (error instanceof Error) {
-        console.error(`Error details: ${error.message}`);
-        console.error(`Error stack: ${error.stack ?? "No stack trace"}`);
-      }
       onClose(false);
-      console.log("=== FORM SUBMISSION FAILED ===");
     } finally {
       setIsSubmitting(false);
     }
@@ -289,7 +225,6 @@ const CredentialModal = ({
           <form
             autoComplete="off"
             onSubmit={(e) => {
-              console.log("Form submission initiated");
               return void handleSubmit(onSubmit)(e);
             }}
             role="presentation"
@@ -428,13 +363,7 @@ const CredentialModal = ({
                   type={showPassword ? "text" : "password"}
                   {...register("cred_key", {
                     onBlur: clearSensitiveData,
-                    onChange: (e) => {
-                      console.log(
-                        `API Key field changed (length: ${String(
-                          (e as React.ChangeEvent<HTMLInputElement>).target
-                            .value.length
-                        )})`
-                      );
+                    onChange: () => {
                       handleInputChange();
                     },
                     required: "API Key is required",
@@ -494,13 +423,7 @@ const CredentialModal = ({
                   type={showSecret ? "text" : "password"}
                   {...register("cred_secret", {
                     onBlur: clearSensitiveData,
-                    onChange: (e) => {
-                      console.log(
-                        `API Secret field changed (length: ${String(
-                          (e as React.ChangeEvent<HTMLInputElement>).target
-                            .value.length
-                        )})`
-                      );
+                    onChange: () => {
                       handleInputChange();
                     },
                     validate: validateApiSecret,
@@ -561,14 +484,7 @@ const CredentialModal = ({
                     message: "Notes must be less than 500 characters",
                     value: 500,
                   },
-                  onChange: (e) => {
-                    console.log(
-                      `Notes field changed (length: ${String(
-                        (e as React.ChangeEvent<HTMLTextAreaElement>).target
-                          .value.length
-                      )})`
-                    );
-                  },
+                  onChange: () => {},
                   validate: validateNotesPotentialApiKey,
                 })}
               />
@@ -586,7 +502,6 @@ const CredentialModal = ({
                 className="px-6 py-3 border border-gray-600 text-brand-light-secondary hover:bg-gray-700/50 hover:text-brand-light font-semibold rounded-xl focus:outline-none disabled:opacity-50 transition-all duration-200"
                 disabled={isSubmitting}
                 onClick={() => {
-                  console.log("Form cancelled by user");
                   reset();
                   onClose();
                 }}

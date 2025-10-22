@@ -52,7 +52,6 @@ const useUserStore = create<UserStore>((set) => ({
       }
     } catch (error) {
       set({ error: error as Error });
-      console.error("Error fetching user document:", error);
     } finally {
       set({ isLoading: false });
     }
@@ -77,7 +76,6 @@ const useUserStore = create<UserStore>((set) => ({
       }));
     } catch (error) {
       set({ error: error as Error });
-      console.error("Error updating user document:", error);
     } finally {
       set({ isLoading: false });
     }

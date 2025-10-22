@@ -77,7 +77,6 @@ const ProfileInformationForm: React.FC<ProfileInformationFormProps> = ({
 
       toast.success("Profile updated successfully");
     } catch (error) {
-      console.error("Error updating profile:", error);
       const errorMessage =
         error instanceof Error
           ? error.message

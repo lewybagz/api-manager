@@ -154,7 +154,6 @@ const MasterPasswordModal: React.FC<MasterPasswordModalProps> = ({
 
       onClose();
     } catch (error: unknown) {
-      console.error("Master password verification error:", error);
       setError(
         error instanceof Error
           ? error.message

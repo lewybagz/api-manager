@@ -2,6 +2,7 @@ import { collection, deleteDoc, doc, getDocs, limit, orderBy, query, runTransact
 import { create } from "zustand";
 
 import { db } from "../firebase";
+import { getRandomValuesSafe } from "../utils/cryptoSafe";
 import { logger, ErrorCategory } from "../services/logger";
 import { decryptWithKey, encryptWithKey } from "../services/encryptionService";
 import useAuthStore from "./authStore";
@@ -69,7 +70,7 @@ const usePasswordStore = create<PasswordStoreState>((set, get) => ({
     let keyHex = localStorage.getItem(keyName);
     if (!keyHex) {
       const bytes = new Uint8Array(32);
-      crypto.getRandomValues(bytes);
+      getRandomValuesSafe(bytes);
       keyHex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
       localStorage.setItem(keyName, keyHex);
     }
@@ -129,18 +130,20 @@ const usePasswordStore = create<PasswordStoreState>((set, get) => ({
           logger.warn(ErrorCategory.CREDENTIAL, "Daily add limit reached", { dayKey: key, currentCount });
           throw new Error("DAILY_LIMIT_REACHED");
         }
-        const payload: Omit<StoredPassword, "createdAt" | "updatedAt"> & { createdAt: any; updatedAt: any } = {
+        const payload: any = {
           createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
           encryptedPassword,
           iv: encrypted.iv,
           name: args.name,
-          notes: args.notes,
-          updatedAt: serverTimestamp(),
-          url: args.url,
           userId: currentUser.uid,
-          username: args.username,
-          tagIds: Array.isArray((args as any).tagIds) ? ((args as any).tagIds as string[]).slice(0, 20) : [],
+          tagIds: Array.isArray((args as any).tagIds)
+            ? ((args as any).tagIds as string[]).slice(0, 20)
+            : [],
         };
+        if (typeof args.notes === 'string') payload.notes = args.notes;
+        if (typeof args.url === 'string') payload.url = args.url;
+        if (typeof args.username === 'string') payload.username = args.username;
         tx.set(newPwRef, payload);
         tx.set(limitRef, { count: currentCount + 1, updatedAt: serverTimestamp() }, { merge: true });
       });
@@ -205,7 +208,12 @@ const usePasswordStore = create<PasswordStoreState>((set, get) => ({
           });
           decryptedCount++;
         } catch (e) {
-          console.warn("Failed to decrypt password", e);
+          logger.warn(
+            ErrorCategory.UNKNOWN,
+            "decrypt password failed; skipping item",
+            e,
+            { id: d.id }
+          );
         }
       }
       set({ passwords: items, isLoading: false });
@@ -399,7 +407,7 @@ const usePasswordStore = create<PasswordStoreState>((set, get) => ({
       );
       const snap = await getDocs(q);
       set({ trashCount: snap.docs.length });
-    } catch (e) {
+    } catch {
       // ignore
     }
   },

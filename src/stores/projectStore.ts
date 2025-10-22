@@ -86,7 +86,6 @@ const useProjectStore = create<ProjectState>((set, get) => ({
       await get().fetchProjects();
       return docRef.id;
     } catch (e: unknown) {
-      console.error("Error adding project:", e);
       set({ error: e as Error, isLoading: false });
       return null;
     }
@@ -130,7 +129,6 @@ const useProjectStore = create<ProjectState>((set, get) => ({
         projects: state.projects.filter(p => p.id !== projectId),
       }));
     } catch (e: unknown) {
-      console.error("Error deleting project, its credentials, and files:", e);
       set({ error: e as Error, isLoading: false });
     }
   },
@@ -155,7 +153,6 @@ const useProjectStore = create<ProjectState>((set, get) => ({
       }));
       set({ isLoading: false, projects: projectsData });
     } catch (e: unknown) {
-      console.error("Error fetching projects:", e);
       set({ error: e as Error, isLoading: false });
     }
   },
@@ -204,7 +201,6 @@ const useProjectStore = create<ProjectState>((set, get) => ({
         ),
       }));
     } catch (e: unknown) {
-      console.error("Error updating project:", e);
       set({ error: e as Error, isLoading: false });
     }
   }

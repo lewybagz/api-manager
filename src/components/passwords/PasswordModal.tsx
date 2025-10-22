@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Eye, EyeOff, Copy, X, Save } from "lucide-react";
 
 import usePasswordStore from "../../stores/passwordStore";
+import { getSecureRandomInt } from "../../utils/cryptoSafe";
 
 interface PasswordModalProps {
   onClose: () => void;
@@ -108,17 +109,7 @@ export default function PasswordModal({
     const symbols = "!@#$%^&*()-_=+[]{};:,.<>/?";
     const all = lowers + uppers + digits + symbols;
 
-    const cryptoRand = (max: number): number => {
-      // Unbiased random int in [0, max)
-      const arr = new Uint32Array(1);
-      const limit = Math.floor(0x100000000 / max) * max;
-      let x = 0;
-      do {
-        crypto.getRandomValues(arr);
-        x = arr[0];
-      } while (x >= limit);
-      return x % max;
-    };
+    const cryptoRand = (max: number): number => getSecureRandomInt(max);
 
     const pick = (set: string) => set[cryptoRand(set.length)];
 

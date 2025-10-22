@@ -58,12 +58,14 @@ export default function PasswordHomePage() {
     <div className="space-y-6">
       <div className="pw-card p-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-red-200">
-            Password Vault <br />
-            <h1 className="text-sm text-gray-500">
-              How fast can you type the word "giggles"?
+          <div>
+            <h1 className="text-2xl font-semibold text-red-200">
+              Password Vault
             </h1>
-          </h1>
+            <p className="text-sm text-gray-500 mt-1">
+              How fast can you type the word "giggles"?
+            </p>
+          </div>
           <button
             onClick={() => navigate("/pw/add")}
             className="pw-btn-primary"

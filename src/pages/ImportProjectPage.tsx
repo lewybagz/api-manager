@@ -337,7 +337,6 @@ const ImportProjectPage: React.FC = () => {
           if (id) successCount++;
           else failCount++;
         } catch (e) {
-          console.error("Failed importing key", keyEntry.key, e);
           failCount++;
         }
       }
@@ -347,7 +346,6 @@ const ImportProjectPage: React.FC = () => {
       });
       setEnvText("");
     } catch (e) {
-      console.error(e);
       toast.error("Import failed", {
         description: e instanceof Error ? e.message : String(e),
       });

@@ -145,7 +145,6 @@ const DashboardPage: React.FC = () => {
         void navigate(`/project/${projectId}`);
       }
     } catch (error: unknown) {
-      console.error("Failed to add project:", error);
       toast.error("Failed to create project", {
         description: "Please try again later",
       });
@@ -174,7 +173,6 @@ const DashboardPage: React.FC = () => {
           : "Project has been deleted",
       });
     } catch (error: unknown) {
-      console.error("Failed to delete project:", error);
       toast.error("Failed to delete project", {
         description: "Please try again later",
       });
@@ -216,7 +214,6 @@ const DashboardPage: React.FC = () => {
         description: `Project name has been updated to "${projectName.trim()}"`,
       });
     } catch (error: unknown) {
-      console.error("Failed to update project:", error);
       toast.error("Failed to update project", {
         description: "Please try again later",
       });

@@ -6,6 +6,7 @@ import { logger, ErrorCategory } from "../services/logger";
 
 import usePasswordStore from "../stores/passwordStore";
 import TagPicker from "../components/pw/TagPicker";
+import { getSecureRandomInt } from "../utils/cryptoSafe";
 
 export default function AddPasswordPage() {
   const navigate = useNavigate();
@@ -100,16 +101,7 @@ export default function AddPasswordPage() {
     const digits = "23456789";
     const symbols = "!@#$%^&*()-_=+[]{};:,.<>/?";
     const all = lowers + uppers + digits + symbols;
-    const cryptoRand = (max: number): number => {
-      const arr = new Uint32Array(1);
-      const limit = Math.floor(0x100000000 / max) * max;
-      let x = 0;
-      do {
-        crypto.getRandomValues(arr);
-        x = arr[0];
-      } while (x >= limit);
-      return x % max;
-    };
+    const cryptoRand = (max: number): number => getSecureRandomInt(max);
     const pick = (set: string) => set[cryptoRand(set.length)];
     const chars: string[] = [
       pick(lowers),

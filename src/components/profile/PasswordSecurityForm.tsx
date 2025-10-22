@@ -79,7 +79,6 @@ const PasswordSecurityForm: React.FC<PasswordSecurityFormProps> = ({
       setErrors({});
       toast.success("Password changed successfully");
     } catch (error) {
-      console.error("Error changing password:", error);
       const errorMessage =
         error instanceof Error
           ? error.message

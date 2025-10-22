@@ -65,7 +65,6 @@ const Sidebar: React.FC = () => {
     } catch (error: unknown) {
       if (error instanceof Error) {
         setError(error);
-        console.error("Logout error:", error);
       }
     }
   };

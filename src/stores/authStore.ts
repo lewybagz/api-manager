@@ -35,7 +35,6 @@ const secureLocalStorage = {
       if (!storedValue) return null;
       return atob(storedValue); // base64 decoding
     } catch (e) {
-      console.error('Failed to retrieve item from secure storage:', e);
       return null;
     }
   },
@@ -45,7 +44,6 @@ const secureLocalStorage = {
     try {
       localStorage.removeItem(key);
     } catch (e) {
-      console.error('Failed to remove item from secure storage:', e);
     }
   },
   
@@ -57,7 +55,6 @@ const secureLocalStorage = {
       const obfuscated = btoa(value); // base64 encoding
       localStorage.setItem(key, obfuscated);
     } catch (e) {
-      console.error('Failed to store item in secure storage:', e);
     }
   }
 };
@@ -74,7 +71,6 @@ const useAuthStore = create<AuthState>((set, get) => ({
     if (storedPasswordHash && storedKeyHash) {
       // We don't want to auto-set the master password, but we can indicate that it was previously set
       // The user will need to enter it again, but we'll know it exists
-      console.log("Found persisted master password information. User needs to re-enter password.");
       
       // Later we can add a feature to verify the entered password matches the stored hash
       // For now, just log it so we know it's working
@@ -119,7 +115,6 @@ const useAuthStore = create<AuthState>((set, get) => ({
     if (!user?.uid) {
       const err = new Error("User not authenticated. Cannot set master password.");
       set({ encryptionKey: null, error: err, masterPasswordSet: false });
-      console.error(err);
       return Promise.resolve();
     }
     
@@ -159,7 +154,6 @@ const useAuthStore = create<AuthState>((set, get) => ({
       
       return Promise.resolve();
     } catch (e) {
-      console.error("Error deriving encryption key:", e);
       const error = e instanceof Error ? e : new Error('Failed to derive encryption key');
       set({
         encryptionKey: null,

@@ -70,7 +70,6 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
           toast.error("Could not prepare file for download", { id: toastId });
         }
       } catch (err) {
-        console.error("Download error:", err);
         toast.error("Download failed", { id: toastId });
       } finally {
         setIsPreparingDownload((prev) => ({ ...prev, [file.id]: false }));
@@ -125,7 +124,6 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
       });
       closeDeleteConfirmModal();
     } catch (err: unknown) {
-      console.error("Delete error:", err);
       toast.error("Delete operation failed", { id: toastId });
     } finally {
       setIsDeleting(false);

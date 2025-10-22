@@ -154,7 +154,6 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
       const errorMsg = !currentUser 
         ? 'User not authenticated' 
         : 'Master password not set';
-      console.error(`Authentication error: ${errorMsg}`);
       set({ error: new Error(`User not authenticated or master password not set. (${errorMsg})`), isLoading: false });
       return null;
     }
@@ -203,10 +202,8 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
       await get().fetchCredentials(projectId);
       return docRef.id;
     } catch (e: unknown) {
-      console.error("Error adding credential:", e);
       if (e instanceof Error) {
-        console.error(`Error details: ${e.message}`);
-        console.error(`Error stack: ${e.stack ?? 'No stack trace'}`);
+        console.error(e.message);
       }
       set({ error: e instanceof Error ? e : new Error(String(e)), isLoading: false });
       return null;
@@ -231,7 +228,6 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
       await get().fetchCredentials(currentProjectId);
       set({ isLoading: false });
     } catch (e: unknown) {
-      console.error("Error deleting credential:", e);
       set({ error: e instanceof Error ? e : new Error(String(e)), isLoading: false });
     }
   },
@@ -255,7 +251,6 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
         isLoading: false
       }));
     } catch (e: unknown) {
-      console.error(`Error deleting credentials for project ${projectId}:`, e);
       set({ error: e instanceof Error ? e : new Error(String(e)), isLoading: false });
     }
   },
@@ -400,7 +395,6 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
             // Fallback for legacy team-encrypted credentials: present as placeholder requiring update
             if (!apiKey) {
               if (isLegacyTeamEncryptedCredential(raw)) {
-                console.warn(`Legacy team-encrypted credential detected (ID: ${docSnap.id}). Presenting placeholder that requires update.`);
                 fetchedCredentials.push({
                   apiKey: 'PLACEHOLDER-RESET-VALUE',
                   apiSecret: undefined,
@@ -416,7 +410,6 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
                 continue;
               }
               decryptionErrors++;
-              console.error(`Failed to decrypt API key for credential ID: ${docSnap.id}. Skipping.`);
               continue;
             }
             
@@ -434,7 +427,6 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
             });
           } catch (decryptError) {
             decryptionErrors++;
-            console.error(`Error processing credential ${docSnap.id}:`, decryptError);
           }
         }
       }
@@ -444,7 +436,6 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
       
       // If we had decryption errors but still got some credentials, show a warning but don't fail
       if (decryptionErrors > 0 && fetchedCredentials.length > 0) {
-        console.warn(`Successfully loaded ${String(fetchedCredentials.length)} credentials, but couldn't decrypt ${String(decryptionErrors)} credentials.`);
         // We don't set an error here since we still have some credentials to show
       } else if (decryptionErrors > 0 && fetchedCredentials.length === 0) {
         // Only set an error if all credentials failed to decrypt
@@ -454,7 +445,6 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
         });
       }
     } catch (e: unknown) {
-      console.error("Error fetching all credentials:", e);
       set({ error: e instanceof Error ? e : new Error(String(e)), isLoading: false });
     }
   },
@@ -563,7 +553,6 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
           // Skip this credential if we couldn't decrypt the API key
           if (!apiKey) { // Changed from apiKey === null || apiKey === ""
             if (isLegacyTeamEncryptedCredential(raw)) {
-              console.warn(`Legacy team-encrypted credential detected (ID: ${docSnap.id}). Presenting placeholder that requires update.`);
               fetchedCredentials.push({
                 apiKey: 'PLACEHOLDER-RESET-VALUE',
                 apiSecret: undefined,
@@ -579,7 +568,6 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
               continue;
             }
             decryptionErrors++;
-            console.error(`Failed to decrypt API key for credential ID: ${docSnap.id}. Skipping.`);
             continue;
           }
           
@@ -597,7 +585,6 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
           });
         } catch (decryptError) {
           decryptionErrors++;
-          console.error(`Error processing credential ${docSnap.id}:`, decryptError);
         }
       }
       
@@ -606,7 +593,6 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
       
       // If we had decryption errors but still got some credentials, show a warning but don't fail
       if (decryptionErrors > 0 && fetchedCredentials.length > 0) {
-        console.warn(`Successfully loaded ${String(fetchedCredentials.length)} credentials, but couldn't decrypt ${String(decryptionErrors)} credentials.`);
         // We don't set an error here since we still have some credentials to show
       } else if (decryptionErrors > 0 && fetchedCredentials.length === 0) {
         // Only set an error if all credentials failed to decrypt
@@ -616,7 +602,6 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
         });
       }
     } catch (e: unknown) {
-      console.error("Error fetching credentials:", e);
       set({ error: e instanceof Error ? e : new Error(String(e)), isLoading: false });
     }
   },
@@ -675,7 +660,6 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
       set({ isLoading: false });
       
     } catch (error) {
-      console.error('Error resetting corrupted credential:', error);
       set({ error: new Error('Failed to reset corrupted credential'), isLoading: false });
     }
   },
@@ -738,7 +722,6 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
 
       const fieldCountToUpdate = Object.keys(dataToUpdateFirestore).length;
       if (fieldCountToUpdate <= 1 && !dataToUpdateFirestore.updatedAt) {
-        console.warn("Update called without changes to actual data fields.");
         set({ isLoading: false });
         return;
       }
@@ -749,7 +732,6 @@ const useCredentialStore = create<CredentialState>((set, get) => ({
       await get().fetchCredentials(currentProjectId);
       set({ isLoading: false });
     } catch (e: unknown) {
-      console.error("Error updating credential:", e);
       set({ error: e instanceof Error ? e : new Error(String(e)), isLoading: false });
     }
   }

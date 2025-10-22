@@ -65,8 +65,7 @@ const CredentialsPage: React.FC = () => {
   // Load all credentials
   useEffect(() => {
     if (masterPasswordSet && encryptionKey) {
-      void fetchAllCredentials().catch((error: unknown) => {
-        console.error("Failed to load credentials:", error);
+      void fetchAllCredentials().catch(() => {
         toast.error("Failed to load credentials", {
           description: "Please try refreshing the page",
         });
@@ -186,8 +185,7 @@ const CredentialsPage: React.FC = () => {
 
       // Refresh all credentials only on successful add/edit
       if (success && masterPasswordSet && encryptionKey) {
-        void fetchAllCredentials().catch((error: unknown) => {
-          console.error("Failed to refresh credentials:", error);
+        void fetchAllCredentials().catch(() => {
           toast.error("Failed to refresh credentials", {
             description: "Please try refreshing the page",
           });
@@ -209,8 +207,7 @@ const CredentialsPage: React.FC = () => {
           ? `"${credentialToDeleteDetails.serviceName}" has been deleted`
           : "Credential has been deleted",
       });
-    } catch (error: unknown) {
-      console.error("Failed to delete credential:", error);
+    } catch {
       toast.error("Failed to delete credential", {
         description: "Please try again later",
       });
@@ -260,8 +257,9 @@ const CredentialsPage: React.FC = () => {
         // Set new timeout to clear the copied state
         const timeout = setTimeout(() => {
           setClipboardTimeout((prev) => {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { [id]: _, ...rest } = prev;
+            // use computed property to omit without unused var warnings
+            const rest = { ...prev } as Record<string, NodeJS.Timeout>;
+            delete rest[id];
             return rest;
           });
           setCopiedStates((prev) => ({ ...prev, [id]: false }));
@@ -272,8 +270,7 @@ const CredentialsPage: React.FC = () => {
           description:
             "The unencrypted credential has been copied to your clipboard",
         });
-      } catch (error: unknown) {
-        console.error("Failed to copy to clipboard:", error);
+      } catch {
         toast.error("Failed to copy", {
           description: "Please try copying again",
         });

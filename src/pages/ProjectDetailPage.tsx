@@ -91,7 +91,6 @@ const ProjectDetailPage: React.FC = () => {
 
   useEffect(() => {
     if (!projectId) {
-      console.error("Project ID is missing from URL params.");
       void navigate("/dashboard");
     }
   }, [navigate, projectId]);
@@ -118,8 +117,7 @@ const ProjectDetailPage: React.FC = () => {
 
   const loadCredentials = useCallback(() => {
     if (masterPasswordSet && encryptionKey && projectId) {
-      void fetchCredentials(projectId).catch((error: unknown) => {
-        console.error("Failed to load credentials:", error);
+      void fetchCredentials(projectId).catch(() => {
         toast.error("Failed to load credentials", {
           description: "Please try refreshing the page",
         });
@@ -172,7 +170,6 @@ const ProjectDetailPage: React.FC = () => {
           : "Credential has been deleted",
       });
     } catch (error: unknown) {
-      console.error("Failed to delete credential:", error);
       toast.error("Failed to delete credential", {
         description: "Please try again later",
       });
@@ -226,8 +223,7 @@ const ProjectDetailPage: React.FC = () => {
     }
 
     if (masterPasswordSet && encryptionKey && projectId) {
-      void fetchCredentials(projectId).catch((error: unknown) => {
-        console.error("Failed to refresh credentials:", error);
+      void fetchCredentials(projectId).catch(() => {
         toast.error("Failed to refresh credentials", {
           description: "Please try refreshing the page",
         });
@@ -255,7 +251,6 @@ const ProjectDetailPage: React.FC = () => {
             "The unencrypted credential has been copied to your clipboard",
         });
       } catch (error: unknown) {
-        console.error("Failed to copy to clipboard:", error);
         toast.error("Failed to copy", {
           description: "Please try copying again",
         });
@@ -266,8 +261,7 @@ const ProjectDetailPage: React.FC = () => {
 
   const handleCopyToClipboard = useCallback(
     (text: string, id: string) => {
-      copyToClipboard(text, id).catch((error: unknown) => {
-        console.error("Failed to copy to clipboard:", error);
+      copyToClipboard(text, id).catch(() => {
         toast.error("Failed to copy", {
           description: "Please try copying again",
         });

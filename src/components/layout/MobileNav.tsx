@@ -72,7 +72,6 @@ const MobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose }) => {
     } catch (error: unknown) {
       if (error instanceof Error) {
         setError(error);
-        console.error("Logout error:", error);
       }
     }
   };
