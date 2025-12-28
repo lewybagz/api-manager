@@ -352,7 +352,7 @@ export default function DocumentationHomepage() {
                         </p>
                         {!user && (
                           <a
-                            className="inline-flex items-center px-4 py-2 text-blue-600 bg-slate-50 rounded-lg hover:bg-slate-200 transition-colors"
+                            className="inline-flex items-center px-4 py-2 text-blue-600 bg-transparent border border-blue-600 rounded-lg hover:bg-slate-200 transition-colors"
                             href="/login"
                           >
                             <LogIn className="h-4 w-4 mr-2 text-blue-600" />

@@ -14,12 +14,16 @@ const AuthGuard = () => {
   const navigate = useNavigate();
 
   const currentPath = location.pathname;
-  const isAuthRoute =
-    currentPath === "/login" || currentPath === "/forgot-password";
+  const isPublicRoute =
+    currentPath === "/" ||
+    currentPath === "/login" ||
+    currentPath === "/forgot-password" ||
+    currentPath.startsWith("/docs") ||
+    currentPath.startsWith("/pro");
 
   useEffect(() => {
-    // Skip redirection if still loading or already on an auth route
-    if (isLoading || isAuthRoute) {
+    // Skip redirection if still loading or on a public route
+    if (isLoading || isPublicRoute) {
       return;
     }
 
@@ -37,7 +41,7 @@ const AuthGuard = () => {
       // Use replace instead of push to avoid building up history
       void navigate("/login", { replace: true });
     }
-  }, [user, isLoading, currentPath, navigate, isAuthRoute]);
+  }, [user, isLoading, currentPath, navigate, isPublicRoute]);
 
   // This component doesn't render anything
   return null;
