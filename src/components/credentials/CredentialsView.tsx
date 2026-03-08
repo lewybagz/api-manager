@@ -1,4 +1,4 @@
-import { Plus, Shield } from "lucide-react";
+import { Plus, Search, Shield } from "lucide-react";
 import React from "react";
 
 import { type DecryptedCredential } from "../../stores/credentialStore";
@@ -9,6 +9,7 @@ interface CredentialsViewProps {
   copiedStates: Record<string, boolean>;
   credentials: DecryptedCredential[];
   error: Error | null;
+  hasActiveFilters?: boolean;
   isLoading: boolean;
   maskCredential: (value: string, revealed: boolean) => string;
   onCopy: (text: string, id: string) => void;
@@ -20,6 +21,7 @@ interface CredentialsViewProps {
     newCategory: string
   ) => void;
   revealedStates: Record<string, boolean>;
+  searchQuery?: string;
 }
 
 const CredentialsView: React.FC<CredentialsViewProps> = ({
@@ -27,6 +29,7 @@ const CredentialsView: React.FC<CredentialsViewProps> = ({
   copiedStates,
   credentials,
   error,
+  hasActiveFilters = false,
   isLoading,
   maskCredential,
   onCopy,
@@ -35,6 +38,7 @@ const CredentialsView: React.FC<CredentialsViewProps> = ({
   onToggleReveal,
   onUpdateCategory,
   revealedStates,
+  searchQuery = "",
 }) => {
   const sortedCredentials = [...credentials].sort(
     (a, b) =>
@@ -88,20 +92,39 @@ const CredentialsView: React.FC<CredentialsViewProps> = ({
 
       {showEmptyState && (
         <div className="text-center py-16 bg-transparent border-none">
-          <div className="w-20 h-20 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Plus className="h-10 w-10 text-gray-400" />
-          </div>
-          <h2 className="text-3xl text-brand-light mb-4">No Credentials Yet</h2>
-          <p className="text-brand-light-secondary mb-8 max-w-md mx-auto leading-relaxed">
-            Click "Add Credential" to secure your first API key for this
-            project. Your credentials will be encrypted and stored safely.
-          </p>
-          <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-brand-blue/20 to-brand-primary/20 border border-brand-blue/30 text-brand-blue rounded-xl">
-            <Shield className="h-4 w-4 mr-2" />
-            <span className="text-sm font-medium">
-              Zero-knowledge encryption enabled
-            </span>
-          </div>
+          {hasActiveFilters ? (
+            <>
+              <div className="w-20 h-20 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Search className="h-10 w-10 text-gray-400" />
+              </div>
+              <h2 className="text-3xl text-brand-light mb-4">
+                No Matching Credentials
+              </h2>
+              <p className="text-brand-light-secondary mb-8 max-w-md mx-auto leading-relaxed">
+                No credentials match "{searchQuery.trim()}". Try a different
+                search or change the category filter.
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="w-20 h-20 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Plus className="h-10 w-10 text-gray-400" />
+              </div>
+              <h2 className="text-3xl text-brand-light mb-4">
+                No Credentials Yet
+              </h2>
+              <p className="text-brand-light-secondary mb-8 max-w-md mx-auto leading-relaxed">
+                Click "Add Credential" to secure your first API key for this
+                project. Your credentials will be encrypted and stored safely.
+              </p>
+              <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-brand-blue/20 to-brand-primary/20 border border-brand-blue/30 text-brand-blue rounded-xl">
+                <Shield className="h-4 w-4 mr-2" />
+                <span className="text-sm font-medium">
+                  Zero-knowledge encryption enabled
+                </span>
+              </div>
+            </>
+          )}
         </div>
       )}
 

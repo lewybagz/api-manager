@@ -6,14 +6,15 @@ import FileUploadArea from "../files/FileUploadArea";
 
 interface FilesViewProps {
   projectId: string;
+  searchQuery: string;
 }
 
-const FilesView: React.FC<FilesViewProps> = ({ projectId }) => {
+const FilesView: React.FC<FilesViewProps> = ({ projectId, searchQuery }) => {
   return (
     <div className="mt-0 bg-transparent border-none">
       <FileUploadArea projectId={projectId} />
 
-      <FileList projectId={projectId} />
+      <FileList projectId={projectId} searchQuery={searchQuery} />
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { FileText, FolderOpen, XCircle } from "lucide-react";
+import { FileText, FolderOpen, Search, XCircle } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -9,9 +9,10 @@ import ProjectFileCard from "./ProjectFileCard";
 
 interface FileListProps {
   projectId: string;
+  searchQuery: string;
 }
 
-const FileList: React.FC<FileListProps> = ({ projectId }) => {
+const FileList: React.FC<FileListProps> = ({ projectId, searchQuery }) => {
   const {
     deleteFile,
     error,
@@ -23,6 +24,23 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
   const { encryptionKey, openMasterPasswordModal } = useAuthStore();
 
   const filesForCurrentProject = projectFiles[projectId] ?? [];
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+  const filteredFiles = filesForCurrentProject.filter((file) => {
+    if (!normalizedSearchQuery) return true;
+
+    const searchableContent = [
+      file.fileName,
+      file.contentType,
+      file.id,
+      file.storagePath,
+      file.isEncrypted ? "encrypted" : "unencrypted",
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return searchableContent.includes(normalizedSearchQuery);
+  });
 
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [fileToDelete, setFileToDelete] = useState<FileMetadata | null>(null);
@@ -69,7 +87,7 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
         } else {
           toast.error("Could not prepare file for download", { id: toastId });
         }
-      } catch (err) {
+      } catch {
         toast.error("Download failed", { id: toastId });
       } finally {
         setIsPreparingDownload((prev) => ({ ...prev, [file.id]: false }));
@@ -123,7 +141,7 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
         id: toastId,
       });
       closeDeleteConfirmModal();
-    } catch (err: unknown) {
+    } catch {
       toast.error("Delete operation failed", { id: toastId });
     } finally {
       setIsDeleting(false);
@@ -191,6 +209,21 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
     );
   }
 
+  if (filteredFiles.length === 0) {
+    return (
+      <div className="mt-6 text-center p-12 bg-gradient-to-br from-brand-dark-secondary/80 to-brand-dark-secondary/40 backdrop-blur-sm rounded-2xl border border-gray-800/50">
+        <div className="w-20 h-20 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Search className="h-10 w-10 text-gray-400" />
+        </div>
+        <h3 className="text-2xl text-brand-light mb-4">No Matching Files</h3>
+        <p className="text-brand-light-secondary max-w-md mx-auto leading-relaxed">
+          No files match "{searchQuery.trim()}". Try searching by file name, type,
+          ID, or encryption status.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 pt-4">
       {/* Enhanced Header */}
@@ -201,16 +234,16 @@ const FileList: React.FC<FileListProps> = ({ projectId }) => {
         <div>
           <h2 className="text-2xl text-brand-light">Project Files</h2>
           <p className="text-sm text-gray-400">
-            {filesForCurrentProject.length}{" "}
-            {filesForCurrentProject.length === 1 ? "file" : "files"} in this
-            project
+            {filteredFiles.length}{" "}
+            {filteredFiles.length === 1 ? "file" : "files"}
+            {normalizedSearchQuery ? " match" : ""} in this project
           </p>
         </div>
       </div>
 
       {/* Enhanced Files Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filesForCurrentProject.map((file) => (
+        {filteredFiles.map((file) => (
           <ProjectFileCard
             file={file}
             isDownloading={isPreparingDownload[file.id] || false}

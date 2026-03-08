@@ -59,6 +59,7 @@ const ProjectDetailPage: React.FC = () => {
     "credentials"
   );
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   // Persist per session and per project: initialize from sessionStorage or URL
   useEffect(() => {
     if (!projectId) return;
@@ -169,7 +170,7 @@ const ProjectDetailPage: React.FC = () => {
           ? `"${credentialToDeleteDetails.serviceName}" has been deleted`
           : "Credential has been deleted",
       });
-    } catch (error: unknown) {
+      } catch {
       toast.error("Failed to delete credential", {
         description: "Please try again later",
       });
@@ -238,9 +239,9 @@ const ProjectDetailPage: React.FC = () => {
         clearTimeout(clipboardTimeout[id]);
         const timeout = setTimeout(() => {
           setClipboardTimeout((prev) => {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { [id]: _, ...rest } = prev;
-            return rest;
+            const nextTimeouts = { ...prev };
+            delete nextTimeouts[id];
+            return nextTimeouts;
           });
           setCopiedStates((prev) => ({ ...prev, [id]: false }));
         }, 2000);
@@ -250,7 +251,7 @@ const ProjectDetailPage: React.FC = () => {
           description:
             "The unencrypted credential has been copied to your clipboard",
         });
-      } catch (error: unknown) {
+      } catch {
         toast.error("Failed to copy", {
           description: "Please try copying again",
         });
@@ -388,12 +389,33 @@ const ProjectDetailPage: React.FC = () => {
     );
   }
 
-  // Derive filtered credentials based on categoryFilter
-  const filteredCredentials = credentials.filter((c) => {
-    if (categoryFilter === "all") return true;
-    const cat = (c.category ?? "none").toLowerCase();
-    return cat === categoryFilter.toLowerCase();
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+
+  // Derive filtered credentials based on categoryFilter and searchQuery
+  const filteredCredentials = credentials.filter((credential) => {
+    const category = (credential.category ?? "none").toLowerCase();
+    const matchesCategory =
+      categoryFilter === "all" || category === categoryFilter.toLowerCase();
+
+    if (!matchesCategory) return false;
+    if (!normalizedSearchQuery) return true;
+
+    const searchableContent = [
+      credential.serviceName,
+      credential.apiKey,
+      credential.apiSecret ?? "",
+      credential.notes ?? "",
+      credential.category ?? "none",
+      credential.id,
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return searchableContent.includes(normalizedSearchQuery);
   });
+
+  const hasCredentialFilters =
+    categoryFilter !== "all" || normalizedSearchQuery.length > 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-dark via-brand-dark-blue-light to-brand-dark-secondary">
@@ -436,7 +458,12 @@ const ProjectDetailPage: React.FC = () => {
         {/* Enhanced Project Tabs */}
         <div className="mb-8">
           <div className="px-4">
-            <ProjectTabs activeTab={activeTab} onTabChange={setActiveTab} />
+            <ProjectTabs
+              activeTab={activeTab}
+              onSearchChange={setSearchQuery}
+              onTabChange={setActiveTab}
+              searchQuery={searchQuery}
+            />
           </div>
         </div>
 
@@ -448,6 +475,7 @@ const ProjectDetailPage: React.FC = () => {
               copiedStates={copiedStates}
               credentials={filteredCredentials}
               error={credentialsError}
+              hasActiveFilters={hasCredentialFilters}
               isLoading={credentialsLoading}
               maskCredential={maskCredential}
               onCopy={handleCopyToClipboard}
@@ -464,11 +492,12 @@ const ProjectDetailPage: React.FC = () => {
                   });
               }}
               revealedStates={revealedStates}
+              searchQuery={searchQuery}
             />
           )}
 
           {activeTab === "files" && projectId && (
-            <FilesView projectId={projectId} />
+            <FilesView projectId={projectId} searchQuery={searchQuery} />
           )}
         </div>
 
