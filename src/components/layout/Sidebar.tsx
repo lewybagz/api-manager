@@ -52,7 +52,7 @@ const Sidebar: React.FC = () => {
   }, [user?.uid, fetchUserDoc, clearUserDoc]);
 
   const filteredProjects = projects.filter((project) =>
-    project.projectName.toLowerCase().includes(searchQuery.toLowerCase())
+    project.projectName.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handleLogout = async () => {
@@ -377,18 +377,19 @@ const Sidebar: React.FC = () => {
                       <p className="font-semibold text-sm text-white truncate">
                         {name}
                       </p>
-                      <div className="mt-1 flex items-center gap-2">
+                      <div className="mt-0 flex items-center gap-2 text-[11px]">
                         {isPro && (
                           <Link
-                            className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-brand-blue text-white shadow-sm whitespace-nowrap"
+                            className="inline-flex items-center p-0 rounded-md font-semibold bg-transparent text-brand-blue shadow-sm whitespace-nowrap"
                             to={`/pro/billing/${user.uid}`}
                           >
                             Pro
+                            <Star className="h-3 w-3 ml-0.5" />
                           </Link>
                         )}
                         {!isPro && isTrial && (
                           <Link
-                            className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold border border-yellow-500/40 bg-yellow-900/30 text-yellow-300 shadow-sm whitespace-nowrap"
+                            className="inline-flex items-center px-2 py-0.5 rounded-md font-semibold border border-yellow-500/40 bg-yellow-900/30 text-yellow-300 shadow-sm whitespace-nowrap"
                             to={`/pro/billing/${user.uid}`}
                           >
                             {daysLeft > 0

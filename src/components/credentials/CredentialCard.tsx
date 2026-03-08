@@ -76,14 +76,14 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
   return (
     <div
       className={cn(
-        "relative bg-brand-dark-secondary/60 backdrop-blur-xl transition-all duration-300 hover:shadow-brand-blue/20 hover:border-brand-blue/40 w-full group overflow-visible",
-        className
+        "relative bg-brand-dark-secondary/60 backdrop-blur-xl transition-all duration-300 hover:bg-brand-blue hover:shadow-brand-blue/20 hover:border-brand-blue/40 w-full group overflow-visible",
+        className,
       )}
     >
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-2 px-4 gap-0">
         {/* Service Info */}
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-1 h-10 bg-gradient-to-b from-transparent from-20% via-brand-blue via-50% to-transparent to-80% rounded-full -translate-x-2"></div>
+          <div className="w-1 h-10 bg-gradient-to-b from-transparent from-20% via-brand-blue group-hover:via-white/80 via-50% to-transparent to-80% rounded-full -translate-x-2"></div>
           <div className={cn("min-w-0 flex-shrink-0 max-w-[350px]")}>
             <button
               aria-label="Copy service name to clipboard"
@@ -140,7 +140,7 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
         <div className="flex-1 flex items-center justify-center gap-2 max-w-[80%]">
           <div
             className={cn(
-              "flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2 font-mono text-xs w-full"
+              "flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2 font-mono text-xs w-full",
             )}
           >
             {/* API Key */}
@@ -155,7 +155,7 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
                     "p-1.5 rounded-md transition-colors duration-200",
                     isApiKeyCopied || clipboardTimeoutApiKey
                       ? "text-green-400"
-                      : "text-gray-400 hover:text-brand-blue"
+                      : "text-gray-400 hover:text-brand-blue",
                   )}
                   onClick={onCopyApiKey}
                   title="Copy API Key"
@@ -171,7 +171,7 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
                     "p-1.5 rounded-md transition-colors duration-200",
                     isApiKeyRevealed
                       ? "text-amber-400"
-                      : "text-gray-400 hover:text-brand-blue"
+                      : "text-gray-400 hover:text-brand-blue",
                   )}
                   onClick={onToggleApiKeyReveal}
                   title={isApiKeyRevealed ? "Hide" : "Show"}
@@ -201,7 +201,7 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
                       "p-1.5 rounded-md transition-colors duration-200",
                       isApiSecretCopied || clipboardTimeoutApiSecret
                         ? "text-green-400"
-                        : "text-gray-400 hover:text-brand-blue"
+                        : "text-gray-400 hover:text-brand-blue",
                     )}
                     onClick={onCopyApiSecret}
                     title="Copy API Secret"
@@ -217,7 +217,7 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
                       "p-1.5 rounded-md transition-colors duration-200",
                       isApiSecretRevealed
                         ? "text-amber-400"
-                        : "text-gray-400 hover:text-brand-blue"
+                        : "text-gray-400 hover:text-brand-blue",
                     )}
                     onClick={onToggleApiSecretReveal}
                     title={isApiSecretRevealed ? "Hide" : "Show"}
