@@ -1,0 +1,199 @@
+---
+description: ZekerKey in-app redesign — scope (no logic/API drift) and ZK design system aligned with marketing
+globs: src/**/*.{tsx,ts},src/index.css,tailwind.config.js
+alwaysApply: true
+---
+
+# ZekerKey app redesign — scope & design rules
+
+Use this rule when redesigning **in-app** UI (dashboard, sidebar, modals, auth, password app, docs shell, etc.) to match the **marketing** look defined on the landing (`/`, `HomePage.tsx`) and pricing (`/pro/pricing`, `ProPricingPage.tsx`) experiences.
+
+**Visual source of truth (read before large changes):**
+
+- [`src/pages/HomePage.tsx`](src/pages/HomePage.tsx) — layout rhythm, hero density, bento cards, trust strip patterns
+- [`src/pages/ProPricingPage.tsx`](src/pages/ProPricingPage.tsx) — centered column, glass card, FAQ accordion
+- [`src/components/marketing/MarketingNav.tsx`](src/components/marketing/MarketingNav.tsx) / [`MarketingFooter.tsx`](src/components/marketing/MarketingFooter.tsx) — nav + footer language
+
+---
+
+## Part A — Scope: what you must NOT change
+
+These boundaries prevent regressions during a visual-only pass.
+
+### A.1 Data, APIs, and business logic
+
+- **Do not** change Firestore paths, collection names, document shapes, or field names unless explicitly tasked with a data migration.
+- **Do not** change Firebase Auth flows (sign-in, sign-up, password reset), `onAuthStateChanged` behavior, or redirect conditions—**except** purely presentational copy/layout around the same conditions.
+- **Do not** change encryption semantics: `PBKDF2` iteration counts, cipher mode (e.g. AES-GCM), key derivation inputs, `encryptWithKey` / `decryptWithKey` call patterns, or what gets persisted to storage.
+- **Do not** remove or reorder **side effects** in stores (`zustand`): `set(...)`, `getDocs`, `getDoc`, `updateDoc`, `addDoc`, `deleteDoc`, batch writes, `uploadBytes`, `deleteObject`, etc. Refactors that touch these must be **behavior-identical** (same calls, same order unless a performance task explicitly allows reordering).
+- **Do not** change Stripe checkout URLs, webhook assumptions, subscription/trial fields on `UserDocument`, or `userHasAccess` / `userHasAccessOrBypass` logic.
+- **Do not** change route paths, `react-router` route trees, or `AuthGuard` public-route lists unless the task is explicitly routing.
+
+### A.2 Component contracts
+
+- **Do not** change public props interfaces of shared components unless you update **all** call sites in the same change (or the task is narrowly “rename prop across codebase”).
+- **Do not** remove accessibility attributes (`aria-*`, `role`, keyboard handlers) without replacing equivalent behavior.
+- **Do not** change form field **names** wired to `react-hook-form` / handlers if that would break submit payloads.
+
+### A.3 Copy that is legally or billing-sensitive
+
+- **Do not** invent new pricing, trial length, or encryption claims without product/legal sign-off. Marketing numbers in code (e.g. `$4.99`, 7-day trial, PBKDF2 iterations) must stay **consistent** across landing, pricing, paywall, and in-app hints unless a single coordinated copy update is requested.
+
+### A.4 Files outside redesign scope unless asked
+
+- `functions/**`, `api/**`, security rules, CI config: **no** drive-by edits for “theme alignment.”
+- Avoid changing `feature_tracker.md`, plans, or unrelated READMEs as part of UI work.
+
+---
+
+## Part B — Scope: what you MAY change freely
+
+- **Class names**, layout wrappers, spacing, typography classes, borders, backgrounds, shadows, and **purely presentational** conditional classes (e.g. `isActive ? "border-zk-indigo" : "border-zk-border"`).
+- **Markup structure** when it does not alter behavior: wrapping in `<div>` for grid, reordering flex children **if** tab order and semantics stay correct (verify).
+- **Icon choice** from `lucide-react` (same stroke weight family, see Part D).
+- **Motion**: opacity/transform transitions that **do not** block input or change timing of data fetches.
+
+---
+
+## Part C — Design system (ZK theme)
+
+### C.1 Canonical tokens (Tailwind)
+
+Defined in [`tailwind.config.js`](tailwind.config.js). **Prefer these over legacy `brand-*` for new and touched UI:**
+
+| Token                           | Role                                                                                  |
+| ------------------------------- | ------------------------------------------------------------------------------------- |
+| `zk-base` `#0E0E12`             | Default page background, deepest layer                                                |
+| `zk-surface` `#13131A`          | Panels, secondary surfaces                                                            |
+| `zk-elevated` `#1A1A22`         | Cards, inputs, raised chips                                                           |
+| `zk-violet` `#18141F`           | Subtle violet undertone sections (sparingly)                                          |
+| `zk-border`                     | Hairline borders / dividers (violet-tinted)                                           |
+| `zk-text` `#E4E4E7`             | Primary text on dark                                                                  |
+| `zk-muted` `#9CA3AF`            | Secondary labels, helper text                                                         |
+| `zk-indigo` / `zk-indigo-hover` | **Primary** interactive accent (buttons, key links)                                   |
+| `zk-indigo-glow`                | Soft outer glow on **primary** CTAs only (use rarely)                                 |
+| `zk-cyan`                       | **Security / encryption / tech** indicators, code accents, “verified” line highlights |
+| `zk-safe` `#5DAE8C`             | **Encrypted / safe / success** state only (muted green—never neon)                    |
+
+**Legacy `brand-*` tokens:** still used across the app. During redesign, **migrate touched files** toward `zk-*` where practical. Do not bulk-replace the entire repo in one PR unless the task says “full migration.”
+
+### C.2 Typography
+
+- **UI sans:** `font-zk-sans` (Inter stack). Use for all in-app UI text when touching a file for redesign.
+- **Code / keys / IDs:** `font-zk-mono` (JetBrains Mono stack). Use for API key previews, env snippets, search tokens, timestamps, badge labels that mimic CLI.
+
+**Scale (Tailwind, adjust per context but stay in this system):**
+
+| Use              | Classes (indicative)                                                                              |
+| ---------------- | ------------------------------------------------------------------------------------------------- |
+| Page title       | `text-2xl md:text-3xl font-semibold tracking-[-0.03em] text-zk-text`                              |
+| Section title    | `text-lg md:text-xl font-semibold tracking-[-0.02em] text-zk-text`                                |
+| Body             | `text-sm md:text-base leading-relaxed text-zk-text`                                               |
+| Secondary / help | `text-xs md:text-sm text-zk-muted`                                                                |
+| Overline / label | `font-zk-mono text-[10px] md:text-xs uppercase tracking-wider text-zk-cyan/80` or `text-zk-muted` |
+
+**Rules:**
+
+- Headlines: **tight tracking** (`tracking-[-0.03em]` to `[-0.045em]`), **no** decorative display fonts.
+- Avoid all-caps sentences except **micro labels** (e.g. status chips).
+- **Never** mix more than two font contexts in one component (sans + mono only).
+
+### C.3 Layout & density
+
+- **Philosophy:** “Dense but calm” (Linear / developer-tooling). Prefer readable `max-w-*` on text columns; tables and dashboards can be full width.
+- **Page padding:** `px-4 md:px-6 lg:px-8` for main content; align with marketing sections unless layout constraints (e.g. sidebar) dictate otherwise.
+- **Vertical rhythm:** section gaps `gap-6` to `gap-10`; avoid excessive `py-24`-style whitespace inside dense tools **unless** it is a marketing-like empty state.
+- **Sidebar / shell:** keep **one** clear hierarchy: base → surface → elevated. Sidebar should feel like a **slightly different elevation** from main (`zk-surface` / `zk-elevated`), not a unrelated color (avoid random gradients unless matching a defined pattern below).
+
+### C.4 Radius, border, shadow
+
+- **Cards / modals:** `rounded-xl` (12px) default; `rounded-2xl` for hero-style panels only.
+- **Buttons / chips:** `rounded-full` for primary/secondary pills; `rounded-md` or `rounded-lg` for compact controls.
+- **Borders:** default `border border-zk-border`. On **primary** focus for emphasis: `border-zk-indigo/40` with **very** subtle glow `shadow-[0_0_24px_-8px_rgba(99,102,241,0.35)]`—do not stack multiple glows.
+- **Shadows:** prefer **single** soft shadow; no heavy drop shadows on every card.
+
+### C.5 Color usage rules
+
+- **Backgrounds:** page `bg-zk-base`; grouped content `bg-zk-surface/30`–`bg-zk-elevated/50`; avoid pure black `#000`.
+- **Primary CTA:** `bg-zk-indigo` → `hover:bg-zk-indigo-hover` + white text. **Do not** use legacy `bg-blue-600` on **new** work in files you touch.
+- **Destructive:** keep a **single** destructive hue (existing reds are fine) but **tone down** saturation to fit zk-base (no fluorescent error reds).
+- **Links (in prose):** `text-zk-cyan/90` hover `text-zk-cyan` **or** indigo underline pattern—pick **one** pattern per surface and stay consistent.
+- **Do not** use `zk-cyan` for non-security decorative blobs (no random gradients).
+
+### C.6 Motion
+
+- **Allowed:** `opacity`, `translateY` max ~8–16px, `transition` 200–400ms, easing `cubic-bezier(0.22, 1, 0.36, 1)` or `ease-out`.
+- **Avoid:** bounce springs, spinners except loading states, scroll hijacking, parallax that shifts layout.
+- Prefer **CSS transitions**; use **framer-motion** only where it already exists or for meaningful `whileInView` fades—do not add heavy motion deps to leaf components.
+
+### C.7 Icons (`lucide-react`)
+
+- Default stroke `strokeWidth={1.5}` on marketing-style surfaces; keep icons **small** (`h-4 w-4`–`h-5 w-5`) next to text.
+- Icon color: `text-zk-muted` default; `text-zk-cyan` for security; `text-zk-safe` for encrypted/success; `text-zk-indigo` only when tied to primary action.
+
+### C.8 Forms & inputs
+
+- Inputs on dark: `bg-zk-base/80` or `bg-zk-elevated`, `border-zk-border`, `text-zk-text`, placeholder `placeholder:text-zk-muted/60`.
+- Focus ring: `focus:outline-none focus:ring-2 focus:ring-zk-indigo/50 focus:ring-offset-2 focus:ring-offset-zk-base` (adjust offset to match surface).
+- **Do not** change validation rules or `register()` field names—only styles and optional `aria-invalid` presentation.
+
+### C.9 States: loading, empty, error
+
+- **Loading:** subtle text `text-zk-muted` or thin progress; **no** playful copy unless product asks.
+- **Empty:** one clear headline + one sentence + single CTA (`zk-indigo` button).
+- **Error:** `text-red-400/90` on `bg-red-950/20` border `border-red-500/30`—keep contrast on `zk-base`.
+
+### C.10 Toasts (`sonner`)
+
+- Restyle via **wrapper** or global class if introduced later; until then, match surrounding page background so toasts do not look like legacy bright cards.
+
+### C.11 Password app (`/pw`)
+
+- May keep **distinct** accent (red theme) for product separation, but **shell** (nav if shared, typography, spacing) should still use `font-zk-sans` / ZK neutrals where PW-specific red is not the signal.
+- Do not remove PW-specific guards (`PasswordAppGuard`, etc.).
+
+### C.12 Public docs layout (`PublicLayout`, `PublicHeader`)
+
+- Align `PublicHeader` / docs chrome with **MarketingNav** patterns (floating bar optional; at minimum shared colors and typography).
+- **Do not** change doc markdown content unless editorial task.
+
+---
+
+## Part D — Implementation conventions
+
+- **Tailwind only** for layout/color in React files unless a file already uses CSS modules—do not introduce new styling systems.
+- **Avoid** arbitrary `style={{}}` except one-off transforms already present.
+- **Prefer** semantic HTML: `button` for actions, `a`/`Link` for navigation, headings in order.
+- **Dark mode:** app is **dark-first**; do not add light theme unless explicitly requested.
+- When removing old classes, **delete unused** imports (icons, components) in the same edit.
+
+---
+
+## Part E — Page-by-page rollout (suggested order)
+
+1. **Global shell:** `Sidebar`, `MobileHeader`, `MobileNav`, `GlobalSearchBar`, `EncryptionStatusIndicator`
+2. **Auth surfaces:** `LoginPage`, `ForgotPasswordPage`, `MasterPasswordModal` — layout/copy only; **no** changes to `AuthGuard` logic
+3. **Core app:** `DashboardPage`, `ProjectDetailPage`, `CredentialsPage`, `ImportProjectPage`, `ProfilePage`
+4. **Billing:** `PaywallPage`, `SubscriptionManagementPage`, billing return/canceled pages
+5. **Files / modals:** `FileList`, `FileUploadArea`, `FilePreviewModal`, credential modals/cards
+6. **Password app:** `LayoutShell`, toolbar, list, settings
+7. **Docs:** `DocsPage`, `DocDetailPage`, `DocCard` to match public header refresh
+
+Track completed areas in the PR description or a short checklist—**one mergeable vertical slice** (e.g. “sidebar + dashboard only”) is better than 40 files of half-updated colors.
+
+---
+
+## Part F — PR checklist (design-only PRs)
+
+- [ ] No changes under `functions/`, `api/`, or Firestore rules unless ticket says so
+- [ ] No changes to store **async** logic, HTTP/Firebase calls, or encryption code paths
+- [ ] No new user-visible pricing/security claims without matching landing/pricing
+- [ ] `npm run build` passes
+- [ ] Keyboard: tab order unchanged or improved
+- [ ] Touch targets ≥ ~44px for primary mobile actions
+
+---
+
+## Part G — When this rule conflicts with another instruction
+
+If another rule or ticket says “change API behavior,” that instruction **wins** for that task. This rule is the **default** for **visual alignment** work.

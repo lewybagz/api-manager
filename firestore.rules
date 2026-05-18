@@ -1,0 +1,237 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Helper function to check if a string is not empty and within a reasonable length
+    function isString(value, minLength, maxLength) {
+      return value is string && value.size() >= minLength && value.size() <= maxLength;
+    }
+
+    // Access helper based on subscription or active trial
+    function hasSubscriptionAccess(userId) {
+      let userDoc = get(/databases/$(database)/documents/users/$(userId));
+      // Server-side bypass for specific admin emails (optional). To add more, update this list and deploy rules.
+      let adminBypass = userDoc.data.email in [
+        'lleep1997@gmail.com'
+      ];
+      let inTrial = userDoc.data.trialEndsAt != null && userDoc.data.trialEndsAt > request.time;
+      let billing = userDoc.data.billing;
+      let activeStatus = billing != null && (billing.status == 'active' || billing.status == 'trialing');
+      let periodOk = billing == null || billing.cancelAtPeriodEnd != true || (billing.currentPeriodEnd != null && billing.currentPeriodEnd > request.time);
+      return adminBypass || inTrial || (activeStatus && periodOk);
+    }
+
+    // Global Helper function to validate fileName (allows most common characters, incl. spaces, dots, dashes, underscores)
+    function isValidFileName(name) {
+      // Allows \\w, \\s, and specific punctuation. Max 255 chars.
+      // Disallows names that are only "." or "..".
+      // Punctuation set: ! # $ % & ' ( ) * + , - . / : ; < = > ? @ [ ] ^ _ ` { | } ~
+      // Backslashes are doubled for Firestore string literals (e.g., \\w in regex becomes \\\\w in the string).
+      let pattern = '^[\\\\w\\\\s!#\\\\$%&\'\\\\(\\\\)\\\\\\*\\\\+,\\\\-\\\\.\\\\/:;<=>\\\\?\\\\@\\\\[\\\\]\\\\^\\\\_`\\\\{\\\\|\\\\}~]{1,255}$';
+      return name.matches(pattern) && !(name == '.' || name == '..') && isString(name, 1, 255);
+    }
+
+    // Global Helper function to validate contentType and ensure it's not video
+    function isValidContentTypeAndNotVideo(type) {
+      let generalMimePattern = '^[a-zA-Z0-9\\-\\+\\.]+\\/[a-zA-Z0-9\\-\\+\\.]+$';
+      let isGeneralMime = type.matches(generalMimePattern) && isString(type, 3, 128);
+      let isVideo = type.matches('^video\\/.*$'); // Match "video/*"
+      return isGeneralMime && !isVideo;
+    }
+
+    // Rate Limits Collection
+    match /rateLimits/{email} {
+      // Allow unauthenticated access for login rate limiting
+      allow read, write: if true;
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      // CREATE: User can create their own document
+      allow create: if request.auth != null &&
+                       request.auth.uid == userId &&
+                       isString(request.resource.data.email, 1, 255) &&
+                       (request.resource.data.displayName == null || isString(request.resource.data.displayName, 1, 100)) &&
+                       request.resource.data.roles is list &&
+                       request.resource.data.createdAt == request.time &&
+                       request.resource.data.updatedAt == request.time;
+
+      // READ: User can read their own document
+      allow read: if request.auth != null &&
+                     request.auth.uid == userId;
+
+      // UPDATE: User can update their own document
+      // Prevent client from changing server-managed fields: billing, roles, trialEndsAt
+      allow update: if request.auth != null &&
+                       request.auth.uid == userId &&
+                       request.resource.data.uid == resource.data.uid && // uid cannot change
+                       request.resource.data.createdAt == resource.data.createdAt && // createdAt cannot change
+                       isString(request.resource.data.email, 1, 255) &&
+                       (request.resource.data.displayName == null || isString(request.resource.data.displayName, 1, 100)) &&
+                       request.resource.data.roles == resource.data.roles &&
+                       request.resource.data.trialEndsAt == resource.data.trialEndsAt &&
+                       request.resource.data.billing == resource.data.billing &&
+                       request.resource.data.updatedAt == request.time;
+
+      // DELETE: User can delete their own document
+      allow delete: if request.auth != null &&
+                       request.auth.uid == userId;
+      
+      // Nested Projects Collection
+      match /projects/{projectId} {
+        // CREATE: User can create a project in their user document
+        allow create: if request.auth != null &&
+                         request.auth.uid == userId &&
+                         hasSubscriptionAccess(userId) &&
+                         isString(request.resource.data.projectName, 1, 100) &&
+                         request.resource.data.createdAt == request.time &&
+                         request.resource.data.updatedAt == request.time;
+
+        // READ: User can read their projects
+        allow read: if request.auth != null &&
+                       request.auth.uid == userId &&
+                       hasSubscriptionAccess(userId);
+
+        // UPDATE: User can update their projects
+        allow update: if request.auth != null &&
+                         request.auth.uid == userId &&
+                         hasSubscriptionAccess(userId) &&
+                         request.resource.data.createdAt == resource.data.createdAt &&
+                         (request.resource.data.projectName != resource.data.projectName ? isString(request.resource.data.projectName, 1, 100) : true) &&
+                         request.resource.data.updatedAt == request.time;
+
+        // DELETE: User can delete their projects
+        allow delete: if request.auth != null &&
+                         request.auth.uid == userId &&
+                         hasSubscriptionAccess(userId);
+
+        // Nested Credentials Collection
+        match /credentials/{credentialId} {
+          // CREATE: User can create credentials in their projects
+          allow create: if request.auth != null &&
+                           request.auth.uid == userId &&
+                           hasSubscriptionAccess(userId);
+
+          // READ: User can read their credentials
+          allow read: if request.auth != null &&
+                         request.auth.uid == userId &&
+                         hasSubscriptionAccess(userId);
+
+          // UPDATE: User can update their credentials
+          allow update: if request.auth != null &&
+                           request.auth.uid == userId &&
+                           hasSubscriptionAccess(userId) &&
+                           request.resource.data.createdAt == resource.data.createdAt &&
+                           (request.resource.data.serviceName != resource.data.serviceName ? isString(request.resource.data.serviceName, 1, 100) : true) &&
+                           (request.resource.data.encryptedApiKey != resource.data.encryptedApiKey ? isString(request.resource.data.encryptedApiKey, 1, 2048) : true) &&
+                           (request.resource.data.encryptedApiSecret != resource.data.encryptedApiSecret ? (request.resource.data.encryptedApiSecret == null || isString(request.resource.data.encryptedApiSecret, 0, 2048)) : true) &&
+                           (request.resource.data.encryptedNotes != resource.data.encryptedNotes ? (request.resource.data.encryptedNotes == null || isString(request.resource.data.encryptedNotes, 0, 4096)) : true) &&
+                           (request.resource.data.iv != resource.data.iv ? isString(request.resource.data.iv, 32, 32) : true) &&
+                           request.resource.data.updatedAt == request.time;
+
+          // DELETE: User can delete their credentials
+          allow delete: if request.auth != null &&
+                           request.auth.uid == userId &&
+                           hasSubscriptionAccess(userId);
+        }
+
+        // Rule for listing files in the 'files' collection
+        match /files {
+          allow list: if request.auth != null && request.auth.uid == userId && hasSubscriptionAccess(userId);
+        }
+
+        // Nested Files Collection
+        match /files/{fileDocId} {
+
+          // CREATE: User can create file metadata in their projects
+          allow create: if request.auth != null &&
+                           request.auth.uid == userId &&
+                           hasSubscriptionAccess(userId) &&
+                           isValidContentTypeAndNotVideo(request.resource.data.contentType) &&
+                           request.resource.data.size is number && 
+                           request.resource.data.size >= 0 && 
+                           request.resource.data.size <= 10 * 1024 * 1024 && // Max 10MB, consistent with storage rules
+                           request.resource.data.projectId == projectId &&
+                           request.resource.data.userId == userId;
+
+          // READ: User can read their file metadata
+          allow read: if request.auth != null &&
+                         request.auth.uid == userId &&
+                         hasSubscriptionAccess(userId);
+
+          // UPDATE: Disallow direct updates to file metadata.
+          // If a file's content or fundamental metadata (like name for storage path purposes) changes,
+          // it should typically be handled as a delete & new upload to ensure consistency.
+          // Specific non-critical metadata fields could be allowed if necessary in the future.
+          allow update: if false;
+
+          // DELETE: User can delete their file metadata (should accompany Storage file deletion)
+          allow delete: if request.auth != null &&
+                           request.auth.uid == userId &&
+                           hasSubscriptionAccess(userId);
+        }
+      }
+
+      // Passwords Collection (PW mode)
+      match /passwords/{passwordId} {
+        // User can read/write own passwords regardless of subscription (free PW mode)
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null && request.auth.uid == userId;
+        allow update: if request.auth != null && request.auth.uid == userId &&
+                      (
+                        request.resource.data.tagIds == null ||
+                        (request.resource.data.tagIds is list &&
+                          request.resource.data.tagIds.size() <= 20 &&
+                          request.resource.data.tagIds.hasOnly([x | x is string]) &&
+                          // Ensure each tag exists under users/{uid}/tags/{tagId}
+                          request.resource.data.tagIds.every(tid =>
+                            exists(/databases/$(database)/documents/users/$(userId)/tags/$(tid))
+                          )
+                        )
+                      ) &&
+                      (
+                        request.resource.data.notes == null ||
+                        (request.resource.data.notes is string && request.resource.data.notes.size() <= 100 &&
+                         // Basic sanitation: disallow angle brackets/backticks/braces
+                         !(request.resource.data.notes.matches(".*[<>`{}].*"))
+                        )
+                      );
+        allow delete: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Tags collection for PW mode (private per user)
+      match /tags/{tagId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null && request.auth.uid == userId &&
+                      isString(request.resource.data.name, 1, 40) &&
+                      isString(request.resource.data.normalizedName, 1, 40) &&
+                      isString(request.resource.data.color, 4, 16) &&
+                      request.resource.data.createdAt == request.time &&
+                      request.resource.data.updatedAt == request.time;
+        allow update: if request.auth != null && request.auth.uid == userId &&
+                      (request.resource.data.name == resource.data.name || isString(request.resource.data.name, 1, 40)) &&
+                      (request.resource.data.normalizedName == resource.data.normalizedName || isString(request.resource.data.normalizedName, 1, 40)) &&
+                      (request.resource.data.color == resource.data.color || isString(request.resource.data.color, 4, 16)) &&
+                      request.resource.data.createdAt == resource.data.createdAt &&
+                      request.resource.data.updatedAt == request.time;
+        allow delete: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // PW mode limits documents (any nested structure under limits/)
+      match /limits/{document=**} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // Legacy Collections (for migration)
+    match /projects/{projectId} {
+      allow read: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+
+    match /credentials/{credentialId} {
+      allow read: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+  }
+}
