@@ -6,11 +6,12 @@ import {
   Eye,
   EyeOff,
   Info,
+  MoreVertical,
   RefreshCw,
   SquarePen,
   Trash2,
 } from "lucide-react";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/utils/cn";
 
@@ -70,13 +71,36 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
   onToggleApiSecretReveal,
   onUpdateNeeded,
 }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuWrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onMouseDown = (e: MouseEvent) => {
+      const el = menuWrapRef.current;
+      if (el && !el.contains(e.target as Node)) setMenuOpen(false);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuOpen]);
+
   const hasSecret = credential.apiSecret && credential.apiSecret.length > 0;
   const category = (credential.category ?? "none").toLowerCase();
+  const needsUpdate =
+    credential.apiKey === "PLACEHOLDER-RESET-VALUE" && Boolean(onUpdateNeeded);
 
   return (
     <div
       className={cn(
-        "group relative w-full overflow-visible border-0 border-b border-zk-border bg-zk-elevated/35 backdrop-blur-sm transition-colors duration-200 last:border-b-0 hover:bg-zk-elevated/55",
+        "group relative w-full overflow-visible border-0 border-b border-zk-border bg-zk-elevated/35 backdrop-blur-sm transition-colors duration-200 last:border-b-0 hover:bg-zk-indigo/50",
+        menuOpen && "z-[80]",
         className,
       )}
     >
@@ -85,41 +109,27 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
         <div className="flex min-w-0 items-center gap-3">
           <div className="h-10 w-1 -translate-x-2 rounded-full bg-gradient-to-b from-transparent from-20% via-zk-indigo/80 via-50% to-transparent to-80% group-hover:via-zk-indigo"></div>
           <div className={cn("min-w-0 max-w-[350px] flex-shrink-0")}>
-            <button
-              aria-label="Copy service name to clipboard"
-              className="group/btn m-0 flex w-full items-center border-none bg-transparent p-0 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-zk-indigo/35"
-              onClick={onCopyServiceName}
-              title="Copy service name"
-              type="button"
-            >
-              <div className="group/service relative inline-flex max-w-[300px]">
-                <h3 className="text-md max-w-[300px] font-zk-sans font-medium text-zk-text transition-colors duration-200 group-hover:text-zk-text">
+            <div className="m-0 flex w-full min-w-0 items-center border-none bg-transparent p-0 text-left">
+              <div className="group/service relative inline-flex max-w-[300px] min-w-0">
+                <h3 className="text-md max-w-[300px] truncate font-zk-sans font-medium text-zk-text">
                   {credential.serviceName.length > 12
                     ? credential.serviceName.slice(0, 16) + "…"
                     : credential.serviceName}
                 </h3>
                 <div className="pointer-events-none absolute bottom-full left-1/2 z-[9999] mb-2 w-max max-w-xs -translate-x-1/2 rounded-lg border border-zk-border bg-zk-elevated p-3 text-xs text-zk-muted opacity-0 shadow-[0_16px_48px_-12px_rgba(0,0,0,0.55)] transition-opacity duration-200 whitespace-pre-wrap break-words group-hover/service:opacity-100">
-                  Tap to copy this name
+                  Use the menu to copy or show values
                 </div>
               </div>
-              <span className="ml-2 flex items-center gap-2">
+              <span className="ml-2 flex shrink-0 items-center gap-2">
                 {category !== "none" && (
                   <span className="rounded-full border border-zk-border bg-zk-base/60 px-2 py-0.5 font-zk-sans text-[10px] capitalize text-zk-muted transition-colors group-hover:border-zk-indigo/25 group-hover:text-zk-text">
                     {category}
                   </span>
                 )}
-                {isServiceNameCopied ? (
-                  <CheckCircle className="h-4 w-4 text-zk-safe" strokeWidth={1.5} />
-                ) : (
-                  <Copy
-                    className="h-4 w-4 text-zk-muted transition-colors duration-200 group-hover:text-zk-text"
-                    strokeWidth={1.5}
-                  />
-                )}
                 {credential.notes && (
                   <div className="group/notes relative flex items-center">
                     <Info
-                      className="h-4 w-4 cursor-pointer text-zk-muted transition-colors group-hover:text-zk-text"
+                      className="h-4 w-4 text-zk-muted transition-colors group-hover:text-zk-text"
                       strokeWidth={1.5}
                     />
                     <div className="pointer-events-none absolute bottom-full left-1/2 z-[9999] mb-2 w-max max-w-xs -translate-x-1/2 rounded-lg border border-zk-border bg-zk-elevated p-3 text-xs text-zk-muted opacity-0 shadow-[0_16px_48px_-12px_rgba(0,0,0,0.55)] transition-opacity duration-200 whitespace-pre-wrap break-words group-hover/notes:opacity-100">
@@ -133,7 +143,7 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
                   </span>
                 )}
               </span>
-            </button>
+            </div>
             <p className="relative flex items-center gap-1 font-zk-sans text-xs text-zk-muted">
               Saved entry
               <span className="text-zk-muted/80">
@@ -153,126 +163,203 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
             {/* API Key */}
             <div className="flex min-w-0 flex-1 items-center rounded-lg border border-zk-border bg-zk-base/50 p-2">
               <span className="mr-2 flex-shrink-0 text-zk-muted">Key</span>
-              <span className="flex-1 truncate text-zk-text">
+              <span className="min-w-0 flex-1 truncate text-zk-text">
                 {maskCredential(credential.apiKey, isApiKeyRevealed)}
               </span>
-              <div className="ml-2 flex flex-shrink-0 items-center">
-                <button
-                  className={cn(
-                    "rounded-md p-1.5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-zk-indigo/35",
-                    isApiKeyCopied || clipboardTimeoutApiKey
-                      ? "text-zk-safe"
-                      : "text-zk-muted hover:text-zk-indigo",
-                  )}
-                  onClick={onCopyApiKey}
-                  title="Copy key"
-                  type="button"
-                >
-                  {isApiKeyCopied || clipboardTimeoutApiKey ? (
-                    <CheckCircle className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  ) : (
-                    <Copy className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  )}
-                </button>
-                <button
-                  className={cn(
-                    "rounded-md p-1.5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-zk-indigo/35",
-                    isApiKeyRevealed
-                      ? "text-amber-300/90"
-                      : "text-zk-muted hover:text-zk-indigo",
-                  )}
-                  onClick={onToggleApiKeyReveal}
-                  title={isApiKeyRevealed ? "Hide" : "Show"}
-                  type="button"
-                >
-                  {isApiKeyRevealed ? (
-                    <EyeOff className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  ) : (
-                    <Eye className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  )}
-                </button>
-              </div>
             </div>
 
             {/* API Secret */}
             {hasSecret && (
               <div className="flex min-w-0 flex-1 items-center rounded-lg border border-zk-border bg-zk-base/50 p-2">
                 <span className="mr-2 flex-shrink-0 text-zk-muted">Secret</span>
-                <span className="flex-1 truncate text-zk-text">
+                <span className="min-w-0 flex-1 truncate text-zk-text">
                   {credential.apiSecret &&
                     maskCredential(credential.apiSecret, isApiSecretRevealed)}
                 </span>
-                <div className="ml-2 flex flex-shrink-0 items-center">
-                  <button
-                    className={cn(
-                      "rounded-md p-1.5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-zk-indigo/35",
-                      isApiSecretCopied || clipboardTimeoutApiSecret
-                        ? "text-zk-safe"
-                        : "text-zk-muted hover:text-zk-indigo",
-                    )}
-                    onClick={onCopyApiSecret}
-                    title="Copy secret"
-                    type="button"
-                  >
-                    {isApiSecretCopied || clipboardTimeoutApiSecret ? (
-                      <CheckCircle className="h-3.5 w-3.5" strokeWidth={1.5} />
-                    ) : (
-                      <Copy className="h-3.5 w-3.5" strokeWidth={1.5} />
-                    )}
-                  </button>
-                  <button
-                    className={cn(
-                      "rounded-md p-1.5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-zk-indigo/35",
-                      isApiSecretRevealed
-                        ? "text-amber-300/90"
-                        : "text-zk-muted hover:text-zk-indigo",
-                    )}
-                    onClick={onToggleApiSecretReveal}
-                    title={isApiSecretRevealed ? "Hide" : "Show"}
-                    type="button"
-                  >
-                    {isApiSecretRevealed ? (
-                      <EyeOff className="h-3.5 w-3.5" strokeWidth={1.5} />
-                    ) : (
-                      <Eye className="h-3.5 w-3.5" strokeWidth={1.5} />
-                    )}
-                  </button>
-                </div>
               </div>
             )}
           </div>
-          {/* Actions */}
-          <div className="flex flex-col items-center gap-1.5 self-start md:flex-row md:self-center">
-            {credential.apiKey === "PLACEHOLDER-RESET-VALUE" &&
-            onUpdateNeeded ? (
-              <button
-                className="flex items-center rounded-lg bg-zk-safe/15 p-2 text-xs text-zk-safe transition-all duration-200 hover:bg-zk-safe/25"
-                onClick={onUpdateNeeded}
-                title="This entry needs an update"
-                type="button"
-              >
-                <RefreshCw className="h-3.5 w-3.5 sm:mr-1" strokeWidth={1.5} />
-                <span className="hidden sm:inline">Update</span>
-              </button>
-            ) : (
-              <button
-                className="rounded-lg p-2 text-zk-muted transition-colors duration-200 hover:bg-zk-base/80 hover:text-zk-text focus:outline-none focus-visible:ring-2 focus-visible:ring-zk-indigo/35"
-                onClick={onEdit}
-                title="Edit"
-                type="button"
-              >
-                <SquarePen className="h-4 w-4" strokeWidth={1.5} />
-              </button>
-            )}
-
+          {/* Card actions — kebab menu */}
+          <div
+            className="relative flex shrink-0 self-start md:self-center"
+            ref={menuWrapRef}
+          >
             <button
-              className="rounded-lg p-2 text-red-400/90 transition-colors duration-200 hover:bg-red-950/35 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30"
-              onClick={onDelete}
-              title="Remove"
+              aria-expanded={menuOpen}
+              aria-haspopup="menu"
+              aria-label="More options for this entry"
+              className="rounded-lg p-2 text-zk-muted transition-colors duration-200 hover:bg-zk-base/80 hover:text-zk-text focus:outline-none focus-visible:ring-2 focus-visible:ring-zk-indigo/35"
+              onClick={() => {
+                setMenuOpen((o) => !o);
+              }}
               type="button"
             >
-              <Trash2 className="h-4 w-4" strokeWidth={1.5} />
+              <MoreVertical className="h-4 w-4" strokeWidth={1.5} />
             </button>
+            {menuOpen && (
+              <div
+                className="absolute right-0 top-full z-[200] mt-1 w-56 rounded-xl border border-zk-border bg-zk-elevated py-1 shadow-[0_16px_48px_-12px_rgba(0,0,0,0.55)] ring-1 ring-black/20"
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+                role="menu"
+              >
+                <button
+                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left font-zk-sans text-sm text-zk-text transition-colors hover:bg-zk-base/70"
+                  onClick={() => {
+                    onCopyServiceName();
+                    setMenuOpen(false);
+                  }}
+                  role="menuitem"
+                  type="button"
+                >
+                  {isServiceNameCopied ? (
+                    <CheckCircle
+                      className="h-4 w-4 shrink-0 text-zk-safe"
+                      strokeWidth={1.5}
+                    />
+                  ) : (
+                    <Copy
+                      className="h-4 w-4 shrink-0 text-zk-muted"
+                      strokeWidth={1.5}
+                    />
+                  )}
+                  Copy name
+                </button>
+                <button
+                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left font-zk-sans text-sm text-zk-text transition-colors hover:bg-zk-base/70"
+                  onClick={() => {
+                    onCopyApiKey();
+                    setMenuOpen(false);
+                  }}
+                  role="menuitem"
+                  type="button"
+                >
+                  {isApiKeyCopied || clipboardTimeoutApiKey ? (
+                    <CheckCircle
+                      className="h-4 w-4 shrink-0 text-zk-safe"
+                      strokeWidth={1.5}
+                    />
+                  ) : (
+                    <Copy
+                      className="h-4 w-4 shrink-0 text-zk-muted"
+                      strokeWidth={1.5}
+                    />
+                  )}
+                  Copy key
+                </button>
+                {hasSecret && (
+                  <button
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left font-zk-sans text-sm text-zk-text transition-colors hover:bg-zk-base/70"
+                    onClick={() => {
+                      onCopyApiSecret();
+                      setMenuOpen(false);
+                    }}
+                    role="menuitem"
+                    type="button"
+                  >
+                    {isApiSecretCopied || clipboardTimeoutApiSecret ? (
+                      <CheckCircle
+                        className="h-4 w-4 shrink-0 text-zk-safe"
+                        strokeWidth={1.5}
+                      />
+                    ) : (
+                      <Copy
+                        className="h-4 w-4 shrink-0 text-zk-muted"
+                        strokeWidth={1.5}
+                      />
+                    )}
+                    Copy secret
+                  </button>
+                )}
+                <button
+                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left font-zk-sans text-sm text-zk-text transition-colors hover:bg-zk-base/70"
+                  onClick={onToggleApiKeyReveal}
+                  role="menuitem"
+                  type="button"
+                >
+                  {isApiKeyRevealed ? (
+                    <EyeOff
+                      className="h-4 w-4 shrink-0 text-amber-300/90"
+                      strokeWidth={1.5}
+                    />
+                  ) : (
+                    <Eye
+                      className="h-4 w-4 shrink-0 text-zk-muted"
+                      strokeWidth={1.5}
+                    />
+                  )}
+                  {isApiKeyRevealed ? "Hide key" : "Show key"}
+                </button>
+                {hasSecret && (
+                  <button
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left font-zk-sans text-sm text-zk-text transition-colors hover:bg-zk-base/70"
+                    onClick={onToggleApiSecretReveal}
+                    role="menuitem"
+                    type="button"
+                  >
+                    {isApiSecretRevealed ? (
+                      <EyeOff
+                        className="h-4 w-4 shrink-0 text-amber-300/90"
+                        strokeWidth={1.5}
+                      />
+                    ) : (
+                      <Eye
+                        className="h-4 w-4 shrink-0 text-zk-muted"
+                        strokeWidth={1.5}
+                      />
+                    )}
+                    {isApiSecretRevealed ? "Hide secret" : "Show secret"}
+                  </button>
+                )}
+                <div
+                  aria-hidden
+                  className="my-1 border-t border-zk-border"
+                />
+                {needsUpdate ? (
+                  <button
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left font-zk-sans text-sm text-zk-safe transition-colors hover:bg-zk-safe/10"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onUpdateNeeded?.();
+                    }}
+                    role="menuitem"
+                    type="button"
+                  >
+                    <RefreshCw className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+                    Update entry
+                  </button>
+                ) : (
+                  <button
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left font-zk-sans text-sm text-zk-text transition-colors hover:bg-zk-base/70"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onEdit();
+                    }}
+                    role="menuitem"
+                    type="button"
+                  >
+                    <SquarePen
+                      className="h-4 w-4 shrink-0 text-zk-indigo"
+                      strokeWidth={1.5}
+                    />
+                    Edit
+                  </button>
+                )}
+                <button
+                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left font-zk-sans text-sm text-red-400/95 transition-colors hover:bg-red-950/30 hover:text-red-300"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onDelete();
+                  }}
+                  role="menuitem"
+                  type="button"
+                >
+                  <Trash2 className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+                  Remove
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

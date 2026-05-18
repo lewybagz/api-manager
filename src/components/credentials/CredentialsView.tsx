@@ -125,7 +125,7 @@ const CredentialsView: React.FC<CredentialsViewProps> = ({
 
       {showCredentials && (
         <div className="space-y-8 overflow-visible">
-          <div className="overflow-hidden rounded-2xl border border-zk-border bg-zk-base/20">
+          <div className="overflow-visible rounded-2xl border border-zk-border bg-zk-base/20">
             {credentials.map((cred, idx) => {
               const isFirst = idx === 0;
               const isLast = idx === credentials.length - 1;
