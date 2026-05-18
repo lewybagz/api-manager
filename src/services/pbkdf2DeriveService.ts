@@ -5,6 +5,9 @@ import type {
   Pbkdf2WorkerOutbound,
 } from "../workers/pbkdf2.worker";
 
+// Resolved at build time to a same-origin script URL (not a data: URL), so CSP `worker-src 'self'` applies.
+import pbkdf2WorkerSrc from "../workers/pbkdf2.worker.ts?worker&url";
+
 /**
  * Runs PBKDF2 off the main thread when workers are available; falls back to the
  * same derivation on the main thread so unlock always matches historical behavior.
@@ -18,8 +21,7 @@ export function deriveMasterKeyHexWithWorkerFallback(
   }
 
   try {
-    const workerUrl = new URL("../workers/pbkdf2.worker.ts", import.meta.url);
-    const worker = new Worker(workerUrl, { type: "module" });
+    const worker = new Worker(pbkdf2WorkerSrc, { type: "module" });
 
     return new Promise<string>((resolve, reject) => {
       const finish = () => {
