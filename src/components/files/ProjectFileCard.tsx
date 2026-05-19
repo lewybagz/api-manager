@@ -82,11 +82,16 @@ const ProjectFileCard: React.FC<ProjectFileCardProps> = ({
   // Get the icon placeholder using the utility function
   const iconPlaceholder = getFileIconPlaceholder(file.fileName);
 
-  // Format uploaded date
-  const uploadedDate = new Date(
-    // Firestore Timestamp: .seconds to ms
+  // Format upload date and time (locale-aware; never includes seconds)
+  const uploadedLabel = new Date(
     (file.uploadedAt.seconds || 0) * 1000
-  ).toLocaleDateString();
+  ).toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 
   const borderColor = getFileTypeColor(file.fileName, file.contentType);
 
@@ -343,7 +348,7 @@ const ProjectFileCard: React.FC<ProjectFileCardProps> = ({
           </div>
           <div className="flex items-center justify-between">
             <span>Uploaded</span>
-            <span className="text-zk-text/85">{uploadedDate}</span>
+            <span className="text-zk-text/85">{uploadedLabel}</span>
           </div>
           <div className="flex items-center justify-between gap-2">
             <span>ID</span>
