@@ -12,7 +12,7 @@
     "test:watch": "vitest",
     "git": "git add . && git commit -m \"Build update - %date% %time%\" && git push origin main",
     "preview": "vite preview",
-    "deploy": "git add . && git commit -m \"Build update - %date% %time%\" && git push origin main"
+    "deploy": "npm run build && npm run git"
   },
   "dependencies": {
     "clsx": "^2.1.1",

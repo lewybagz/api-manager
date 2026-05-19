@@ -8,6 +8,7 @@ import useFileStore from "../../stores/fileStore";
 import SensitiveFileWarningModal from "./SensitiveFileWarningModal";
 
 interface FileUploadAreaProps {
+  onUploadSuccess?: () => void;
   projectId: string;
 }
 
@@ -22,7 +23,10 @@ const SENSITIVE_EXTENSIONS = [
   ".rdp",
 ];
 
-const FileUploadArea: React.FC<FileUploadAreaProps> = ({ projectId }) => {
+const FileUploadArea: React.FC<FileUploadAreaProps> = ({
+  onUploadSuccess,
+  projectId,
+}) => {
   const { isLoading, uploadFile } = useFileStore();
   const { masterPasswordSet } = useAuthStore();
 
@@ -46,6 +50,7 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({ projectId }) => {
         await uploadFile(projectId, file, encrypt);
         toast.success(`File "${file.name}" uploaded successfully!`);
         setUploadingFileName(null);
+        onUploadSuccess?.();
       } catch (error) {
         setUploadError(
           error instanceof Error ? error.message : "Failed to upload file."
@@ -56,7 +61,7 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({ projectId }) => {
         setUploadingFileName(null);
       }
     },
-    [projectId, uploadFile]
+    [onUploadSuccess, projectId, uploadFile]
   );
 
   const onDrop = useCallback(

@@ -1,4 +1,4 @@
-import { Lock, Trash2 } from "lucide-react";
+import { Lock, Trash2, UploadCloud, X } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   Link,
@@ -10,6 +10,7 @@ import { toast, Toaster } from "sonner";
 
 import CredentialModal from "../components/credentials/CredentialModal";
 import CredentialsView from "../components/credentials/CredentialsView";
+import FileUploadArea from "../components/files/FileUploadArea";
 import GlobalSearchBar from "../components/layout/GlobalSearchBar";
 import FilesView from "../components/projects/FilesView";
 import ProjectHeader from "../components/projects/ProjectHeader";
@@ -65,6 +66,7 @@ const ProjectDetailPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"credentials" | "files">(
     "credentials"
   );
+  const [fileUploadModalOpen, setFileUploadModalOpen] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   // Persist per session and per project: initialize from sessionStorage or URL
@@ -148,6 +150,15 @@ const ProjectDetailPage: React.FC = () => {
       });
     }
   }, [projectId, projects, addRecentItem]);
+
+  useEffect(() => {
+    if (!fileUploadModalOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setFileUploadModalOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [fileUploadModalOpen]);
 
   const handleAddCredential = () => {
     setEditingCredential(null);
@@ -463,13 +474,35 @@ const ProjectDetailPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="mb-6 max-w-2xl w-full">
-          <GlobalSearchBar
-            className="w-full"
-            onQueryChange={setSearchQuery}
-            prioritizeProjectId={project.id}
-            variant="page"
-          />
+        <div className="mb-6 flex w-full max-w-2xl flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-3">
+          <div className="min-w-0 flex-1">
+            <GlobalSearchBar
+              className="w-full"
+              onQueryChange={setSearchQuery}
+              prioritizeProjectId={project.id}
+              variant="page"
+            />
+          </div>
+          {projectId && (
+            <button
+              aria-label="Upload a file"
+              className="group relative flex shrink-0 items-center justify-center gap-2 self-stretch overflow-hidden rounded-xl border border-zk-indigo/35 bg-zk-elevated px-4 py-3 font-zk-sans text-sm font-medium text-zk-text shadow-[0_0_28px_-10px_rgba(99,102,241,0.45)] transition-[border-color,box-shadow,transform,background-color] duration-200 hover:border-zk-indigo/55 hover:bg-zk-indigo/15 hover:shadow-[0_0_36px_-8px_rgba(99,102,241,0.55)] focus:outline-none focus-visible:ring-2 focus-visible:ring-zk-indigo/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zk-base active:scale-[0.98] sm:self-center sm:py-2.5"
+              onClick={() => {
+                setFileUploadModalOpen(true);
+              }}
+              type="button"
+            >
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 bg-gradient-to-br from-zk-indigo/25 via-transparent to-zk-cyan/10 opacity-80 transition-opacity duration-200 group-hover:opacity-100"
+              />
+              <UploadCloud
+                className="relative h-5 w-5 shrink-0 text-zk-indigo transition-colors group-hover:text-zk-indigo-hover"
+                strokeWidth={1.5}
+              />
+              <span className="relative hidden sm:inline">Upload</span>
+            </button>
+          )}
         </div>
 
         <div className="mb-8">
@@ -510,6 +543,56 @@ const ProjectDetailPage: React.FC = () => {
             <FilesView projectId={projectId} searchQuery={searchQuery} />
           )}
         </div>
+
+        {fileUploadModalOpen && projectId && (
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+            onClick={() => {
+              setFileUploadModalOpen(false);
+            }}
+            role="presentation"
+          >
+            <div
+              aria-labelledby="file-upload-modal-title"
+              aria-modal="true"
+              className="relative max-h-[min(90vh,720px)] w-full max-w-lg overflow-y-auto rounded-2xl border border-zk-border bg-zk-elevated p-5 shadow-[0_24px_64px_-24px_rgba(0,0,0,0.65)] sm:p-6"
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+              role="dialog"
+            >
+              <div className="mb-5 flex items-start justify-between gap-3">
+                <div>
+                  <h2
+                    className="font-zk-sans text-lg font-semibold tracking-[-0.02em] text-zk-text sm:text-xl"
+                    id="file-upload-modal-title"
+                  >
+                    Upload a file
+                  </h2>
+                  <p className="mt-1 text-sm text-zk-muted">
+                    Drag in or choose a file for this project
+                  </p>
+                </div>
+                <button
+                  aria-label="Close upload"
+                  className="rounded-lg p-2 text-zk-muted transition-colors hover:bg-zk-base/70 hover:text-zk-text focus:outline-none focus-visible:ring-2 focus-visible:ring-zk-indigo/35"
+                  onClick={() => {
+                    setFileUploadModalOpen(false);
+                  }}
+                  type="button"
+                >
+                  <X className="h-5 w-5" strokeWidth={1.5} />
+                </button>
+              </div>
+              <FileUploadArea
+                onUploadSuccess={() => {
+                  setFileUploadModalOpen(false);
+                }}
+                projectId={projectId}
+              />
+            </div>
+          </div>
+        )}
 
         <CredentialModal
           editingCredential={editingCredential}
