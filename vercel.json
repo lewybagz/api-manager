@@ -1,5 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "headers": [
     {
       "source": "/(.*)",
@@ -33,7 +35,7 @@
       ]
     },
     {
-      "source": "/assets/logos/site.webmanifest",
+      "source": "/internal/zeker/assets/logos/site.webmanifest",
       "headers": [
         {
           "key": "Content-Type",
@@ -47,29 +49,22 @@
     }
   ],
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
+    { "source": "/api/(.*)", "destination": "/api/$1" },
     {
       "source": "/internal/zeker/api/(.*)",
       "destination": "/api/$1"
     },
     {
       "source": "/internal/zeker/assets/(.*)",
-      "destination": "/dist/assets/$1"
+      "destination": "/assets/$1"
     },
     {
       "source": "/internal/zeker",
-      "destination": "/dist/index.html"
+      "destination": "/index.html"
     },
     {
       "source": "/internal/zeker/(.*)",
-      "destination": "/dist/index.html"
-    },
-    {
-      "source": "/assets/(.*)",
-      "destination": "/dist/assets/$1"
+      "destination": "/index.html"
     },
     {
       "source": "/",
