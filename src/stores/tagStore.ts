@@ -1,8 +1,8 @@
 import { collection, deleteDoc, doc, getDocs, query, runTransaction, serverTimestamp, setDoc, Timestamp, updateDoc, where } from "firebase/firestore";
-import { getFunctions, httpsCallable } from "firebase/functions";
 import { create } from "zustand";
 
 import { db } from "../firebase";
+import { apiPostJson } from "../services/apiClient";
 import useAuthStore from "./authStore";
 
 export interface TagDocument {
@@ -102,8 +102,14 @@ const useTagStore = create<TagStoreState>((set, get) => ({
     await get().fetchTags();
   },
   mergeTags: async (sourceTagId, targetTagId) => {
-    const callable = httpsCallable(getFunctions(), "pw_mergeTags");
-    await callable({ sourceTagId, targetTagId });
+    const { user } = useAuthStore.getState();
+    if (!user) return;
+    const token = await user.getIdToken();
+    await apiPostJson(
+      "/api/pw/merge-tags",
+      { sourceTagId, targetTagId },
+      { token }
+    );
     await get().fetchTags();
   },
 }));

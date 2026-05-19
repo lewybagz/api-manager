@@ -7,6 +7,7 @@ import { defineConfig } from "vite";
 // https://vite.dev/config/
 // Run `npm run build:analyze` then open `dist/stats.html` after build. Use Chrome Lighthouse (mobile) on `npm run preview` for LCP/INP baselines.
 export default defineConfig(({ mode }) => ({
+  base: "/internal/zeker/",
   css: {
     postcss: {
       plugins: [tailwindcss],
@@ -34,6 +35,15 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  server: {
+    proxy: {
+      "/internal/zeker/api": {
+        changeOrigin: true,
+        target: "http://127.0.0.1:3000",
+        rewrite: (path) => path.replace(/^\/internal\/zeker\/api/, "/api"),
+      },
     },
   },
 }));

@@ -48,24 +48,33 @@
   ],
   "rewrites": [
     {
-      "source": "/assets/(.*)",
-      "destination": "/dist/assets/$1"
-    },
-    {
-      "source": "/index.html",
-      "destination": "/dist/index.html"
-    },
-    {
-      "source": "/$",
-      "destination": "/dist/index.html"
-    },
-    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "source": "/internal/zeker/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/internal/zeker/assets/(.*)",
+      "destination": "/dist/assets/$1"
+    },
+    {
+      "source": "/internal/zeker",
+      "destination": "/dist/index.html"
+    },
+    {
+      "source": "/internal/zeker/(.*)",
+      "destination": "/dist/index.html"
+    },
+    {
+      "source": "/assets/(.*)",
+      "destination": "/dist/assets/$1"
+    },
+    {
+      "source": "/",
+      "destination": "/internal/zeker",
+      "statusCode": 308
     }
   ]
 }

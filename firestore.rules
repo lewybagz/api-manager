@@ -39,10 +39,13 @@ service cloud.firestore {
       return isGeneralMime && !isVideo;
     }
 
-    // Rate Limits Collection
+    // Rate limits — server-only (Vercel Admin SDK)
     match /rateLimits/{email} {
-      // Allow unauthenticated access for login rate limiting
-      allow read, write: if true;
+      allow read, write: if false;
+    }
+
+    match /dailyLimits/{docId} {
+      allow read, write: if false;
     }
 
     // Users Collection

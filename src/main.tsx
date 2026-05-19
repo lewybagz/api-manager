@@ -5,6 +5,7 @@ import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import App from "./App.tsx";
 import { applyBranding } from "./utils/appBranding";
+import { APP_BASE } from "./config/paths";
 
 const rootElement = document.getElementById("root");
 applyBranding();
@@ -15,8 +16,8 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={APP_BASE || undefined}>
       <App />
     </BrowserRouter>
-  </StrictMode>
+  </StrictMode>,
 );

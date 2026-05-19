@@ -1,19 +1,8 @@
-import { type VercelRequest, type VercelResponse } from '@vercel/node';
-import Stripe from 'stripe';
-import admin from 'firebase-admin';
+import { type VercelRequest, type VercelResponse } from "@vercel/node";
+import Stripe from "stripe";
+import admin from "firebase-admin";
 
-let app: admin.app.App | null = null;
-function getAdminApp() {
-  if (app) return app;
-  if (!admin.apps.length) {
-    app = admin.initializeApp({
-      credential: admin.credential.applicationDefault(),
-    });
-  } else {
-    app = admin.app();
-  }
-  return app;
-}
+import { FieldValue, getFirestore } from "./_lib/firebase-admin";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -50,10 +39,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const app = getAdminApp();
-  const db = app.firestore();
+  const db = getFirestore();
 
-  async function upsertUserByEmail(email: string, updater: (ref: FirebaseFirestore.DocumentReference) => Promise<void>) {
+  async function upsertUserByEmail(
+    email: string,
+    updater: (ref: admin.firestore.DocumentReference) => Promise<void>
+  ) {
     const usersRef = db.collection('users');
     const snap = await usersRef.where('email', '==', email).limit(1).get();
     if (snap.empty) return;
@@ -92,7 +83,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               currentPeriodEnd: admin.firestore.Timestamp.fromMillis(sub.current_period_end * 1000),
               cancelAtPeriodEnd: sub.cancel_at_period_end,
             },
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: FieldValue.serverTimestamp(),
           });
         });
         break;
@@ -125,7 +116,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               currentPeriodEnd: admin.firestore.Timestamp.fromMillis(sub.current_period_end * 1000),
               cancelAtPeriodEnd: true,
             },
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: FieldValue.serverTimestamp(),
           });
         });
         break;
@@ -137,7 +128,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         await upsertUserByEmail(email, async (ref) => {
           await ref.update({
             'billing.status': 'past_due',
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: FieldValue.serverTimestamp(),
           });
         });
         break;

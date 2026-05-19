@@ -1,12 +1,14 @@
 import { useMemo, useState } from "react";
 import { getAuth } from "firebase/auth";
+import { resolveApiUrl } from "../services/apiClient";
 import useUserStore from "../stores/userStore";
+
 async function postCancel(): Promise<Response> {
   const auth = getAuth();
   const currentUser = auth.currentUser;
   if (!currentUser) throw new Error("Not authenticated");
   const token = await currentUser.getIdToken();
-  return fetch("/api/cancel-subscription", {
+  return fetch(resolveApiUrl("/api/cancel-subscription"), {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,

@@ -8,7 +8,9 @@
     "moduleDetection": "force",
     "strict": true,
     "noEmit": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["node"],
+    "esModuleInterop": true
   },
   "include": ["api/**/*.ts"]
 }

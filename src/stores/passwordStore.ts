@@ -1,7 +1,8 @@
-import { collection, deleteDoc, doc, getDocs, limit, orderBy, query, runTransaction, serverTimestamp, Timestamp, updateDoc, where } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDoc, getDocs, limit, orderBy, query, runTransaction, serverTimestamp, Timestamp, updateDoc, where } from "firebase/firestore";
 import { create } from "zustand";
 
 import { db } from "../firebase";
+import { syncTagUsageForPasswordChange } from "../utils/pwTagUsage";
 import { getRandomValuesSafe } from "../utils/cryptoSafe";
 import { logger, ErrorCategory } from "../services/logger";
 import { decryptWithKey, encryptWithKey } from "../services/encryptionService";
@@ -148,6 +149,11 @@ const usePasswordStore = create<PasswordStoreState>((set, get) => ({
         tx.set(limitRef, { count: currentCount + 1, updatedAt: serverTimestamp() }, { merge: true });
       });
 
+      const newTagIds = Array.isArray((args as { tagIds?: string[] }).tagIds)
+        ? ((args as { tagIds?: string[] }).tagIds as string[]).slice(0, 20)
+        : [];
+      await syncTagUsageForPasswordChange(currentUser.uid, [], newTagIds);
+
       await get().fetchPasswords();
       set({ isLoading: false });
       logger.info(ErrorCategory.CREDENTIAL, "addPassword success", { refreshedList: true });
@@ -252,12 +258,16 @@ const usePasswordStore = create<PasswordStoreState>((set, get) => ({
       const day = new Date();
       const dayKey = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
 
+      let tagUsageBefore: string[] | undefined;
+      let tagUsageAfter: string[] | undefined;
+
       await runTransaction(db, async (tx) => {
         const { doc } = await import('firebase/firestore');
         const pwRef = doc(collection(db, 'users', currentUser.uid, 'passwords'), id);
         const pwSnap = await tx.get(pwRef);
         if (!pwSnap.exists()) throw new Error('NOT_FOUND');
         const prev = pwSnap.data() as StoredPassword;
+        tagUsageBefore = Array.isArray(prev.tagIds) ? prev.tagIds : [];
 
         // Determine categories and limits
         const categories: Array<{ key: string; limit: number }> = [];
@@ -281,13 +291,28 @@ const usePasswordStore = create<PasswordStoreState>((set, get) => ({
         if (typeof data.username !== 'undefined') updates.username = data.username;
         if (typeof data.url !== 'undefined') updates.url = data.url;
         if (typeof data.notes !== 'undefined') updates.notes = data.notes;
-        if (Array.isArray((data as any).tagIds)) {
-          const nextTagIds = ((data as any).tagIds as string[]).slice(0, 20);
+        if (Array.isArray((data as { tagIds?: string[] }).tagIds)) {
+          const nextTagIds = (data.tagIds as string[]).slice(0, 20);
           updates.tagIds = nextTagIds;
+          tagUsageAfter = nextTagIds;
+        } else {
+          tagUsageAfter = tagUsageBefore;
         }
         if (encPassword && encIv) { updates.encryptedPassword = encPassword; updates.iv = encIv; }
         tx.update(pwRef, updates);
       });
+
+      if (
+        tagUsageBefore !== undefined &&
+        tagUsageAfter !== undefined &&
+        JSON.stringify(tagUsageBefore) !== JSON.stringify(tagUsageAfter)
+      ) {
+        await syncTagUsageForPasswordChange(
+          currentUser.uid,
+          tagUsageBefore,
+          tagUsageAfter
+        );
+      }
 
       await get().fetchPasswords();
       set({ isLoading: false });
@@ -303,8 +328,16 @@ const usePasswordStore = create<PasswordStoreState>((set, get) => ({
     }
     set({ error: null, isLoading: true });
     try {
-      const pwRef = doc(collection(db, 'users', currentUser.uid, 'passwords'), id);
-      await updateDoc(pwRef, { tagIds: tagIds.slice(0, 20), updatedAt: serverTimestamp() });
+      const pwRef = doc(collection(db, "users", currentUser.uid, "passwords"), id);
+      const prevSnap = await getDoc(pwRef);
+      const prevTagIds = prevSnap.exists()
+        ? (Array.isArray((prevSnap.data() as StoredPassword).tagIds)
+            ? (prevSnap.data() as StoredPassword).tagIds!
+            : [])
+        : [];
+      const nextTagIds = tagIds.slice(0, 20);
+      await updateDoc(pwRef, { tagIds: nextTagIds, updatedAt: serverTimestamp() });
+      await syncTagUsageForPasswordChange(currentUser.uid, prevTagIds, nextTagIds);
       await get().fetchPasswords();
       set({ isLoading: false });
     } catch (e) {
@@ -415,7 +448,13 @@ const usePasswordStore = create<PasswordStoreState>((set, get) => ({
     const currentUser = useAuthStore.getState().user;
     if (!currentUser) return;
     try {
-      const ref = doc(collection(db, 'users', currentUser.uid, 'passwords'), id);
+      const ref = doc(collection(db, "users", currentUser.uid, "passwords"), id);
+      const snap = await getDoc(ref);
+      const prevTagIds =
+        snap.exists() && Array.isArray((snap.data() as StoredPassword).tagIds)
+          ? ((snap.data() as StoredPassword).tagIds as string[])
+          : [];
+      await syncTagUsageForPasswordChange(currentUser.uid, prevTagIds, []);
       await deleteDoc(ref);
       await get().fetchTrashed?.();
     } catch (e) {

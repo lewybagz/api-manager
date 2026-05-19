@@ -25,5 +25,8 @@ jobs:
       - name: Unit tests (crypto golden vectors)
         run: npm test
 
+      - name: Typecheck Vercel API routes
+        run: npm run build:api
+
       - name: Build
         run: npm run build
