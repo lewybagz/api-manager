@@ -3,7 +3,8 @@
     "origin": [
       "http://localhost:5173",
       "https://zeker-delta.vercel.app",
-      "https://tovutillc.com"
+      "https://tovutillc.com",
+      "https://www.tovutillc.com"
     ],
     "method": ["GET"],
     "maxAgeSeconds": 3600

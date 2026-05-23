@@ -103,9 +103,9 @@ Order matters (specific routes first):
 
 ### Firebase / Stripe
 
-- **Firebase Auth:** add `tovutillc.com` to authorized domains.
+- **Firebase Auth:** add `tovutillc.com` and `www.tovutillc.com` to authorized domains (each host is separate).
 - **Stripe:** webhook URL stays on the Zeker project (`https://zeker-delta.vercel.app/api/stripe-webhook` or custom domain). Billing return URLs in Stripe Dashboard should include `https://tovutillc.com/internal/zeker/pro/billing/...` if users checkout from the portfolio path.
-- **CORS** ([`cors.json`](../cors.json)): add `https://tovutillc.com` if Storage uploads fail from that origin.
+- **Storage CORS** ([`cors.json`](../cors.json)): must list every browser **origin** you use (`https://www.tovutillc.com` and `https://tovutillc.com` are different). Apply with `gsutil cors set cors.json gs://api-manager-42e60.firebasestorage.app`. Auth authorized domains do **not** set Storage CORS.
 
 ### Local development
 
