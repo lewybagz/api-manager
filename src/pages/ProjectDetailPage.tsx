@@ -1,5 +1,5 @@
 import { Lock, Trash2, UploadCloud, X } from "lucide-react";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Link,
   useNavigate,
@@ -22,9 +22,15 @@ import useCredentialStore, {
 import useProjectStore from "../stores/projectStore";
 import useRecentItemsStore from "../stores/recentItemsStore";
 import {
+  buildExportCategoryOptions,
+  normalizeCredentialCategory,
+} from "../constants/credentialCategories";
+import {
   buildProjectEnvFileContent,
   downloadTextFile,
+  filterCredentialsForExport,
   projectEnvFilename,
+  type ProjectEnvExportScope,
 } from "../utils/exportProjectEnv";
 
 const ProjectDetailPage: React.FC = () => {
@@ -302,20 +308,44 @@ const ProjectDetailPage: React.FC = () => {
     void navigate("/dashboard");
   }, [navigate]);
 
-  const handleExportProjectEnv = useCallback(() => {
-    if (!project) return;
-    if (credentials.length === 0) {
-      toast.error("Nothing to download yet", {
-        description: "Add a credential to this project first.",
-      });
-      return;
+  const exportCategoryOptions = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const credential of credentials) {
+      const key = normalizeCredentialCategory(credential.category);
+      counts.set(key, (counts.get(key) ?? 0) + 1);
     }
-    const content = buildProjectEnvFileContent(credentials);
-    downloadTextFile(content, projectEnvFilename(project.projectName));
-    toast.success("Download started", {
-      description: "Keep this file somewhere safe and private.",
-    });
-  }, [credentials, project]);
+    return buildExportCategoryOptions(counts);
+  }, [credentials]);
+
+  const handleExportProjectEnv = useCallback(
+    (scope: ProjectEnvExportScope) => {
+      if (!project) return;
+      if (credentials.length === 0) {
+        toast.error("Nothing to download yet", {
+          description: "Add a credential to this project first.",
+        });
+        return;
+      }
+      const rows = filterCredentialsForExport(credentials, scope);
+      if (rows.length === 0) {
+        toast.error("Nothing to download in this category", {
+          description: "Try another category or add credentials here first.",
+        });
+        return;
+      }
+      const content = buildProjectEnvFileContent(rows, { categoryScope: scope });
+      downloadTextFile(
+        content,
+        projectEnvFilename(project.projectName, scope)
+      );
+      const description =
+        scope === "all"
+          ? `${rows.length} ${rows.length === 1 ? "entry" : "entries"} — keep this file private.`
+          : `${rows.length} ${rows.length === 1 ? "entry" : "entries"} in this category — keep this file private.`;
+      toast.success("Download started", { description });
+    },
+    [credentials, project]
+  );
 
   if (!projectId) {
     return (
@@ -445,6 +475,7 @@ const ProjectDetailPage: React.FC = () => {
             <ProjectHeader
               canExportEnv={credentials.length > 0}
               categoryFilter={categoryFilter}
+              exportCategoryOptions={exportCategoryOptions}
               onAddCredential={handleAddCredential}
               onCategoryFilterChange={(value: string) => {
                 setCategoryFilter(value);
@@ -534,6 +565,7 @@ const ProjectDetailPage: React.FC = () => {
                     category: newCategory,
                   });
               }}
+              projectId={projectId}
               revealedStates={revealedStates}
               searchQuery={searchQuery}
             />

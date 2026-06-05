@@ -7,14 +7,18 @@ import {
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { CREDENTIAL_CATEGORIES } from "../../constants/credentialCategories";
+import type { ExportCategoryOption } from "../../constants/credentialCategories";
 import useProjectStore, { type ProjectStatus } from "../../stores/projectStore";
+import type { ProjectEnvExportScope } from "../../utils/exportProjectEnv";
 
 type HeaderMenu = "actions" | "filters" | null;
 
 interface ProjectHeaderProps {
   onAddCredential: () => void;
   canExportEnv?: boolean;
-  onExportEnv?: () => void;
+  exportCategoryOptions?: ExportCategoryOption[];
+  onExportEnv?: (scope: ProjectEnvExportScope) => void;
   projectCreatedAt: null | undefined | { nanoseconds: number; seconds: number };
   projectName: string;
   projectId?: string;
@@ -31,6 +35,7 @@ const selectClass =
 const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   onAddCredential,
   canExportEnv = false,
+  exportCategoryOptions = [],
   onExportEnv,
   projectCreatedAt,
   projectName,
@@ -147,15 +152,11 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
                       value={categoryFilter}
                     >
                       <option value="all">All categories</option>
-                      <option value="frontend">Frontend</option>
-                      <option value="backend">Backend</option>
-                      <option value="database">Database</option>
-                      <option value="infrastructure">Infrastructure</option>
-                      <option value="devops">DevOps</option>
-                      <option value="mobile">Mobile</option>
-                      <option value="analytics">Analytics</option>
-                      <option value="other">Other</option>
-                      <option value="none">None</option>
+                      {CREDENTIAL_CATEGORIES.map(({ value, label }) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -181,29 +182,69 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
                 onMouseDown={(e) => e.stopPropagation()}
                 role="menu"
               >
-                {onExportEnv && (
-                  <button
-                    className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-zk-text transition-colors hover:bg-zk-base/60 disabled:cursor-not-allowed disabled:opacity-45"
-                    disabled={!canExportEnv}
-                    onClick={() => {
-                      onExportEnv();
-                      setOpenMenu(null);
-                    }}
-                    role="menuitem"
-                    title={
-                      canExportEnv
-                        ? "Download a file with your keys for this project"
-                        : "Add at least one credential first"
-                    }
-                    type="button"
-                  >
-                    <Download
-                      className="h-4 w-4 shrink-0 text-zk-indigo"
-                      strokeWidth={1.5}
-                    />
-                    Download .env
-                  </button>
-                )}
+                {onExportEnv ? (
+                  <>
+                    <button
+                      className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-zk-text transition-colors hover:bg-zk-base/60 disabled:cursor-not-allowed disabled:opacity-45"
+                      disabled={!canExportEnv}
+                      onClick={() => {
+                        onExportEnv("all");
+                        setOpenMenu(null);
+                      }}
+                      role="menuitem"
+                      title={
+                        canExportEnv
+                          ? "Download every key in this project"
+                          : "Add at least one credential first"
+                      }
+                      type="button"
+                    >
+                      <Download
+                        className="h-4 w-4 shrink-0 text-zk-indigo"
+                        strokeWidth={1.5}
+                      />
+                      Download .env (all)
+                    </button>
+                    {canExportEnv && exportCategoryOptions.length > 0 ? (
+                      <>
+                        <div
+                          aria-hidden
+                          className="my-1 border-t border-zk-border"
+                          role="separator"
+                        />
+                        <p className="px-3 py-1.5 font-zk-sans text-[10px] font-medium uppercase tracking-wider text-zk-muted">
+                          By category
+                        </p>
+                        {exportCategoryOptions.map((option) => (
+                          <button
+                            className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm text-zk-text transition-colors hover:bg-zk-base/60"
+                            key={option.value}
+                            onClick={() => {
+                              onExportEnv(option.value);
+                              setOpenMenu(null);
+                            }}
+                            role="menuitem"
+                            title={`Download keys in ${option.label}`}
+                            type="button"
+                          >
+                            <span className="flex min-w-0 items-center gap-2">
+                              <Download
+                                className="h-4 w-4 shrink-0 text-zk-indigo/80"
+                                strokeWidth={1.5}
+                              />
+                              <span className="truncate capitalize">
+                                {option.label}
+                              </span>
+                            </span>
+                            <span className="shrink-0 font-zk-mono text-xs text-zk-muted">
+                              {option.count}
+                            </span>
+                          </button>
+                        ))}
+                      </>
+                    ) : null}
+                  </>
+                ) : null}
                 <button
                   className="flex w-full items-center gap-2 bg-zk-indigo px-3 py-2.5 text-left text-sm font-medium text-white transition-colors hover:bg-zk-indigo-hover"
                   onClick={() => {

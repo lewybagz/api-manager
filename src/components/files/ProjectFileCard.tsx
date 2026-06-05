@@ -22,6 +22,8 @@ interface ProjectFileCardProps {
   onDownload: () => void;
   onPreview: () => void;
   onToggleMenu: () => void;
+  onToggleSelect?: () => void;
+  selected?: boolean;
 }
 
 const SUPPORTED_PREVIEW_TYPES = [
@@ -73,6 +75,8 @@ const ProjectFileCard: React.FC<ProjectFileCardProps> = ({
   onDownload,
   onPreview,
   onToggleMenu,
+  onToggleSelect,
+  selected = false,
 }) => {
   const fileSize =
     file.size > 1024 * 1024
@@ -124,9 +128,15 @@ const ProjectFileCard: React.FC<ProjectFileCardProps> = ({
     if (contentType === "application/octet-stream") return "Binary/Unknown";
     return "Code/Text";
   };
+  const hasPreview = isPreviewSupported(file.contentType, file.size);
+
   return (
     <div
-      className="group relative mx-auto flex h-full min-h-[180px] min-w-0 w-[85vw] flex-col gap-4 rounded-2xl border border-zk-border bg-zk-elevated/40 p-6 shadow-[0_16px_48px_-20px_rgba(0,0,0,0.5)] transition-colors duration-200 hover:border-zk-indigo/25 hover:shadow-[0_20px_56px_-24px_rgba(0,0,0,0.55)] md:w-[25vw]"
+      className={`group relative mx-auto flex h-full min-h-[180px] min-w-0 w-[85vw] flex-col gap-4 rounded-2xl border bg-zk-elevated/40 p-6 shadow-[0_16px_48px_-20px_rgba(0,0,0,0.5)] transition-colors duration-200 hover:border-zk-indigo/25 hover:shadow-[0_20px_56px_-24px_rgba(0,0,0,0.55)] md:w-[25vw] ${
+        selected
+          ? "border-zk-indigo/50 ring-2 ring-zk-indigo/30"
+          : "border-zk-border"
+      }`}
       onMouseEnter={() => {
         setShowTip(true);
         setHoveredCategory(
@@ -139,11 +149,28 @@ const ProjectFileCard: React.FC<ProjectFileCardProps> = ({
       }}
       style={{ borderTop: `4px solid ${borderColor}` }}
     >
+      {onToggleSelect ? (
+        <div className="absolute left-3 top-3 z-10">
+          <input
+            aria-label={`Select ${file.fileName}`}
+            checked={selected}
+            className="h-4 w-4 cursor-pointer rounded border-zk-border bg-zk-base/90 text-zk-indigo shadow-sm focus:ring-2 focus:ring-zk-indigo/50 focus:ring-offset-2 focus:ring-offset-zk-elevated"
+            onChange={onToggleSelect}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+            type="checkbox"
+          />
+        </div>
+      ) : null}
+
       {/* Enhanced Preview icon button (if supported) */}
-      {isPreviewSupported(file.contentType, file.size) && (
+      {hasPreview && (
         <button
           aria-label="Preview file"
-          className="absolute left-3 top-3 z-10 rounded-xl border border-zk-border bg-zk-base/80 p-2.5 text-zk-muted shadow-sm backdrop-blur-sm transition-colors hover:border-zk-indigo/30 hover:bg-zk-elevated hover:text-zk-indigo focus:outline-none focus-visible:ring-2 focus-visible:ring-zk-indigo/35"
+          className={`absolute top-3 z-10 rounded-xl border border-zk-border bg-zk-base/80 p-2.5 text-zk-muted shadow-sm backdrop-blur-sm transition-colors hover:border-zk-indigo/30 hover:bg-zk-elevated hover:text-zk-indigo focus:outline-none focus-visible:ring-2 focus-visible:ring-zk-indigo/35 ${
+            onToggleSelect ? "left-11" : "left-3"
+          }`}
           onClick={(e) => {
             e.stopPropagation();
             onPreview();

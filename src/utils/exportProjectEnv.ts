@@ -1,4 +1,10 @@
+import {
+  credentialCategoryLabel,
+  normalizeCredentialCategory,
+} from "../constants/credentialCategories";
 import type { DecryptedCredential } from "../stores/credentialStore";
+
+export type ProjectEnvExportScope = "all" | string;
 
 /** Escape a value for a KEY=value line in a .env-style file. */
 export function escapeEnvValue(value: string): string {
@@ -34,19 +40,41 @@ export function resolveSecretEnvVarName(
   return `${serviceName}_SECRET`;
 }
 
-export function projectEnvFilename(projectName: string): string {
-  const base = projectName
+const slugifyFilenamePart = (part: string, maxLen = 40): string =>
+  part
     .trim()
+    .toLowerCase()
     .replace(/[<>:"/\\|?*\u0000-\u001f]/g, "-")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "")
-    .slice(0, 80);
-  return `${base || "project"}.env`;
+    .slice(0, maxLen)
+
+export function filterCredentialsForExport(
+  credentials: DecryptedCredential[],
+  scope: ProjectEnvExportScope
+): DecryptedCredential[] {
+  if (scope === "all") return credentials
+  const target = normalizeCredentialCategory(scope)
+  return credentials.filter(
+    (c) => normalizeCredentialCategory(c.category) === target
+  )
+}
+
+export function projectEnvFilename(
+  projectName: string,
+  scope: ProjectEnvExportScope = "all"
+): string {
+  const base = slugifyFilenamePart(projectName, 80)
+  const projectSlug = base || "project"
+  if (scope === "all") return `${projectSlug}.env`
+  const categorySlug = slugifyFilenamePart(scope, 24) || "category"
+  return `${projectSlug}.${categorySlug}.env`
 }
 
 export function buildProjectEnvFileContent(
-  credentials: DecryptedCredential[]
+  credentials: DecryptedCredential[],
+  options?: { categoryScope?: ProjectEnvExportScope }
 ): string {
   const sorted = [...credentials].sort((a, b) =>
     a.serviceName.localeCompare(b.serviceName, undefined, {
@@ -54,10 +82,16 @@ export function buildProjectEnvFileContent(
     })
   );
 
-  const lines: string[] = [
-    "# Keys for this project — treat like a password.",
-    "",
-  ];
+  const lines: string[] = ["# Keys for this project — treat like a password."]
+
+  const scope = options?.categoryScope
+  if (scope && scope !== "all") {
+    lines.push(
+      `# Category: ${credentialCategoryLabel(scope)}`,
+    )
+  }
+
+  lines.push("")
 
   for (const c of sorted) {
     lines.push(`${c.serviceName}=${escapeEnvValue(c.apiKey)}`);

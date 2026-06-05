@@ -1,5 +1,5 @@
 import { FileText, FolderOpen, Search, Trash2, XCircle } from "lucide-react";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import useAuthStore from "../../stores/authStore";
@@ -53,6 +53,93 @@ const FileList: React.FC<FileListProps> = ({ projectId, searchQuery }) => {
   >({});
   const [fileToPreview, setFileToPreview] = useState<FileMetadata | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const selectAllRef = useRef<HTMLInputElement>(null);
+
+  const visibleIds = useMemo(
+    () => filteredFiles.map((f) => f.id),
+    [filteredFiles]
+  );
+
+  useEffect(() => {
+    setSelectedIds((prev) => prev.filter((id) => visibleIds.includes(id)));
+  }, [visibleIds]);
+
+  const allVisibleSelected =
+    visibleIds.length > 0 &&
+    visibleIds.every((id) => selectedIds.includes(id));
+  const someVisibleSelected =
+    selectedIds.length > 0 && !allVisibleSelected;
+
+  useEffect(() => {
+    const el = selectAllRef.current;
+    if (el) {
+      el.indeterminate = someVisibleSelected;
+    }
+  }, [someVisibleSelected]);
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAllToggle = () => {
+    if (allVisibleSelected) {
+      setSelectedIds([]);
+      return;
+    }
+    setSelectedIds(visibleIds);
+  };
+
+  const handleClearSelection = () => {
+    setSelectedIds([]);
+  };
+
+  const handleOpenBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    setShowBulkDeleteConfirm(true);
+  };
+
+  const handleConfirmBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    setIsBulkDeleting(true);
+    const idsToDelete = [...selectedIds];
+    const filesById = new Map(
+      filesForCurrentProject.map((f) => [f.id, f] as const)
+    );
+    let failed = 0;
+    for (const id of idsToDelete) {
+      const file = filesById.get(id);
+      if (!file) {
+        failed++;
+        continue;
+      }
+      try {
+        await deleteFile(file);
+      } catch {
+        failed++;
+      }
+    }
+    setSelectedIds([]);
+    setShowBulkDeleteConfirm(false);
+    setIsBulkDeleting(false);
+    if (failed === 0) {
+      toast.success(
+        idsToDelete.length === 1
+          ? "File removed"
+          : `${idsToDelete.length} files removed`
+      );
+    } else if (failed < idsToDelete.length) {
+      toast.warning("Some files could not be removed", {
+        description: `${idsToDelete.length - failed} removed, ${failed} failed.`,
+      });
+    } else {
+      toast.error("Could not remove selected files");
+    }
+  };
 
   useEffect(() => {
     if (projectId) {
@@ -247,6 +334,47 @@ const FileList: React.FC<FileListProps> = ({ projectId, searchQuery }) => {
         </div>
       </div>
 
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zk-border bg-zk-elevated/40 px-4 py-3">
+        <label className="flex cursor-pointer items-center gap-2.5">
+          <input
+            aria-label={
+              allVisibleSelected ? "Deselect all files" : "Select all files"
+            }
+            checked={allVisibleSelected}
+            className="h-4 w-4 cursor-pointer rounded border-zk-border bg-zk-base text-zk-indigo focus:ring-2 focus:ring-zk-indigo/50 focus:ring-offset-2 focus:ring-offset-zk-elevated"
+            onChange={handleSelectAllToggle}
+            ref={selectAllRef}
+            type="checkbox"
+          />
+          <span className="font-zk-sans text-sm text-zk-muted">
+            {allVisibleSelected ? "Deselect all" : "Select all"}
+          </span>
+        </label>
+        {selectedIds.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <span className="font-zk-sans text-sm text-zk-muted">
+              {selectedIds.length} selected
+            </span>
+            <button
+              className="rounded-lg border border-zk-border px-3 py-1.5 font-zk-sans text-sm font-medium text-zk-muted transition-colors hover:bg-zk-base/60 hover:text-zk-text focus:outline-none focus-visible:ring-2 focus-visible:ring-zk-indigo/35"
+              onClick={handleClearSelection}
+              type="button"
+            >
+              Clear
+            </button>
+            <button
+              className="inline-flex items-center gap-2 rounded-lg bg-red-600/90 px-3 py-1.5 font-zk-sans text-sm font-medium text-white transition-colors hover:bg-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 disabled:opacity-50"
+              disabled={isBulkDeleting}
+              onClick={handleOpenBulkDelete}
+              type="button"
+            >
+              <Trash2 className="h-4 w-4" strokeWidth={1.5} />
+              Remove selected
+            </button>
+          </div>
+        ) : null}
+      </div>
+
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
         {filteredFiles.map((file) => (
           <ProjectFileCard
@@ -263,9 +391,13 @@ const FileList: React.FC<FileListProps> = ({ projectId, searchQuery }) => {
             onPreview={() => {
               handlePreviewRequest(file);
             }}
+            onToggleSelect={() => {
+              handleToggleSelect(file.id);
+            }}
             onToggleMenu={() => {
               toggleMenu(file.id);
             }}
+            selected={selectedIds.includes(file.id)}
           />
         ))}
       </div>
@@ -278,6 +410,53 @@ const FileList: React.FC<FileListProps> = ({ projectId, searchQuery }) => {
           onClose={closePreviewModal}
         />
       )}
+
+      {showBulkDeleteConfirm ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-red-500/35 bg-zk-elevated shadow-[0_24px_64px_-24px_rgba(0,0,0,0.65)]">
+            <div className="p-6 text-center">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-600/90">
+                <Trash2 className="h-6 w-6 text-white" strokeWidth={1.5} />
+              </div>
+              <h2 className="mb-3 text-xl font-semibold text-red-400/95">
+                Remove {selectedIds.length}{" "}
+                {selectedIds.length === 1 ? "file" : "files"}?
+              </h2>
+              <p className="mb-6 text-sm text-zk-muted">
+                This will permanently delete the selected files from this
+                project.
+              </p>
+              <div className="mb-6 rounded-lg border border-amber-500/30 bg-amber-950/20 p-3">
+                <p className="text-center text-sm text-amber-200/85">
+                  You cannot undo this.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  className="flex-1 rounded-xl border border-zk-border py-3 text-sm font-medium text-zk-muted transition-colors hover:bg-zk-base/60 disabled:opacity-50"
+                  disabled={isBulkDeleting}
+                  onClick={() => {
+                    setShowBulkDeleteConfirm(false);
+                  }}
+                  type="button"
+                >
+                  Cancel
+                </button>
+                <button
+                  className="flex-1 rounded-xl bg-red-600 py-3 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+                  disabled={isBulkDeleting}
+                  onClick={() => {
+                    void handleConfirmBulkDelete();
+                  }}
+                  type="button"
+                >
+                  {isBulkDeleting ? "Removing…" : "Remove"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {showDeleteConfirmModal && fileToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">

@@ -39,7 +39,9 @@ export interface CredentialCardProps {
   onEdit: () => void;
   onToggleApiKeyReveal: () => void;
   onToggleApiSecretReveal: () => void;
+  onToggleSelect?: () => void;
   onUpdateNeeded?: () => void; // Optional, only if credential needs update
+  selected?: boolean;
 }
 
 const formatTimestamp = (ts: null | Timestamp): string => {
@@ -69,7 +71,9 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
   onEdit,
   onToggleApiKeyReveal,
   onToggleApiSecretReveal,
+  onToggleSelect,
   onUpdateNeeded,
+  selected = false,
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuWrapRef = useRef<HTMLDivElement>(null);
@@ -101,12 +105,25 @@ const CredentialCard: React.FC<CredentialCardProps> = ({
       className={cn(
         "group relative w-full overflow-visible border-0 border-b border-zk-border bg-zk-elevated/35 backdrop-blur-sm transition-colors duration-200 last:border-b-0 hover:bg-zk-indigo/50",
         menuOpen && "z-[80]",
+        selected && "bg-zk-indigo/15 ring-1 ring-inset ring-zk-indigo/30",
         className,
       )}
     >
       <div className="flex flex-col items-start justify-between gap-0 p-2 px-4 md:flex-row md:items-center">
         {/* Service Info */}
         <div className="flex min-w-0 items-center gap-3">
+          {onToggleSelect ? (
+            <input
+              aria-label={`Select ${credential.serviceName}`}
+              checked={selected}
+              className="h-4 w-4 shrink-0 cursor-pointer rounded border-zk-border bg-zk-base text-zk-indigo focus:ring-2 focus:ring-zk-indigo/50 focus:ring-offset-2 focus:ring-offset-zk-elevated"
+              onChange={onToggleSelect}
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+              type="checkbox"
+            />
+          ) : null}
           <div className="h-10 w-1 -translate-x-2 rounded-full bg-gradient-to-b from-transparent from-20% via-zk-indigo/80 via-50% to-transparent to-80% group-hover:via-zk-indigo"></div>
           <div className={cn("min-w-0 max-w-[350px] flex-shrink-0")}>
             <div className="m-0 flex w-full min-w-0 items-center border-none bg-transparent p-0 text-left">
